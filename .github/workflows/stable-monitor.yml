@@ -1,0 +1,52 @@
+name: Trump Market Alert - stable 10 minute monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trump-market-alert-stable-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Run Trump market scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    env:
+      RUN_ONCE: "true"
+      LOG_LEVEL: INFO
+      PYTHONUNBUFFERED: "1"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Check required secrets
+        run: |
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID"; exit 1; }
+          test -n "$DATABASE_URL" || { echo "Missing DATABASE_URL"; exit 1; }
+
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run one alert check
+        run: |
+          python -m trump_market_alert.runner --once
