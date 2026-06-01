@@ -1,0 +1,131 @@
+# Trump Market Alert - Ultimate Free Cloud Version
+
+This project checks legal public sources for Trump-related market mentions and sends Telegram alerts to your iPhone.
+
+It is designed for:
+
+- GitHub Actions scheduled checks
+- Supabase Postgres history
+- Telegram iPhone push notifications
+- No PC required
+- No trading or order placement
+
+## Main monitor
+
+The stable monitor runs from:
+
+```text
+.github/workflows/monitor.yml
+```
+
+Schedule:
+
+```text
+2, 12, 22, 32, 42, 52 minutes every hour
+```
+
+It scans:
+
+- Truth Social public posts
+- Google News RSS searches for Trump + markets, X/Twitter mentions, CEOs, companies, crypto, commodities, tariffs, rates
+- White House RSS/video feeds
+- RSBN RSS
+- YouTube RSS
+- YouTube transcripts when available
+- Optional official X API if you add an X bearer token
+
+## Live audio
+
+A separate optional workflow exists:
+
+```text
+.github/workflows/live_audio.yml
+```
+
+It is disabled by default because free GitHub scheduled jobs are not continuous livestream recorders.
+
+If enabled, it samples public livestream audio using yt-dlp + ffmpeg + faster-whisper. This can catch live speech without captions, but it can still miss words between scheduled samples.
+
+For true 100% live audio coverage, you need an always-running server or a paid transcription service. This free version gives the best realistic no-PC approach.
+
+## Required GitHub Secrets
+
+Keep your existing secrets. Do not put them in files.
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+DATABASE_URL
+```
+
+Optional:
+
+```text
+DISCORD_WEBHOOK_URL
+X_BEARER_TOKEN
+```
+
+Optional repository variables:
+
+```text
+X_ENABLED=true
+LIVE_AUDIO_ENABLED=true
+LIVE_AUDIO_SECONDS=90
+LIVE_AUDIO_MODEL=tiny.en
+```
+
+## Replace your old repo files
+
+Secrets are stored in GitHub Settings, not in the repo files. You can delete or replace repo files without deleting secrets.
+
+Upload this project into the same repo and overwrite old files.
+
+Then run:
+
+```text
+Actions -> Trump Market Alert - cleanup old wrong files -> Run workflow
+```
+
+That removes the old mistaken folder:
+
+```text
+.github/workflows/.github
+```
+
+## Manual test
+
+Run:
+
+```text
+Actions -> Trump Market Alert - manual test -> Run workflow
+```
+
+You should get a sample Telegram alert.
+
+## Confirm schedule
+
+After uploading, the `push` trigger should run once.
+
+Then wait for the next scheduled minute:
+
+```text
+02, 12, 22, 32, 42, 52
+```
+
+The event column should eventually show:
+
+```text
+schedule
+```
+
+GitHub can delay scheduled jobs. Wait 10-20 minutes before deciding it failed.
+
+## Local test
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+pytest
+python -m trump_market_alert.runner --sample
+```

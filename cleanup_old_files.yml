@@ -1,0 +1,61 @@
+name: Trump Market Alert - 10 minute monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "2,12,22,32,42,52 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/monitor.yml"
+      - "trump_market_alert/**"
+      - "config/**"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trump-market-alert-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      RUN_ONCE: "true"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+      LOG_LEVEL: INFO
+      TRUTH_SOCIAL_ENABLED: "true"
+      RSS_ENABLED: "true"
+      YOUTUBE_ENABLED: "true"
+      YOUTUBE_TRANSCRIPT_ENABLED: "true"
+      X_ENABLED: ${{ vars.X_ENABLED || 'false' }}
+      LIVE_AUDIO_ENABLED: "false"
+    steps:
+      - name: Check required secrets
+        shell: bash
+        run: |
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing TELEGRAM_BOT_TOKEN secret"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
+          test -n "$DATABASE_URL" || { echo "Missing DATABASE_URL secret"; exit 1; }
+
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
+      - name: Run one text/API/RSS check
+        run: python -m trump_market_alert.runner --once --text-only
