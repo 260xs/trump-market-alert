@@ -1,9 +1,11 @@
 name: Trump Market Alert - stable 10 minute monitor
 
+run-name: Trump scan - ${{ github.event_name }} - run #${{ github.run_number }}
+
 on:
+  workflow_dispatch:
   schedule:
     - cron: "*/10 * * * *"
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +14,17 @@ concurrency:
   group: trump-market-alert-stable-monitor
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  RUN_ONCE: "true"
+  LOG_LEVEL: INFO
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_INPUT: "1"
+
 jobs:
   check:
     name: Run Trump market scan
@@ -19,14 +32,17 @@ jobs:
     timeout-minutes: 8
 
     env:
-      RUN_ONCE: "true"
-      LOG_LEVEL: INFO
-      PYTHONUNBUFFERED: "1"
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
+      - name: Show trigger info
+        run: |
+          echo "Triggered by: $GITHUB_EVENT_NAME"
+          echo "Run number: $GITHUB_RUN_NUMBER"
+          echo "UTC time: $(date -u)"
+
       - name: Check required secrets
         run: |
           test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing TELEGRAM_BOT_TOKEN"; exit 1; }
@@ -41,12 +57,20 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+          cache-dependency-path: "requirements.txt"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --requirement requirements.txt
+
+      - name: Import check
+        run: |
+          python - <<'PY'
+          import trump_market_alert.runner
+          print("Import check passed")
+          PY
 
       - name: Run one alert check
         run: |
-          python -m trump_market_alert.runner --once
+          timeout 420s python -m trump_market_alert.runner --once
