@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Any
 
 import psycopg
@@ -15,6 +14,14 @@ LOG = logging.getLogger(__name__)
 
 
 class Database:
+    """Small Postgres persistence layer for alert history and deduplication.
+
+    The init() method is intentionally migration-safe. Earlier versions of this
+    project created a different raw_items table. Because raw_items is only a
+    scan cache, we safely rebuild it if the existing schema is incompatible.
+    Alert history is kept in alert_history and is not dropped.
+    """
+
     def __init__(self, database_url: str) -> None:
         self.database_url = database_url
         self.conn: Connection[Any] | None = None
@@ -27,7 +34,14 @@ class Database:
         self.close()
 
     def connect(self) -> None:
-        self.conn = psycopg.connect(self.database_url, autocommit=True, connect_timeout=20)
+        # prepare_threshold=None avoids prepared-statement issues with common
+        # hosted Postgres poolers, including Supabase pooler connections.
+        self.conn = psycopg.connect(
+            self.database_url,
+            autocommit=True,
+            connect_timeout=20,
+            prepare_threshold=None,
+        )
 
     def close(self) -> None:
         if self.conn is not None:
@@ -38,6 +52,41 @@ class Database:
         if self.conn is None:
             raise RuntimeError("Database is not connected")
         return self.conn
+
+    def _table_exists(self, table_name: str) -> bool:
+        with self._conn().cursor() as cur:
+            cur.execute("SELECT to_regclass(%s)", (f"public.{table_name}",))
+            row = cur.fetchone()
+            return bool(row and row[0])
+
+    def _columns(self, table_name: str) -> set[str]:
+        with self._conn().cursor() as cur:
+            cur.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = %s
+                """,
+                (table_name,),
+            )
+            return {str(row[0]) for row in cur.fetchall()}
+
+    def _raw_items_schema_is_current(self) -> bool:
+        if not self._table_exists("raw_items"):
+            return True
+
+        cols = self._columns("raw_items")
+        required = {
+            "item_key",
+            "source_name",
+            "source_type",
+            "source_url",
+            "title",
+            "content_hash",
+            "first_seen_at",
+            "last_seen_at",
+        }
+        return required.issubset(cols)
 
     def init(self) -> None:
         conn = self._conn()
@@ -64,6 +113,14 @@ class Database:
                 )
                 """
             )
+
+            # If raw_items was created by an older version, it may not contain
+            # last_seen_at or item_key. Rebuild only this cache table so the
+            # monitor can continue without manually resetting Supabase.
+            if not self._raw_items_schema_is_current():
+                LOG.warning("Rebuilding legacy raw_items table with current schema")
+                cur.execute("DROP TABLE IF EXISTS raw_items")
+
             cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS raw_items (
@@ -78,6 +135,7 @@ class Database:
                 )
                 """
             )
+
             cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS check_runs (
@@ -91,8 +149,17 @@ class Database:
                 )
                 """
             )
+
+            # Migration safety for partially created check_runs tables.
+            cur.execute("ALTER TABLE check_runs ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ")
+            cur.execute("ALTER TABLE check_runs ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'running'")
+            cur.execute("ALTER TABLE check_runs ADD COLUMN IF NOT EXISTS items_seen INTEGER NOT NULL DEFAULT 0")
+            cur.execute("ALTER TABLE check_runs ADD COLUMN IF NOT EXISTS alerts_sent INTEGER NOT NULL DEFAULT 0")
+            cur.execute("ALTER TABLE check_runs ADD COLUMN IF NOT EXISTS error TEXT")
+
             cur.execute("CREATE INDEX IF NOT EXISTS idx_alert_history_created_at ON alert_history (created_at DESC)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_raw_items_last_seen_at ON raw_items (last_seen_at DESC)")
+            cur.execute("CREATE INDEX IF NOT EXISTS idx_check_runs_started_at ON check_runs (started_at DESC)")
 
     def start_run(self) -> int:
         with self._conn().cursor() as cur:
@@ -121,7 +188,7 @@ class Database:
                 INSERT INTO raw_items (item_key, source_name, source_type, source_url, title, content_hash)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 ON CONFLICT (item_key) DO UPDATE
-                SET last_seen_at = now(), content_hash = EXCLUDED.content_hash
+                SET last_seen_at = now(), content_hash = EXCLUDED.content_hash, title = EXCLUDED.title
                 """,
                 (key, item.source_name, item.source_type, item.url, item.title[:500], content_hash),
             )
