@@ -1,9 +1,1 @@
-.env
-.venv/
-__pycache__/
-*.pyc
-*.db
-data/
-.cache/
-.pytest_cache/
-.DS_Store
+
