@@ -1,0 +1,991 @@
+# Entity and asset mapping for Trump Market Alert.
+# The scanner uses aliases to detect market-related mentions, then maps them
+# to tickers, crypto assets, commodities, sectors, or policy-sensitive assets.
+
+version: 1
+
+settings:
+  min_alias_length: 3
+  case_sensitive: false
+  word_boundary_matching: true
+
+market_keywords:
+  - stock
+  - stocks
+  - market
+  - markets
+  - wall street
+  - nasdaq
+  - dow
+  - s&p
+  - crypto
+  - bitcoin
+  - ethereum
+  - bank
+  - banks
+  - oil
+  - gold
+  - gas
+  - tariff
+  - tariffs
+  - fed
+  - federal reserve
+  - interest rate
+  - interest rates
+  - inflation
+  - recession
+  - dollar
+  - bond
+  - treasury
+  - company
+  - companies
+  - ceo
+  - ipo
+  - earnings
+  - trade deal
+  - china trade
+
+entities:
+  # Trump-linked public market entity
+  - id: trump_media
+    name: Trump Media & Technology Group
+    type: company
+    aliases:
+      - Trump Media
+      - Truth Social
+      - TMTG
+      - DJT
+    related_assets:
+      - symbol: DJT
+        asset_type: equity
+        name: Trump Media & Technology Group
+        relationship: direct_ticker
+
+  # Major indices and market-wide assets
+  - id: sp500
+    name: S&P 500
+    type: index
+    aliases:
+      - S&P 500
+      - SP500
+      - S and P 500
+      - stock market
+      - broad market
+    related_assets:
+      - symbol: SPY
+        asset_type: etf
+        name: SPDR S&P 500 ETF Trust
+        relationship: proxy
+      - symbol: ^GSPC
+        asset_type: index
+        name: S&P 500 Index
+        relationship: index
+
+  - id: nasdaq
+    name: Nasdaq 100 / Nasdaq market
+    type: index
+    aliases:
+      - Nasdaq
+      - Nasdaq 100
+      - tech stocks
+      - technology stocks
+    related_assets:
+      - symbol: QQQ
+        asset_type: etf
+        name: Invesco QQQ Trust
+        relationship: proxy
+      - symbol: ^IXIC
+        asset_type: index
+        name: Nasdaq Composite
+        relationship: index
+
+  - id: dow_jones
+    name: Dow Jones Industrial Average
+    type: index
+    aliases:
+      - Dow
+      - Dow Jones
+      - Dow Jones Industrial Average
+    related_assets:
+      - symbol: DIA
+        asset_type: etf
+        name: SPDR Dow Jones Industrial Average ETF Trust
+        relationship: proxy
+      - symbol: ^DJI
+        asset_type: index
+        name: Dow Jones Industrial Average
+        relationship: index
+
+  - id: russell_2000
+    name: Russell 2000
+    type: index
+    aliases:
+      - Russell 2000
+      - small caps
+      - small cap stocks
+      - small businesses stocks
+    related_assets:
+      - symbol: IWM
+        asset_type: etf
+        name: iShares Russell 2000 ETF
+        relationship: proxy
+
+  # Crypto
+  - id: bitcoin
+    name: Bitcoin
+    type: crypto
+    aliases:
+      - Bitcoin
+      - BTC
+    related_assets:
+      - symbol: BTC
+        asset_type: crypto
+        name: Bitcoin
+        relationship: direct_asset
+      - symbol: IBIT
+        asset_type: etf
+        name: iShares Bitcoin Trust ETF
+        relationship: proxy
+
+  - id: ethereum
+    name: Ethereum
+    type: crypto
+    aliases:
+      - Ethereum
+      - Ether
+      - ETH
+    related_assets:
+      - symbol: ETH
+        asset_type: crypto
+        name: Ethereum
+        relationship: direct_asset
+      - symbol: ETHA
+        asset_type: etf
+        name: iShares Ethereum Trust ETF
+        relationship: proxy
+
+  - id: solana
+    name: Solana
+    type: crypto
+    aliases:
+      - Solana
+      - SOL
+    related_assets:
+      - symbol: SOL
+        asset_type: crypto
+        name: Solana
+        relationship: direct_asset
+
+  - id: xrp
+    name: XRP
+    type: crypto
+    aliases:
+      - XRP
+      - Ripple
+    related_assets:
+      - symbol: XRP
+        asset_type: crypto
+        name: XRP
+        relationship: direct_asset
+
+  - id: dogecoin
+    name: Dogecoin
+    type: crypto
+    aliases:
+      - Dogecoin
+      - DOGE
+    related_assets:
+      - symbol: DOGE
+        asset_type: crypto
+        name: Dogecoin
+        relationship: direct_asset
+
+  # Commodities
+  - id: crude_oil
+    name: Crude Oil
+    type: commodity
+    aliases:
+      - oil
+      - crude oil
+      - petroleum
+      - gasoline
+      - gas prices
+      - energy prices
+    related_assets:
+      - symbol: CL=F
+        asset_type: futures
+        name: WTI Crude Oil Futures
+        relationship: direct_commodity
+      - symbol: USO
+        asset_type: etf
+        name: United States Oil Fund
+        relationship: proxy
+      - symbol: XLE
+        asset_type: etf
+        name: Energy Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: natural_gas
+    name: Natural Gas
+    type: commodity
+    aliases:
+      - natural gas
+      - LNG
+      - liquefied natural gas
+    related_assets:
+      - symbol: NG=F
+        asset_type: futures
+        name: Natural Gas Futures
+        relationship: direct_commodity
+      - symbol: UNG
+        asset_type: etf
+        name: United States Natural Gas Fund
+        relationship: proxy
+
+  - id: gold
+    name: Gold
+    type: commodity
+    aliases:
+      - gold
+      - bullion
+      - precious metals
+    related_assets:
+      - symbol: GC=F
+        asset_type: futures
+        name: Gold Futures
+        relationship: direct_commodity
+      - symbol: GLD
+        asset_type: etf
+        name: SPDR Gold Shares
+        relationship: proxy
+
+  - id: silver
+    name: Silver
+    type: commodity
+    aliases:
+      - silver
+    related_assets:
+      - symbol: SI=F
+        asset_type: futures
+        name: Silver Futures
+        relationship: direct_commodity
+      - symbol: SLV
+        asset_type: etf
+        name: iShares Silver Trust
+        relationship: proxy
+
+  - id: copper
+    name: Copper
+    type: commodity
+    aliases:
+      - copper
+    related_assets:
+      - symbol: HG=F
+        asset_type: futures
+        name: Copper Futures
+        relationship: direct_commodity
+      - symbol: CPER
+        asset_type: etf
+        name: United States Copper Index Fund
+        relationship: proxy
+
+  # Policy and macro topics
+  - id: federal_reserve_rates
+    name: Federal Reserve / Interest Rates
+    type: macro_policy
+    aliases:
+      - Federal Reserve
+      - Fed
+      - Jerome Powell
+      - interest rates
+      - rate cuts
+      - rate hikes
+      - lower rates
+      - high rates
+    related_assets:
+      - symbol: TLT
+        asset_type: etf
+        name: iShares 20+ Year Treasury Bond ETF
+        relationship: rate_sensitive_proxy
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+      - symbol: UUP
+        asset_type: etf
+        name: Invesco DB US Dollar Index Bullish Fund
+        relationship: dollar_proxy
+
+  - id: tariffs_trade
+    name: Tariffs / Trade Policy
+    type: macro_policy
+    aliases:
+      - tariff
+      - tariffs
+      - trade war
+      - trade deal
+      - China tariffs
+      - China trade
+      - imports
+      - exports
+    related_assets:
+      - symbol: FXI
+        asset_type: etf
+        name: iShares China Large-Cap ETF
+        relationship: affected_market_proxy
+      - symbol: MCHI
+        asset_type: etf
+        name: iShares MSCI China ETF
+        relationship: affected_market_proxy
+      - symbol: XLI
+        asset_type: etf
+        name: Industrial Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: us_dollar
+    name: U.S. Dollar
+    type: currency
+    aliases:
+      - dollar
+      - US dollar
+      - U.S. dollar
+      - strong dollar
+      - weak dollar
+    related_assets:
+      - symbol: UUP
+        asset_type: etf
+        name: Invesco DB US Dollar Index Bullish Fund
+        relationship: proxy
+      - symbol: DXY
+        asset_type: index
+        name: U.S. Dollar Index
+        relationship: index
+
+  # Sectors
+  - id: banks
+    name: Banks / Financials
+    type: sector
+    aliases:
+      - banks
+      - banking
+      - bank stocks
+      - financial stocks
+      - Wall Street banks
+    related_assets:
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+      - symbol: KBE
+        asset_type: etf
+        name: SPDR S&P Bank ETF
+        relationship: sector_proxy
+      - symbol: JPM
+        asset_type: equity
+        name: JPMorgan Chase
+        relationship: representative_company
+      - symbol: BAC
+        asset_type: equity
+        name: Bank of America
+        relationship: representative_company
+      - symbol: WFC
+        asset_type: equity
+        name: Wells Fargo
+        relationship: representative_company
+
+  - id: energy_sector
+    name: Energy Sector
+    type: sector
+    aliases:
+      - energy
+      - energy sector
+      - oil companies
+      - oil stocks
+      - drilling
+      - fracking
+    related_assets:
+      - symbol: XLE
+        asset_type: etf
+        name: Energy Select Sector SPDR Fund
+        relationship: sector_proxy
+      - symbol: XOM
+        asset_type: equity
+        name: Exxon Mobil
+        relationship: representative_company
+      - symbol: CVX
+        asset_type: equity
+        name: Chevron
+        relationship: representative_company
+
+  - id: defense_sector
+    name: Defense / Aerospace Sector
+    type: sector
+    aliases:
+      - defense stocks
+      - defense companies
+      - military contractors
+      - aerospace
+      - weapons manufacturers
+    related_assets:
+      - symbol: ITA
+        asset_type: etf
+        name: iShares U.S. Aerospace & Defense ETF
+        relationship: sector_proxy
+      - symbol: XAR
+        asset_type: etf
+        name: SPDR S&P Aerospace & Defense ETF
+        relationship: sector_proxy
+
+  - id: healthcare_sector
+    name: Healthcare Sector
+    type: sector
+    aliases:
+      - healthcare
+      - health care
+      - drug companies
+      - pharmaceutical companies
+      - pharma
+      - biotech
+    related_assets:
+      - symbol: XLV
+        asset_type: etf
+        name: Health Care Select Sector SPDR Fund
+        relationship: sector_proxy
+      - symbol: IBB
+        asset_type: etf
+        name: iShares Biotechnology ETF
+        relationship: sector_proxy
+
+  # Technology companies
+  - id: apple
+    name: Apple Inc.
+    type: company
+    aliases:
+      - Apple
+      - Tim Cook
+    related_assets:
+      - symbol: AAPL
+        asset_type: equity
+        name: Apple Inc.
+        relationship: direct_ticker
+
+  - id: microsoft
+    name: Microsoft Corporation
+    type: company
+    aliases:
+      - Microsoft
+      - Satya Nadella
+    related_assets:
+      - symbol: MSFT
+        asset_type: equity
+        name: Microsoft Corporation
+        relationship: direct_ticker
+
+  - id: nvidia
+    name: NVIDIA Corporation
+    type: company
+    aliases:
+      - Nvidia
+      - NVIDIA
+      - Jensen Huang
+      - AI chips
+      - GPU chips
+      - GPUs
+    related_assets:
+      - symbol: NVDA
+        asset_type: equity
+        name: NVIDIA Corporation
+        relationship: direct_ticker
+      - symbol: SMH
+        asset_type: etf
+        name: VanEck Semiconductor ETF
+        relationship: sector_proxy
+
+  - id: alphabet
+    name: Alphabet Inc. / Google
+    type: company
+    aliases:
+      - Google
+      - Alphabet
+      - Sundar Pichai
+      - YouTube
+    related_assets:
+      - symbol: GOOGL
+        asset_type: equity
+        name: Alphabet Inc. Class A
+        relationship: direct_ticker
+      - symbol: GOOG
+        asset_type: equity
+        name: Alphabet Inc. Class C
+        relationship: direct_ticker
+
+  - id: amazon
+    name: Amazon.com Inc.
+    type: company
+    aliases:
+      - Amazon
+      - Jeff Bezos
+      - AWS
+    related_assets:
+      - symbol: AMZN
+        asset_type: equity
+        name: Amazon.com Inc.
+        relationship: direct_ticker
+
+  - id: meta
+    name: Meta Platforms Inc.
+    type: company
+    aliases:
+      - Meta
+      - Facebook
+      - Instagram
+      - Mark Zuckerberg
+    related_assets:
+      - symbol: META
+        asset_type: equity
+        name: Meta Platforms Inc.
+        relationship: direct_ticker
+
+  - id: tesla
+    name: Tesla Inc.
+    type: company
+    aliases:
+      - Tesla
+      - Elon Musk
+      - EVs
+      - electric vehicles
+      - self driving cars
+    related_assets:
+      - symbol: TSLA
+        asset_type: equity
+        name: Tesla Inc.
+        relationship: direct_ticker
+
+  - id: dell
+    name: Dell Technologies Inc.
+    type: company
+    aliases:
+      - Dell
+      - Dell Technologies
+      - Michael Dell
+    related_assets:
+      - symbol: DELL
+        asset_type: equity
+        name: Dell Technologies Inc.
+        relationship: direct_ticker
+
+  - id: intel
+    name: Intel Corporation
+    type: company
+    aliases:
+      - Intel
+      - Intel chips
+    related_assets:
+      - symbol: INTC
+        asset_type: equity
+        name: Intel Corporation
+        relationship: direct_ticker
+      - symbol: SMH
+        asset_type: etf
+        name: VanEck Semiconductor ETF
+        relationship: sector_proxy
+
+  - id: amd
+    name: Advanced Micro Devices Inc.
+    type: company
+    aliases:
+      - AMD
+      - Advanced Micro Devices
+      - Lisa Su
+    related_assets:
+      - symbol: AMD
+        asset_type: equity
+        name: Advanced Micro Devices Inc.
+        relationship: direct_ticker
+      - symbol: SMH
+        asset_type: etf
+        name: VanEck Semiconductor ETF
+        relationship: sector_proxy
+
+  - id: oracle
+    name: Oracle Corporation
+    type: company
+    aliases:
+      - Oracle
+      - Larry Ellison
+    related_assets:
+      - symbol: ORCL
+        asset_type: equity
+        name: Oracle Corporation
+        relationship: direct_ticker
+
+  - id: palantir
+    name: Palantir Technologies Inc.
+    type: company
+    aliases:
+      - Palantir
+      - Alex Karp
+    related_assets:
+      - symbol: PLTR
+        asset_type: equity
+        name: Palantir Technologies Inc.
+        relationship: direct_ticker
+
+  - id: broadcom
+    name: Broadcom Inc.
+    type: company
+    aliases:
+      - Broadcom
+    related_assets:
+      - symbol: AVGO
+        asset_type: equity
+        name: Broadcom Inc.
+        relationship: direct_ticker
+      - symbol: SMH
+        asset_type: etf
+        name: VanEck Semiconductor ETF
+        relationship: sector_proxy
+
+  # Finance and crypto-related companies
+  - id: jpmorgan
+    name: JPMorgan Chase & Co.
+    type: company
+    aliases:
+      - JPMorgan
+      - JP Morgan
+      - JPMorgan Chase
+      - Jamie Dimon
+    related_assets:
+      - symbol: JPM
+        asset_type: equity
+        name: JPMorgan Chase & Co.
+        relationship: direct_ticker
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: bank_of_america
+    name: Bank of America Corporation
+    type: company
+    aliases:
+      - Bank of America
+      - BofA
+      - Brian Moynihan
+    related_assets:
+      - symbol: BAC
+        asset_type: equity
+        name: Bank of America Corporation
+        relationship: direct_ticker
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: goldman_sachs
+    name: Goldman Sachs Group Inc.
+    type: company
+    aliases:
+      - Goldman Sachs
+      - David Solomon
+    related_assets:
+      - symbol: GS
+        asset_type: equity
+        name: Goldman Sachs Group Inc.
+        relationship: direct_ticker
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: morgan_stanley
+    name: Morgan Stanley
+    type: company
+    aliases:
+      - Morgan Stanley
+    related_assets:
+      - symbol: MS
+        asset_type: equity
+        name: Morgan Stanley
+        relationship: direct_ticker
+      - symbol: XLF
+        asset_type: etf
+        name: Financial Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: blackrock
+    name: BlackRock Inc.
+    type: company
+    aliases:
+      - BlackRock
+      - Larry Fink
+    related_assets:
+      - symbol: BLK
+        asset_type: equity
+        name: BlackRock Inc.
+        relationship: direct_ticker
+
+  - id: coinbase
+    name: Coinbase Global Inc.
+    type: company
+    aliases:
+      - Coinbase
+      - Brian Armstrong
+      - crypto exchange
+    related_assets:
+      - symbol: COIN
+        asset_type: equity
+        name: Coinbase Global Inc.
+        relationship: direct_ticker
+      - symbol: BTC
+        asset_type: crypto
+        name: Bitcoin
+        relationship: related_asset
+
+  - id: robinhood
+    name: Robinhood Markets Inc.
+    type: company
+    aliases:
+      - Robinhood
+      - Vlad Tenev
+    related_assets:
+      - symbol: HOOD
+        asset_type: equity
+        name: Robinhood Markets Inc.
+        relationship: direct_ticker
+
+  - id: microstrategy
+    name: MicroStrategy / Strategy
+    type: company
+    aliases:
+      - MicroStrategy
+      - Strategy
+      - Michael Saylor
+    related_assets:
+      - symbol: MSTR
+        asset_type: equity
+        name: MicroStrategy / Strategy
+        relationship: direct_ticker
+      - symbol: BTC
+        asset_type: crypto
+        name: Bitcoin
+        relationship: related_asset
+
+  # Industrial, auto, defense, and energy companies
+  - id: boeing
+    name: Boeing Company
+    type: company
+    aliases:
+      - Boeing
+    related_assets:
+      - symbol: BA
+        asset_type: equity
+        name: Boeing Company
+        relationship: direct_ticker
+      - symbol: ITA
+        asset_type: etf
+        name: iShares U.S. Aerospace & Defense ETF
+        relationship: sector_proxy
+
+  - id: lockheed_martin
+    name: Lockheed Martin Corporation
+    type: company
+    aliases:
+      - Lockheed
+      - Lockheed Martin
+    related_assets:
+      - symbol: LMT
+        asset_type: equity
+        name: Lockheed Martin Corporation
+        relationship: direct_ticker
+      - symbol: ITA
+        asset_type: etf
+        name: iShares U.S. Aerospace & Defense ETF
+        relationship: sector_proxy
+
+  - id: rtx
+    name: RTX Corporation
+    type: company
+    aliases:
+      - RTX
+      - Raytheon
+      - Raytheon Technologies
+    related_assets:
+      - symbol: RTX
+        asset_type: equity
+        name: RTX Corporation
+        relationship: direct_ticker
+      - symbol: ITA
+        asset_type: etf
+        name: iShares U.S. Aerospace & Defense ETF
+        relationship: sector_proxy
+
+  - id: general_motors
+    name: General Motors Company
+    type: company
+    aliases:
+      - General Motors
+      - GM
+      - Mary Barra
+    related_assets:
+      - symbol: GM
+        asset_type: equity
+        name: General Motors Company
+        relationship: direct_ticker
+
+  - id: ford
+    name: Ford Motor Company
+    type: company
+    aliases:
+      - Ford
+      - Ford Motor
+    related_assets:
+      - symbol: F
+        asset_type: equity
+        name: Ford Motor Company
+        relationship: direct_ticker
+
+  - id: exxon_mobil
+    name: Exxon Mobil Corporation
+    type: company
+    aliases:
+      - Exxon
+      - ExxonMobil
+      - Exxon Mobil
+    related_assets:
+      - symbol: XOM
+        asset_type: equity
+        name: Exxon Mobil Corporation
+        relationship: direct_ticker
+      - symbol: XLE
+        asset_type: etf
+        name: Energy Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: chevron
+    name: Chevron Corporation
+    type: company
+    aliases:
+      - Chevron
+    related_assets:
+      - symbol: CVX
+        asset_type: equity
+        name: Chevron Corporation
+        relationship: direct_ticker
+      - symbol: XLE
+        asset_type: etf
+        name: Energy Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  # Healthcare, retail, media
+  - id: eli_lilly
+    name: Eli Lilly and Company
+    type: company
+    aliases:
+      - Eli Lilly
+      - Lilly
+      - weight loss drugs
+      - GLP-1
+    related_assets:
+      - symbol: LLY
+        asset_type: equity
+        name: Eli Lilly and Company
+        relationship: direct_ticker
+      - symbol: XLV
+        asset_type: etf
+        name: Health Care Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: pfizer
+    name: Pfizer Inc.
+    type: company
+    aliases:
+      - Pfizer
+    related_assets:
+      - symbol: PFE
+        asset_type: equity
+        name: Pfizer Inc.
+        relationship: direct_ticker
+      - symbol: XLV
+        asset_type: etf
+        name: Health Care Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: walmart
+    name: Walmart Inc.
+    type: company
+    aliases:
+      - Walmart
+      - Wal-Mart
+    related_assets:
+      - symbol: WMT
+        asset_type: equity
+        name: Walmart Inc.
+        relationship: direct_ticker
+      - symbol: XLP
+        asset_type: etf
+        name: Consumer Staples Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: target
+    name: Target Corporation
+    type: company
+    aliases:
+      - Target
+      - Target stores
+    related_assets:
+      - symbol: TGT
+        asset_type: equity
+        name: Target Corporation
+        relationship: direct_ticker
+      - symbol: XLY
+        asset_type: etf
+        name: Consumer Discretionary Select Sector SPDR Fund
+        relationship: sector_proxy
+
+  - id: mcdonalds
+    name: McDonald's Corporation
+    type: company
+    aliases:
+      - McDonald's
+      - McDonalds
+    related_assets:
+      - symbol: MCD
+        asset_type: equity
+        name: McDonald's Corporation
+        relationship: direct_ticker
+
+  - id: starbucks
+    name: Starbucks Corporation
+    type: company
+    aliases:
+      - Starbucks
+    related_assets:
+      - symbol: SBUX
+        asset_type: equity
+        name: Starbucks Corporation
+        relationship: direct_ticker
+
+  - id: disney
+    name: The Walt Disney Company
+    type: company
+    aliases:
+      - Disney
+      - Walt Disney
+      - Bob Iger
+    related_assets:
+      - symbol: DIS
+        asset_type: equity
+        name: The Walt Disney Company
+        relationship: direct_ticker
+
+  - id: netflix
+    name: Netflix Inc.
+    type: company
+    aliases:
+      - Netflix
+    related_assets:
+      - symbol: NFLX
+        asset_type: equity
+        name: Netflix Inc.
+        relationship: direct_ticker
