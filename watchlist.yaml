@@ -1,0 +1,80 @@
+people:
+  - id: donald_trump
+    full_name: Donald J. Trump
+    aliases:
+      - Donald Trump
+      - President Trump
+      - Trump
+      - realDonaldTrump
+    role: President / political leader
+    category: political_leader
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      truth_social: https://truthsocial.com/@realDonaldTrump
+      youtube: https://www.youtube.com/@DonaldJTrumpforPresident
+    sources:
+      - id: trump_truth_social_public
+        platform: Truth Social
+        source_type: truthsocial
+        priority: high
+        enabled: false
+        polling_interval_seconds: 120
+        source_confidence: 0.95
+        url: https://truthsocial.com/@realDonaldTrump
+
+      - id: trump_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        url: https://news.google.com/rss/search?q=Trump%20%28Bitcoin%20OR%20Nvidia%20OR%20Tesla%20OR%20Dell%20OR%20Apple%20OR%20crypto%20OR%20stocks%20OR%20oil%20OR%20gold%29&hl=en-US&gl=US&ceid=US:en
+
+      - id: trump_youtube_channel
+        platform: YouTube
+        source_type: youtube_rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.85
+        channel_id: UCAql2DyGU2un1Ei2nMYsqOA
+
+      - id: rsbn_live_public
+        platform: RSBN / public livestream
+        source_type: live_audio
+        priority: high
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.75
+        speaker_confidence: 0.70
+        url: https://www.youtube.com/@RSBNetwork/live
+        expected_speaker: Donald J. Trump
+
+  - id: jerome_powell
+    full_name: Jerome Powell
+    aliases: [Jerome Powell, Chair Powell, Powell]
+    role: Federal Reserve Chair
+    category: central_bank
+    market_impact_score: 10
+    enabled: false
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts: {}
+    sources: []
+
+  - id: elon_musk
+    full_name: Elon Musk
+    aliases: [Elon Musk, Elon]
+    role: CEO / technology leader
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: false
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/elonmusk
+    sources: []
