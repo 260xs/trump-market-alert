@@ -63,30 +63,31 @@ jobs:
         run: |
           set -euo pipefail
 
-          MSG="$(cat <<EOF
-✅ ${CUSTOM_MESSAGE}
+          NOW_UTC="$(date -u '+%Y-%m-%d %H:%M:%S')"
 
-System:
-Telegram notifications are working.
-
-Repository:
-${GITHUB_REPOSITORY}
-
-Workflow:
-${GITHUB_WORKFLOW}
-
-Run:
-#${GITHUB_RUN_NUMBER}
-
-Trigger:
-${GITHUB_EVENT_NAME}
-
-Time UTC:
-$(date -u '+%Y-%m-%d %H:%M:%S')
-
-Result:
-Your Telegram bot token and chat ID are valid.
-EOF
+          MSG="$(printf '%s\n' \
+            "✅ ${CUSTOM_MESSAGE}" \
+            "" \
+            "System:" \
+            "Telegram notifications are working." \
+            "" \
+            "Repository:" \
+            "${GITHUB_REPOSITORY}" \
+            "" \
+            "Workflow:" \
+            "${GITHUB_WORKFLOW}" \
+            "" \
+            "Run:" \
+            "#${GITHUB_RUN_NUMBER}" \
+            "" \
+            "Trigger:" \
+            "${GITHUB_EVENT_NAME}" \
+            "" \
+            "Time UTC:" \
+            "${NOW_UTC}" \
+            "" \
+            "Result:" \
+            "Your Telegram bot token and chat ID are valid." \
           )"
 
           curl --fail --silent --show-error \
