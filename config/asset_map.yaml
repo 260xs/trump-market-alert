@@ -1,0 +1,165 @@
+assets:
+  - canonical: Dell Technologies
+    aliases: [Dell, Dell Technologies]
+    ticker: DELL
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bDell\\b", "\\bDell Technologies\\b"]
+    avoid_contexts: []
+
+  - canonical: NVIDIA
+    aliases: [Nvidia, NVIDIA]
+    ticker: NVDA
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bNvidia\\b", "\\bNVIDIA\\b", "\\bNVDA\\b"]
+    avoid_contexts: []
+
+  - canonical: Nokia
+    aliases: [Nokia, Nokia Corporation]
+    ticker: NOK
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bNokia\\b", "\\bNokia Corporation\\b", "\\bNOK\\b"]
+    avoid_contexts: []
+
+  - canonical: Tesla
+    aliases: [Tesla]
+    ticker: TSLA
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bTesla\\b", "\\bTSLA\\b"]
+    avoid_contexts: []
+
+  - canonical: Apple Inc.
+    aliases: [Apple, Apple Inc, Apple Inc.]
+    ticker: AAPL
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bApple\\b", "\\bApple Inc\\b", "\\bAAPL\\b"]
+    avoid_contexts: ["apple pie", "apple fruit", "apples", "apple farm", "apple juice"]
+
+  - canonical: Alphabet
+    aliases: [Google, Alphabet, Alphabet Inc.]
+    ticker: GOOGL
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bGoogle\\b", "\\bAlphabet\\b", "\\bGOOGL\\b", "\\bGOOG\\b"]
+    avoid_contexts: ["alphabet letters", "google search results"]
+
+  - canonical: Meta Platforms
+    aliases: [Meta Platforms, Facebook]
+    ticker: META
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bMeta Platforms\\b", "\\bFacebook\\b", "\\bMETA\\b"]
+    avoid_contexts: ["metaphor", "meta-analysis", "meta analysis", "meta level"]
+
+  - canonical: Amazon.com
+    aliases: [Amazon, Amazon.com]
+    ticker: AMZN
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bAmazon\\b", "\\bAmazon.com\\b", "\\bAMZN\\b"]
+    avoid_contexts: ["amazon rainforest", "amazon river", "amazon jungle"]
+
+  - canonical: Microsoft
+    aliases: [Microsoft]
+    ticker: MSFT
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bMicrosoft\\b", "\\bMSFT\\b"]
+    avoid_contexts: []
+
+  - canonical: Advanced Micro Devices
+    aliases: [AMD, Advanced Micro Devices]
+    ticker: AMD
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bAMD\\b", "\\bAdvanced Micro Devices\\b"]
+    avoid_contexts: []
+
+  - canonical: Broadcom
+    aliases: [Broadcom]
+    ticker: AVGO
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bBroadcom\\b", "\\bAVGO\\b"]
+    avoid_contexts: []
+
+  - canonical: Palantir
+    aliases: [Palantir]
+    ticker: PLTR
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bPalantir\\b", "\\bPLTR\\b"]
+    avoid_contexts: []
+
+  - canonical: Coinbase
+    aliases: [Coinbase]
+    ticker: COIN
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bCoinbase\\b", "\\bCOIN\\b"]
+    avoid_contexts: []
+
+  - canonical: Bitcoin
+    aliases: [Bitcoin, BTC]
+    ticker: BTC
+    asset_type: crypto
+    confidence: 0.99
+    direct_patterns: ["\\bBitcoin\\b", "\\bBTC\\b"]
+    avoid_contexts: []
+
+  - canonical: Ethereum
+    aliases: [Ethereum, Ether, ETH]
+    ticker: ETH
+    asset_type: crypto
+    confidence: 0.99
+    direct_patterns: ["\\bEthereum\\b", "\\bEther\\b", "\\bETH\\b"]
+    avoid_contexts: []
+
+  - canonical: Dogecoin
+    aliases: [Dogecoin, DOGE]
+    ticker: DOGE
+    asset_type: crypto
+    confidence: 0.99
+    direct_patterns: ["\\bDogecoin\\b", "\\bDOGE\\b"]
+    avoid_contexts: []
+
+  - canonical: Gold
+    aliases: [Gold]
+    ticker: GLD
+    asset_type: commodity
+    confidence: 0.95
+    direct_patterns: ["\\bgold\\b", "\\bGold\\b"]
+    required_context_any: [price, prices, market, markets, commodity, inflation, ounce, ounces, reserve, metal, metals, mining, asset]
+    avoid_contexts: ["gold medal", "golden", "gold color", "gold watch"]
+
+  - canonical: Oil
+    aliases: [Oil, Crude oil, WTI, Brent]
+    ticker: USO
+    asset_type: commodity
+    confidence: 0.95
+    direct_patterns: ["\\boil\\b", "\\bcrude oil\\b", "\\bWTI\\b", "\\bBrent\\b"]
+    required_context_any: [price, prices, barrel, barrels, production, drilling, energy, market, markets, commodity, export, exports]
+    avoid_contexts: ["olive oil", "cooking oil", "oil painting", "baby oil"]
+
+  - canonical: Banking Sector
+    aliases: [banks, banking sector, big banks]
+    ticker: XLF
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\bbanks\\b", "\\bbanking sector\\b", "\\bbig banks\\b", "\\bXLF\\b"]
+    avoid_contexts: []
+
+blocked_ambiguous:
+  - name: Marvel
+    reason: Could mean Marvel Entertainment, Marvel content, or Marvell Technology. Do not map unless ticker MRVL or Marvell Technology is explicit.
+    patterns: ["\\bMarvel\\b"]
+  - name: X
+    reason: Too ambiguous. Could mean Twitter/X, letter X, unknown variable, or another context.
+    patterns: ["\\bX\\b"]
+  - name: Meta
+    reason: Meta alone can be a general word. Require Meta Platforms, Facebook, or ticker META.
+    patterns: ["\\bmeta\\b"]

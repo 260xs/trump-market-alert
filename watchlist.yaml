@@ -1,0 +1,186 @@
+people:
+  - id: donald_trump
+    full_name: Donald J. Trump
+    aliases:
+      - Donald Trump
+      - President Trump
+      - Trump
+      - realDonaldTrump
+    role: President of the United States / political market mover
+    category: political_leader
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      truth_social: https://truthsocial.com/@realDonaldTrump
+      x: https://x.com/realDonaldTrump
+      youtube: https://www.youtube.com/@DonaldJTrumpforPresident
+      white_house: https://www.whitehouse.gov/news/
+    sources:
+      - id: trump_truth_social_public
+        platform: Truth Social
+        source_type: truthsocial
+        priority: high
+        enabled: true
+        polling_interval_seconds: 90
+        source_confidence: 0.95
+        speaker_confidence: 0.99
+        url: https://truthsocial.com/@realDonaldTrump
+
+      - id: trump_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 120
+        source_confidence: 0.96
+        speaker_confidence: 0.99
+        username: realDonaldTrump
+        query: 'from:realDonaldTrump (Nvidia OR NVIDIA OR NVDA OR Nokia OR NOK OR Tesla OR TSLA OR Bitcoin OR BTC OR Apple OR AAPL OR Dell OR DELL OR stocks OR market OR oil OR gold OR banks) -is:retweet'
+
+      - id: trump_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=Trump%20%28Nvidia%20OR%20NVDA%20OR%20Nokia%20OR%20NOK%20OR%20Bitcoin%20OR%20Tesla%20OR%20Dell%20OR%20stocks%20OR%20market%20OR%20oil%20OR%20gold%20OR%20banks%29&hl=en-US&gl=US&ceid=US:en
+
+      - id: trump_youtube_channel
+        platform: YouTube official/channel RSS
+        source_type: youtube_rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.88
+        speaker_confidence: 0.86
+        channel_id: UCAql2DyGU2un1Ei2nMYsqOA
+
+      - id: rsbn_live_public
+        platform: RSBN / public livestream
+        source_type: live_audio
+        priority: high
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.75
+        speaker_confidence: 0.70
+        url: https://www.youtube.com/@RSBNetwork/live
+        expected_speaker: Donald J. Trump
+
+  - id: kevin_warsh
+    full_name: Kevin Warsh
+    aliases:
+      - Kevin Warsh
+      - Warsh
+      - Fed Chair Warsh
+      - Federal Reserve Chair
+    role: Federal Reserve Chair / central bank market mover
+    category: central_bank
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      federal_reserve_news: https://www.federalreserve.gov/newsevents.htm
+    sources:
+      - id: warsh_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Kevin%20Warsh%22%20%28stocks%20OR%20markets%20OR%20rates%20OR%20inflation%20OR%20banks%20OR%20dollar%20OR%20Nvidia%20OR%20Bitcoin%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: scott_bessent
+    full_name: Scott Bessent
+    aliases:
+      - Scott Bessent
+      - Treasury Secretary Bessent
+      - Secretary Bessent
+      - Bessent
+    role: U.S. Treasury Secretary / fiscal-policy market mover
+    category: treasury
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      treasury_news: https://home.treasury.gov/news/press-releases
+    sources:
+      - id: bessent_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Scott%20Bessent%22%20%28stocks%20OR%20markets%20OR%20tariffs%20OR%20banks%20OR%20crypto%20OR%20Bitcoin%20OR%20Nvidia%20OR%20Nokia%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: elon_musk
+    full_name: Elon Musk
+    aliases:
+      - Elon Musk
+      - Elon
+      - Musk
+    role: Tesla CEO / technology and crypto market mover
+    category: mega_cap_ceo
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/elonmusk
+      tesla: https://www.tesla.com/elon-musk
+    sources:
+      - id: musk_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 120
+        source_confidence: 0.96
+        speaker_confidence: 0.99
+        username: elonmusk
+        query: 'from:elonmusk (Tesla OR TSLA OR Nvidia OR NVDA OR Nokia OR NOK OR Bitcoin OR BTC OR Dogecoin OR DOGE OR Apple OR AAPL OR stock OR stocks OR market OR AI) -is:retweet'
+
+      - id: musk_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Elon%20Musk%22%20%28Tesla%20OR%20TSLA%20OR%20Bitcoin%20OR%20Dogecoin%20OR%20Nvidia%20OR%20stocks%20OR%20market%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: jensen_huang
+    full_name: Jensen Huang
+    aliases:
+      - Jensen Huang
+      - Jen-Hsun Huang
+      - Nvidia CEO
+      - NVIDIA CEO
+    role: NVIDIA CEO / AI semiconductor market mover
+    category: mega_cap_ceo
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      nvidia_profile: https://www.nvidia.com/en-us/about-nvidia/leadership/jensen-huang/
+    sources:
+      - id: huang_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Jensen%20Huang%22%20%28Nvidia%20OR%20NVDA%20OR%20AI%20OR%20chips%20OR%20semiconductors%20OR%20stocks%20OR%20market%29&hl=en-US&gl=US&ceid=US:en

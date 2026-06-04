@@ -1,0 +1,86 @@
+settings:
+  # Telegram is silent unless a clean Buy, Sell, or Short setup exists.
+  send_hourly_summary: false
+  send_only_when_actionable: true
+  send_candidate_refresh_telegram: false
+  min_setup_confidence: Medium
+  # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
+  allow_short_model_view: true
+  duplicate_silence_hours: 24
+  max_alerts_per_run: 5
+  min_successful_scans: 1
+
+  # Short-term focus: 1 week to 3 months.
+  timeframe_label: "Short-term swing focus: 1 week to 3 months"
+
+  # Hourly timing chart + daily context chart.
+  hourly_period: 30d
+  hourly_interval: 1h
+  daily_period: 6mo
+  daily_interval: 1d
+
+  # 3-day discovery job.
+  discovery_period: 6mo
+  discovery_interval: 1d
+  max_scan_symbols_per_run: 35
+  top_candidate_count: 5
+
+  # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
+  breakout_lookback_bars: 20
+  risk_reward_multiple: 2.0
+  atr_multiple_stop: 1.4
+  breakout_buffer_atr: 0.10
+  near_trigger_atr_fraction: 0.35
+  min_volume_ratio_high: 1.10
+  # Medium-confidence setups still need reasonable liquidity/volume confirmation.
+  min_volume_ratio_medium: 0.85
+  min_risk_reward: 1.8
+  max_risk_pct: 9.0
+
+  # Entry setup RSI window.
+  entry_rsi_min: 50
+  entry_rsi_high_min: 55
+  entry_rsi_max: 72
+
+  # Exit/risk setup RSI window.
+  exit_rsi_max: 46
+  exit_rsi_high_max: 40
+
+priority_stocks:
+  - ticker: NVDA
+    name: NVIDIA
+    priority: 10
+  - ticker: NOK
+    name: Nokia
+    priority: 10
+
+# Free scanner universe. It is not literally every stock in the world.
+# Add/remove tickers here any time. The 3-day discovery job ranks this universe.
+universe:
+  - NVDA
+  - NOK
+  - AAPL
+  - MSFT
+  - GOOGL
+  - AMZN
+  - META
+  - TSLA
+  - AMD
+  - AVGO
+  - PLTR
+  - COIN
+  - SMCI
+  - ORCL
+  - CRM
+  - NFLX
+  - JPM
+  - BAC
+  - XOM
+  - CVX
+  - GLD
+  - SLV
+  - USO
+  - QQQ
+  - SPY
+  - SOXX
+  - ARKK
