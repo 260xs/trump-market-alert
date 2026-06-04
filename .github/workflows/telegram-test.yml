@@ -1,33 +1,101 @@
 name: Telegram Test
 
+run-name: "Telegram test - run #${{ github.run_number }}"
+
 on:
   workflow_dispatch:
+    inputs:
+      custom_message:
+        description: "Optional custom test message"
+        required: false
+        default: "Telegram test successful"
 
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  test:
+  telegram-test:
+    name: Send Telegram test message
     runs-on: ubuntu-latest
+    timeout-minutes: 2
 
     steps:
-      - name: Send Telegram test message
+      - name: Validate Telegram secrets
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing TELEGRAM_BOT_TOKEN"; exit 1; }
-          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID"; exit 1; }
+          set -euo pipefail
 
-          MSG="✅ Telegram test successful
+          test -n "${TELEGRAM_BOT_TOKEN}" || { echo "Missing TELEGRAM_BOT_TOKEN secret"; exit 1; }
+          test -n "${TELEGRAM_CHAT_ID}" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
 
-Repo: $GITHUB_REPOSITORY
-Run: #$GITHUB_RUN_NUMBER
-Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')
+          if ! echo "${TELEGRAM_CHAT_ID}" | grep -Eq '^-?[0-9]+$'; then
+            echo "TELEGRAM_CHAT_ID must be a number."
+            exit 1
+          fi
 
-Your Telegram bot and chat ID are working."
+          echo "Telegram secrets exist."
+
+      - name: Verify Telegram bot token
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set -euo pipefail
 
           curl --fail --silent --show-error \
-            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
-            --data-urlencode "text=$MSG" \
-            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+            --max-time 20 \
+            --retry 3 \
+            --retry-delay 2 \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe" > /tmp/telegram_getme.json
+
+          echo "Telegram bot token is valid."
+
+      - name: Send Telegram test message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CUSTOM_MESSAGE: ${{ github.event.inputs.custom_message }}
+        run: |
+          set -euo pipefail
+
+          MSG="$(cat <<EOF
+✅ ${CUSTOM_MESSAGE}
+
+System:
+Telegram notifications are working.
+
+Repository:
+${GITHUB_REPOSITORY}
+
+Workflow:
+${GITHUB_WORKFLOW}
+
+Run:
+#${GITHUB_RUN_NUMBER}
+
+Trigger:
+${GITHUB_EVENT_NAME}
+
+Time UTC:
+$(date -u '+%Y-%m-%d %H:%M:%S')
+
+Result:
+Your Telegram bot token and chat ID are valid.
+EOF
+          )"
+
+          curl --fail --silent --show-error \
+            --max-time 20 \
+            --retry 3 \
+            --retry-delay 2 \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+
+          echo "Telegram test message sent."
