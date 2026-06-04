@@ -1,0 +1,33 @@
+name: Telegram Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Telegram test message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          test -n "$TELEGRAM_BOT_TOKEN" || { echo "Missing TELEGRAM_BOT_TOKEN"; exit 1; }
+          test -n "$TELEGRAM_CHAT_ID" || { echo "Missing TELEGRAM_CHAT_ID"; exit 1; }
+
+          MSG="✅ Telegram test successful
+
+Repo: $GITHUB_REPOSITORY
+Run: #$GITHUB_RUN_NUMBER
+Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')
+
+Your Telegram bot and chat ID are working."
+
+          curl --fail --silent --show-error \
+            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=$MSG" \
+            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
