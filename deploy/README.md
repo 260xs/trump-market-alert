@@ -74,6 +74,24 @@ systemctl status market-alert.service
 journalctl -u market-alert.service -f
 ```
 
+## Healthchecks
+
+For basic public scanner health, set:
+
+```text
+HEALTHCHECKS_URL=
+```
+
+For independent always-on runner job monitoring, create separate Healthchecks checks and set:
+
+```text
+RUNNER_HEALTHCHECKS_URL=
+STOCK_HEALTHCHECKS_URL=
+CANDIDATE_HEALTHCHECKS_URL=
+```
+
+Each configured job healthcheck receives `/start`, success, and `/fail` pings. Leave these blank if you do not use Healthchecks.
+
 ## Manual Run Without Service
 
 ```bash
