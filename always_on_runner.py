@@ -6,6 +6,8 @@ import os
 import signal
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Awaitable, Callable
 
 import requests
@@ -17,6 +19,7 @@ from main import setup_logging
 from scheduler import Scheduler
 from stocks.scanner import discover_candidates, hourly_scan, load_stock_config
 from stocks.research_db import StockResearchDB
+from telegram_commands import CommandContext, TelegramCommandCenter
 
 
 @dataclass
@@ -28,6 +31,8 @@ class JobState:
     running: bool = False
     last_rc: int | None = None
     last_error: str = ""
+    last_started_at: str = ""
+    last_finished_at: str = ""
 
 
 def _env_int(name: str, default: int) -> int:
@@ -47,6 +52,10 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value in {"1", "true", "yes", "on"}
 
 
+def _utc_stamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
 class AlwaysOnRunner:
     def __init__(self) -> None:
         self.settings = load_settings()
@@ -54,12 +63,14 @@ class AlwaysOnRunner:
         self.log = logging.getLogger(__name__)
         self.stop_event = asyncio.Event()
         self.active_tasks: set[asyncio.Task[None]] = set()
+        self.scheduled_paused = False
 
         self.public_interval = _env_int("RUNNER_PUBLIC_INTERVAL_SECONDS", 300)
         self.stock_interval = _env_int("RUNNER_STOCK_INTERVAL_SECONDS", 3600)
         self.candidate_interval = _env_int("RUNNER_CANDIDATE_INTERVAL_SECONDS", 259200)
         self.run_stock_scan = _env_bool("RUNNER_ENABLE_STOCK_SCAN", True)
         self.run_candidate_refresh = _env_bool("RUNNER_ENABLE_CANDIDATE_REFRESH", True)
+        self.enable_telegram_commands = _env_bool("RUNNER_ENABLE_TELEGRAM_COMMANDS", True)
         self.sleep_seconds = _env_int("RUNNER_LOOP_SLEEP_SECONDS", 5)
         self.runner_healthcheck_url = os.getenv("RUNNER_HEALTHCHECKS_URL", "").strip()
         self.stock_healthcheck_url = os.getenv("STOCK_HEALTHCHECKS_URL", "").strip()
@@ -71,7 +82,8 @@ class AlwaysOnRunner:
         self.scheduler = Scheduler(self.public_db, self.settings)
 
         stock_db_path = os.getenv("STOCK_SQLITE_PATH", "data/stocks.sqlite3")
-        self.stock_db = StockResearchDB(stock_db_path)
+        self.stock_db_path = Path(stock_db_path)
+        self.stock_db = StockResearchDB(self.stock_db_path)
         self.stock_db.init()
         self.stock_cfg = load_stock_config()
         self.telegram = TelegramClient(self.settings.telegram_bot_token, self.settings.telegram_chat_id)
@@ -97,6 +109,21 @@ class AlwaysOnRunner:
                     self._run_candidate_refresh,
                 )
             )
+        self.command_center = self._build_command_center()
+
+    def _build_command_center(self) -> TelegramCommandCenter | None:
+        if not self.enable_telegram_commands:
+            return None
+        context = CommandContext(
+            public_db_path=self.settings.sqlite_path,
+            stock_db_path=self.stock_db_path,
+            status=self._command_status,
+            run_public_now=self._command_run_public_now,
+            run_stock_now=self._command_run_stock_now,
+            pause=self._command_pause,
+            resume=self._command_resume,
+        )
+        return TelegramCommandCenter(self.settings.telegram_bot_token, self.settings.telegram_chat_id, context)
 
     def install_signal_handlers(self) -> None:
         loop = asyncio.get_running_loop()
@@ -109,27 +136,35 @@ class AlwaysOnRunner:
     async def run_forever(self) -> int:
         self.install_signal_handlers()
         self.log.info(
-            "Always-on runner started: public_interval=%ss stock_interval=%ss candidate_interval=%ss stock_enabled=%s candidate_enabled=%s",
+            "Always-on runner started: public_interval=%ss stock_interval=%ss candidate_interval=%ss stock_enabled=%s candidate_enabled=%s telegram_commands=%s",
             self.public_interval,
             self.stock_interval,
             self.candidate_interval,
             self.run_stock_scan,
             self.run_candidate_refresh,
+            bool(self.command_center),
         )
+
+        command_task: asyncio.Task[None] | None = None
+        if self.command_center:
+            command_task = asyncio.create_task(self.command_center.run_forever(self.stop_event))
 
         while not self.stop_event.is_set():
             self.active_tasks = {task for task in self.active_tasks if not task.done()}
-            now = time.monotonic()
-            for state, func in self.jobs:
-                if state.running or now < state.next_run_monotonic:
-                    continue
-                task = asyncio.create_task(self._run_job(state, func))
-                self.active_tasks.add(task)
+            if not self.scheduled_paused:
+                now = time.monotonic()
+                for state, func in self.jobs:
+                    if state.running or now < state.next_run_monotonic:
+                        continue
+                    task = asyncio.create_task(self._run_job(state, func))
+                    self.active_tasks.add(task)
             try:
                 await asyncio.wait_for(self.stop_event.wait(), timeout=self.sleep_seconds)
             except asyncio.TimeoutError:
                 pass
 
+        if command_task:
+            await asyncio.gather(command_task, return_exceptions=True)
         if self.active_tasks:
             self.log.info("Waiting for %s active job(s) to finish before stopping", len(self.active_tasks))
             await asyncio.gather(*self.active_tasks, return_exceptions=True)
@@ -138,6 +173,7 @@ class AlwaysOnRunner:
 
     async def _run_job(self, state: JobState, func: Callable[[], Awaitable[int]]) -> None:
         state.running = True
+        state.last_started_at = _utc_stamp()
         started = time.monotonic()
         state.last_error = ""
         self._health_start(state)
@@ -159,6 +195,7 @@ class AlwaysOnRunner:
             self.log.exception("Job failed: %s", state.name)
             self._health_fail(state, state.last_error)
         finally:
+            state.last_finished_at = _utc_stamp()
             state.running = False
             state.next_run_monotonic = started + state.interval_seconds
             if state.next_run_monotonic <= time.monotonic():
@@ -193,6 +230,60 @@ class AlwaysOnRunner:
 
     async def _run_candidate_refresh(self) -> int:
         return await asyncio.to_thread(discover_candidates, self.stock_cfg, self.stock_db, self.telegram)
+
+    def _state_for(self, name: str) -> tuple[JobState, Callable[[], Awaitable[int]]] | None:
+        for state, func in self.jobs:
+            if state.name == name:
+                return state, func
+        return None
+
+    async def _run_named_now(self, name: str) -> str:
+        found = self._state_for(name)
+        if not found:
+            return f"{name} is disabled."
+        state, func = found
+        if state.running:
+            return f"{name} is already running."
+        await self._run_job(state, func)
+        status = "OK" if state.last_rc == 0 else f"failed rc={state.last_rc}"
+        if state.last_error:
+            status += f" error={state.last_error[:300]}"
+        return f"Manual {name} finished: {status}"
+
+    def _command_status(self) -> str:
+        lines = [
+            "Market alert status",
+            f"Scheduled jobs: {'paused' if self.scheduled_paused else 'running'}",
+            f"Telegram commands: {'enabled' if self.command_center else 'disabled'}",
+        ]
+        now = time.monotonic()
+        for state, _ in self.jobs:
+            if state.running:
+                next_text = "running now"
+            else:
+                seconds = max(0, int(state.next_run_monotonic - now))
+                next_text = f"next in {seconds}s"
+            rc = "never" if state.last_rc is None else str(state.last_rc)
+            lines.append(
+                f"{state.name}: {next_text}, last rc={rc}, started={state.last_started_at or 'never'}, finished={state.last_finished_at or 'never'}"
+            )
+            if state.last_error:
+                lines.append(f"last error: {state.last_error[:300]}")
+        return "\n".join(lines)
+
+    async def _command_run_public_now(self) -> str:
+        return await self._run_named_now("public-figure-scan")
+
+    async def _command_run_stock_now(self) -> str:
+        return await self._run_named_now("stock-hourly-scan")
+
+    def _command_pause(self) -> str:
+        self.scheduled_paused = True
+        return "Scheduled scans are paused. Manual /run_public_now and /run_stock_now still work."
+
+    def _command_resume(self) -> str:
+        self.scheduled_paused = False
+        return "Scheduled scans are resumed."
 
 
 def main() -> int:
