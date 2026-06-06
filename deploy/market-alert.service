@@ -1,0 +1,23 @@
+[Unit]
+Description=Market alert always-on runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/trump-market-alert
+EnvironmentFile=/etc/market-alert.env
+ExecStart=/opt/trump-market-alert/.venv/bin/python /opt/trump-market-alert/always_on_runner.py
+Restart=always
+RestartSec=10
+User=market-alert
+Group=market-alert
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/trump-market-alert/data
+
+[Install]
+WantedBy=multi-user.target

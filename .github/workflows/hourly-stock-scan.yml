@@ -1,16 +1,14 @@
-name: Hourly Stock Research Scanner
+name: Hourly Stock Research Scanner - manual runner
 
-run-name: "Hourly stock scan - ${{ github.event_name }} - run #${{ github.run_number }}"
+run-name: "Hourly stock scan manual - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, cron-job.org, or test"
+        description: "manual, external runner, or test"
         required: false
         default: "manual"
-  schedule:
-    - cron: "13 * * * *"
 
 permissions:
   contents: read

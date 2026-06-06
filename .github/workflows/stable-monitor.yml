@@ -1,16 +1,14 @@
-name: Market-Moving Public Figure Alert - stable 5 minute monitor
+name: Market-Moving Public Figure Alert - manual runner
 
-run-name: "Public figure scan 5m - ${{ github.event_name }} - run #${{ github.run_number }}"
+run-name: "Public figure scan manual - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, cron-job.org, or test"
+        description: "manual, external runner, or test"
         required: false
         default: "manual"
-  schedule:
-    - cron: "*/5 * * * *"
 
 permissions:
   contents: read

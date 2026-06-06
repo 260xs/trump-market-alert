@@ -2,7 +2,7 @@
 
 This project has two independent scanners.
 
-1. **Public-figure alert scanner** — watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. It is scheduled every 5 minutes in GitHub Actions on a best-effort basis.
+1. **Public-figure alert scanner** — watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. The preferred 24/7 deployment is the always-on runner in `always_on_runner.py`, not GitHub scheduled workflows.
 2. **Short-term stock scanner** — checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, or place trades. Alerts are research signals only.
@@ -77,56 +77,40 @@ Short-term focus:
 1 week to 3 months
 ```
 
-## Stock alert meanings
+## Always-On Runner
 
-### Entry setup
+Use this for reliable monitoring instead of GitHub scheduled workflows:
 
-```text
-Signal: Good
-Model view: Buy
-Meaning: Rule-based short-term entry setup.
-Includes: entry trigger, exit/invalidation level, target, confidence, reason.
+```bash
+python always_on_runner.py
 ```
 
-### Exit/Risk setup
+Default cadence:
 
 ```text
-Signal: Bad
-Model view: Sell
-Meaning: Rule-based short-term risk or exit setup.
-Includes: sell/risk trigger, invalidation level, downside reference, confidence, reason.
+Public-figure scanner: every 5 minutes
+Stock scanner: every 60 minutes
+Candidate refresh: every 3 days
 ```
 
-### Short setup
+Deployment files live in:
 
 ```text
-Signal: Bad
-Model view: Short
-Meaning: Rule-based confirmed breakdown setup.
-Includes: short trigger, short invalidation / cover level, downside reference, confidence, reason.
+deploy/market-alert.service
+deploy/market-alert.env.example
+deploy/README.md
 ```
 
-### Hold
+The recommended host is an Oracle Cloud Always Free VM, a small VPS, or a PC/Mac that never sleeps. Free tiers that sleep are not true 24/7.
 
-```text
-Model view: Hold
-Meaning: No clear setup. Telegram stays silent.
-```
+## Manual GitHub Workflows
 
-These are mechanical technical research labels, not personal investment advice or instructions to trade.
-
-## Workflows
+GitHub Actions workflows are kept for manual runs and testing only. They do not use `schedule` triggers.
 
 Public figure scan:
 
 ```text
 .github/workflows/stable-monitor.yml
-```
-
-Runs around every 5 minutes on a GitHub Actions best-effort schedule:
-
-```text
-*/5 * * * *
 ```
 
 Hourly stock scan:
@@ -135,19 +119,11 @@ Hourly stock scan:
 .github/workflows/hourly-stock-scan.yml
 ```
 
-Runs around:
-
-```text
-:13 every hour
-```
-
-3-day stock candidate refresh:
+Stock candidate refresh:
 
 ```text
 .github/workflows/stock-candidate-refresh.yml
 ```
-
-Runs every 3 days around 06:31 UTC. It updates candidate tickers silently by default. Telegram alerts still only come from actionable hourly setups.
 
 Manual scanner run:
 
@@ -169,7 +145,7 @@ Sends exactly:
 ✅ Telegram test successful
 ```
 
-## GitHub secrets
+## GitHub Secrets / Environment Values
 
 Required:
 
@@ -186,7 +162,9 @@ X_BEARER_TOKEN
 HEALTHCHECKS_URL
 ```
 
-## Optional GitHub variables for live audio
+For the always-on runner, put these values in `/etc/market-alert.env` on the host. Do not commit real secrets.
+
+## Optional Live Audio
 
 ```text
 ENABLE_LIVE_AUDIO=true
@@ -196,7 +174,7 @@ LIVE_SAMPLE_SECONDS=90
 
 Live audio uses `yt-dlp`, `ffmpeg`, and `faster-whisper`. Live alerts are marked as provisional and include the approximate live minute.
 
-## Local run
+## Local Run
 
 Install:
 
@@ -219,6 +197,12 @@ Hourly stock scan:
 python -m stocks.scanner --mode hourly
 ```
 
+Always-on runner:
+
+```bash
+python always_on_runner.py
+```
+
 3-day candidate refresh:
 
 ```bash
@@ -231,16 +215,15 @@ python -m stocks.scanner --mode discover
 pytest
 ```
 
-## Important limitations
+## Important Limitations
 
-GitHub Actions scheduled jobs are free and useful, but they are not guaranteed to start exactly on time. A 5-minute cron is the fastest practical GitHub Actions schedule, but it can still be delayed or skipped during platform load. For the most reliable always-on system, run this project on an always-on VM or a PC running 24/7.
+GitHub Actions scheduled jobs are not reliable enough for time-sensitive monitoring, so scheduled triggers are intentionally disabled. For the most reliable always-on system, run `always_on_runner.py` on an always-on VM or a PC running 24/7.
 
 The stock scanner uses public market data through `yfinance`. Free market data can be delayed, incomplete, or temporarily unavailable.
 
 Nothing here is financial advice. Verify every alert manually before making any decision.
 
-
-## Developer validation
+## Developer Validation
 
 For local tests, install dev dependencies:
 
@@ -249,7 +232,6 @@ python -m pip install -r requirements.txt -r requirements-stocks.txt -r requirem
 python -m pytest -q
 ```
 
-
-## Senior audit notes
+## Senior Audit Notes
 
 See `docs/AUDIT_NOTES.md` for the fixes made during the final audit.

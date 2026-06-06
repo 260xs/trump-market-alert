@@ -1,16 +1,14 @@
-name: 3-Day Stock Candidate Refresh
+name: Stock Candidate Refresh - manual runner
 
-run-name: "3-day candidate refresh - ${{ github.event_name }} - run #${{ github.run_number }}"
+run-name: "Candidate refresh manual - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, cron-job.org, or test"
+        description: "manual, external runner, or test"
         required: false
         default: "manual"
-  schedule:
-    - cron: "31 6 */3 * *"
 
 permissions:
   contents: read
