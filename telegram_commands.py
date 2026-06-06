@@ -68,6 +68,7 @@ class TelegramCommandCenter:
         if not self.enabled:
             log.info("Telegram command center disabled because Telegram is not configured")
             return
+        await asyncio.to_thread(self._discard_old_updates)
         log.info("Telegram command center started")
         while not stop_event.is_set():
             try:
@@ -83,16 +84,23 @@ class TelegramCommandCenter:
                     pass
         log.info("Telegram command center stopped")
 
-    def _get_updates(self) -> list[dict[str, Any]]:
+    def _discard_old_updates(self) -> None:
+        updates = self._get_updates(timeout=0)
+        if updates:
+            self.offset = max(int(update.get("update_id", 0)) for update in updates) + 1
+            log.info("Skipped %s old Telegram update(s) on startup", len(updates))
+
+    def _get_updates(self, timeout: int | None = None) -> list[dict[str, Any]]:
+        poll_timeout = self.poll_timeout if timeout is None else timeout
         url = f"https://api.telegram.org/bot{self.token}/getUpdates"
         response = requests.get(
             url,
             params={
                 "offset": self.offset,
-                "timeout": self.poll_timeout,
+                "timeout": poll_timeout,
                 "allowed_updates": json.dumps(["message"]),
             },
-            timeout=self.poll_timeout + 10,
+            timeout=poll_timeout + 10,
         )
         response.raise_for_status()
         data = response.json()
