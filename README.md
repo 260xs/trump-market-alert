@@ -2,8 +2,8 @@
 
 This project has two independent scanners.
 
-1. **Public-figure alert scanner** — watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. The preferred 24/7 deployment is the always-on runner in `always_on_runner.py`, not GitHub scheduled workflows.
-2. **Short-term stock scanner** — checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
+1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. The preferred 24/7 deployment is the always-on runner in `always_on_runner.py`, not GitHub scheduled workflows.
+2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, or place trades. Alerts are research signals only.
 
@@ -59,6 +59,7 @@ Confidence is High or Medium
 Trigger level exists
 Exit/invalidation level exists
 Duplicate protection passed
+Telegram delivery succeeds
 ```
 
 The stock scanner does **not** send:
@@ -76,6 +77,44 @@ Short-term focus:
 ```text
 1 week to 3 months
 ```
+
+## Stock alert meanings
+
+Entry setup:
+
+```text
+Signal: Good
+Model view: Buy
+Meaning: Rule-based short-term entry setup.
+Includes: entry trigger, exit/invalidation level, target, confidence, reason.
+```
+
+Exit/risk setup:
+
+```text
+Signal: Bad
+Model view: Sell
+Meaning: Rule-based short-term risk or exit setup.
+Includes: exit/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
+```
+
+Short setup:
+
+```text
+Signal: Bad
+Model view: Short
+Meaning: Rule-based confirmed breakdown setup.
+Includes: short/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
+```
+
+Hold:
+
+```text
+Model view: Hold
+Meaning: No clear setup. Telegram stays silent.
+```
+
+These are mechanical technical research labels, not personal investment advice or instructions to trade.
 
 ## Always-On Runner
 
@@ -102,6 +141,19 @@ deploy/README.md
 ```
 
 The recommended host is an Oracle Cloud Always Free VM, a small VPS, or a PC/Mac that never sleeps. Free tiers that sleep are not true 24/7.
+
+## Healthchecks
+
+Optional healthcheck environment values:
+
+```text
+HEALTHCHECKS_URL
+RUNNER_HEALTHCHECKS_URL
+STOCK_HEALTHCHECKS_URL
+CANDIDATE_HEALTHCHECKS_URL
+```
+
+`HEALTHCHECKS_URL` is used by the public scheduler. The runner-specific URLs let you monitor public, stock, and candidate jobs independently. Leave them blank if you do not use Healthchecks.
 
 ## Manual GitHub Workflows
 
