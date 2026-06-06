@@ -347,41 +347,36 @@ def analyze_bars(
 
 def _action_message(setup: StockSetup) -> str:
     if setup.setup_type == "Entry":
-        icon = "📈"
-        title = "Short-Term Stock Entry Setup"
-        trigger_label = "Entry trigger"
-        exit_label = "Exit / invalidation level"
-        target_label = "Research target"
-    elif setup.model_view == "Short":
-        icon = "📉"
-        title = "Short-Term Stock Short Setup"
-        trigger_label = "Short trigger"
-        exit_label = "Short invalidation / cover level"
-        target_label = "Downside reference"
-    else:
-        icon = "📉"
-        title = "Short-Term Stock Exit/Risk Setup"
-        trigger_label = "Sell/risk trigger"
-        exit_label = "Recovery / invalidation level"
-        target_label = "Downside reference"
+        return (
+            "📈 Short-Term Stock Entry Setup\n\n"
+            f"Ticker:\n{setup.ticker}\n\n"
+            "Model view:\nBuy\n\n"
+            "Signal:\nGood\n\n"
+            f"Confidence:\n{setup.confidence}\n\n"
+            f"Timeframe:\n{setup.timeframe}\n\n"
+            f"Last price:\n{_money(setup.last_price)}\n\n"
+            f"Entry trigger:\n{_money(setup.trigger_level)}\n\n"
+            f"Exit / invalidation level:\n{_money(setup.exit_level)}\n\n"
+            f"Research target:\n{_money(setup.target_level)}\n\n"
+            f"Risk:\n{_ratio(setup.risk_pct)}%\n\n"
+            f"Reason:\n{setup.reason}\n\n"
+            "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
+        )
 
     return (
-        f"{icon} {title}\n\n"
-        f"Ticker:\n{setup.ticker} — {setup.name}\n\n"
-        f"Model view (research only):\n{setup.model_view}\n\n"
-        f"Signal quality:\n{setup.signal}\n\n"
+        "📉 Short-Term Stock Exit/Risk Setup\n\n"
+        f"Ticker:\n{setup.ticker}\n\n"
+        f"Model view:\n{setup.model_view}\n\n"
+        "Signal:\nBad\n\n"
         f"Confidence:\n{setup.confidence}\n\n"
         f"Timeframe:\n{setup.timeframe}\n\n"
         f"Last price:\n{_money(setup.last_price)}\n\n"
-        f"{trigger_label}:\n{_money(setup.trigger_level)}\n\n"
-        f"{exit_label}:\n{_money(setup.exit_level)}\n\n"
-        f"{target_label}:\n{_money(setup.target_level)}\n\n"
-        f"Risk/reward reference:\n{_ratio(setup.risk_reward)}R\n\n"
-        f"Trigger-to-exit risk:\n{_ratio(setup.risk_pct)}%\n\n"
-        f"Indicators:\n"
-        f"RSI14 {_money(setup.rsi_14)} | EMA8 {_money(setup.ema_8)} | EMA21 {_money(setup.ema_21)} | EMA50 {_money(setup.ema_50)} | Volume ratio {_pct(setup.volume_ratio_20)}\n\n"
-        f"Why this alert was sent:\n{setup.reason}\n\n"
-        "Warning:\nResearch only. This is not financial advice and not an instruction to buy, sell, short, hold, or trade. Verify chart, news, liquidity, spread, and risk before acting."
+        f"Exit/risk trigger:\n{_money(setup.trigger_level)}\n\n"
+        f"Invalidation / recovery level:\n{_money(setup.exit_level)}\n\n"
+        f"Downside reference:\n{_money(setup.target_level)}\n\n"
+        f"Risk:\n{_ratio(setup.risk_pct)}%\n\n"
+        f"Reason:\n{setup.reason}\n\n"
+        "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
     )
 
 
@@ -453,9 +448,16 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
             continue
         if db.seen_ticker_signal_recent(setup.ticker, setup.signal, silence_hours):
             continue
+        if not telegram.enabled:
+            log.warning("Actionable stock setup skipped because Telegram is not configured: %s", setup.setup_key)
+            continue
 
-        if telegram.enabled:
+        try:
             telegram.send_text(_action_message(setup))
+        except Exception:
+            log.exception("Telegram stock alert failed; setup will not be recorded as sent: %s", setup.setup_key)
+            raise
+
         db.store_alert(setup.ticker, setup.signal, setup.setup_key, asdict(setup))
         sent += 1
         if sent >= max_alerts:
@@ -524,7 +526,7 @@ def discover_candidates(cfg: dict[str, Any], db: StockResearchDB, telegram: Tele
     # Candidate refresh is silent by default. Telegram is reserved for actionable
     # High/Medium confidence entry or exit/risk setups from the hourly scanner.
     if telegram.enabled and top and bool(settings.get("send_candidate_refresh_telegram", False)):
-        lines = [f"{i}. {x['ticker']} — score {x['score']}, 20d {x['return_20d_pct']}%, 60d {x['return_60d_pct']}%" for i, x in enumerate(top, 1)]
+        lines = [f"{i}. {x['ticker']} - score {x['score']}, 20d {x['return_20d_pct']}%, 60d {x['return_60d_pct']}%" for i, x in enumerate(top, 1)]
         telegram.send_text(
             "🔎 3-Day Stock Candidate Refresh\n\n"
             + "\n".join(lines)
