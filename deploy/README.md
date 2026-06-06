@@ -74,6 +74,34 @@ systemctl status market-alert.service
 journalctl -u market-alert.service -f
 ```
 
+## Telegram Command Center
+
+The command center is free and runs inside the same always-on process. It only responds to `TELEGRAM_CHAT_ID`.
+
+Set:
+
+```text
+RUNNER_ENABLE_TELEGRAM_COMMANDS=true
+```
+
+Then send `/menu` to the bot from the configured Telegram chat.
+
+Commands:
+
+```text
+/status
+/last_alert
+/last_public
+/last_stock
+/run_public_now
+/run_stock_now
+/pause
+/resume
+/menu
+```
+
+If the bot has an existing webhook configured elsewhere, Telegram long polling may not work until that webhook is removed.
+
 ## Healthchecks
 
 For basic public scanner health, set:

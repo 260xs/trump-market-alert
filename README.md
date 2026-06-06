@@ -78,6 +78,32 @@ Short-term focus:
 1 week to 3 months
 ```
 
+## Telegram Command Center
+
+The always-on runner includes a free private Telegram command menu. It uses the same `TELEGRAM_BOT_TOKEN` and only responds to the configured `TELEGRAM_CHAT_ID`.
+
+Enable or disable it with:
+
+```text
+RUNNER_ENABLE_TELEGRAM_COMMANDS=true
+```
+
+Available commands:
+
+```text
+/status - runner, last runs, and pause state
+/last_alert - latest public or stock alert
+/last_public - latest public-figure alert
+/last_stock - latest stock setup alert
+/run_public_now - run the public scanner once
+/run_stock_now - run the stock scanner once
+/pause - pause scheduled runner jobs
+/resume - resume scheduled runner jobs
+/menu - show the command menu
+```
+
+Telegram commands cannot trade, connect to a broker, show secrets, change secrets, bypass public-source rules, or loosen alert thresholds.
+
 ## Stock alert meanings
 
 Entry setup:
@@ -212,6 +238,9 @@ Optional:
 DISCORD_WEBHOOK_URL
 X_BEARER_TOKEN
 HEALTHCHECKS_URL
+RUNNER_HEALTHCHECKS_URL
+STOCK_HEALTHCHECKS_URL
+CANDIDATE_HEALTHCHECKS_URL
 ```
 
 For the always-on runner, put these values in `/etc/market-alert.env` on the host. Do not commit real secrets.
