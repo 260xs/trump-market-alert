@@ -1,0 +1,205 @@
+name: Manual Run All Scanners
+
+run-name: "Manual run all scanners - ${{ github.event_name }} - run #${{ github.run_number }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_public_figure_scan:
+        description: "Run the public-figure scanner"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      run_stock_scan:
+        description: "Run the hourly stock scanner"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      run_candidate_refresh:
+        description: "Run the 3-day candidate refresh too"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: manual-run-all-scanners
+  cancel-in-progress: false
+
+env:
+  RUN_ONCE: "true"
+  LOG_LEVEL: INFO
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_INPUT: "1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SQLITE_PATH: data/market_alerts.sqlite3
+  STOCK_SQLITE_PATH: data/stocks.sqlite3
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+  HEALTHCHECKS_URL: ${{ secrets.HEALTHCHECKS_URL }}
+  ENABLE_LIVE_AUDIO: ${{ vars.ENABLE_LIVE_AUDIO || 'false' }}
+  ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'false' }}
+  LIVE_SAMPLE_SECONDS: ${{ vars.LIVE_SAMPLE_SECONDS || '90' }}
+
+jobs:
+  manual-run-all:
+    name: Run selected scanners once
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Show trigger info
+        run: |
+          echo "Triggered by: ${GITHUB_EVENT_NAME}"
+          echo "Run number: ${GITHUB_RUN_NUMBER}"
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Run public figure scan: ${{ github.event.inputs.run_public_figure_scan }}"
+          echo "Run stock scan: ${{ github.event.inputs.run_stock_scan }}"
+          echo "Run candidate refresh: ${{ github.event.inputs.run_candidate_refresh }}"
+
+      - name: Validate Telegram secrets
+        run: |
+          set -euo pipefail
+
+          test -n "${TELEGRAM_BOT_TOKEN}" || { echo "Missing TELEGRAM_BOT_TOKEN secret"; exit 1; }
+          test -n "${TELEGRAM_CHAT_ID}" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
+
+          if ! echo "${TELEGRAM_CHAT_ID}" | grep -Eq '^-?[0-9]+$'; then
+            echo "TELEGRAM_CHAT_ID must be a number."
+            exit 1
+          fi
+
+          echo "Required Telegram secrets exist."
+
+      - name: Check out project
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Prepare data directory
+        run: |
+          mkdir -p data
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            requirements-stocks.txt
+            requirements-live.txt
+
+      - name: Restore public scanner database cache
+        uses: actions/cache/restore@v5
+        with:
+          path: data
+          key: manual-run-all-db-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            public-alert-db-${{ github.ref_name }}-
+            stock-research-db-${{ github.ref_name }}-
+
+      - name: Install dependencies
+        run: |
+          timeout 240s python -m pip install --upgrade pip setuptools wheel
+          timeout 300s python -m pip install \
+            --requirement requirements.txt \
+            --requirement requirements-stocks.txt \
+            --prefer-binary \
+            --retries 5 \
+            --timeout 45
+          python -m pip check
+
+      - name: Install live audio dependencies
+        if: env.ENABLE_LIVE_AUDIO == 'true' && github.event.inputs.run_public_figure_scan == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          timeout 480s python -m pip install \
+            --requirement requirements-live.txt \
+            --prefer-binary \
+            --retries 5 \
+            --timeout 60
+          python -m pip check
+
+      - name: Import check
+        run: |
+          python - <<'PY'
+          import main
+          import pipeline
+          import scheduler
+          import stocks.scanner
+          print("Manual run all import check passed")
+          PY
+
+      - name: Run public-figure scanner once
+        if: github.event.inputs.run_public_figure_scan == 'true'
+        run: |
+          timeout --foreground 780s python main.py
+
+      - name: Run hourly stock scanner once
+        if: github.event.inputs.run_stock_scan == 'true'
+        run: |
+          timeout --foreground 480s python -m stocks.scanner --mode hourly
+
+      - name: Refresh stock candidates once
+        if: github.event.inputs.run_candidate_refresh == 'true'
+        run: |
+          timeout --foreground 720s python -m stocks.scanner --mode discover
+
+      - name: Save scanner database cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: data
+          key: manual-run-all-db-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Send Telegram failure alert
+        if: failure()
+        run: |
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "Telegram secrets missing; cannot send failure alert."
+            exit 0
+          fi
+
+          MSG="$(printf '%s\n' \
+            "🚨 Manual scanner run failed" \
+            "" \
+            "Workflow: ${GITHUB_WORKFLOW}" \
+            "Trigger: ${GITHUB_EVENT_NAME}" \
+            "Run: #${GITHUB_RUN_NUMBER}" \
+            "Branch: ${GITHUB_REF_NAME}" \
+            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
+            "" \
+            "Logs:" \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+
+          curl --fail --silent --show-error \
+            --max-time 20 \
+            --retry 2 \
+            --retry-delay 5 \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=${MSG}" \
+            --data-urlencode "disable_web_page_preview=true" \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" || true

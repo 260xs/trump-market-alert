@@ -4,11 +4,6 @@ run-name: "Telegram test - run #${{ github.run_number }}"
 
 on:
   workflow_dispatch:
-    inputs:
-      custom_message:
-        description: "Optional custom test message"
-        required: false
-        default: "Telegram test successful"
 
 permissions:
   contents: read
@@ -19,7 +14,7 @@ defaults:
 
 jobs:
   telegram-test:
-    name: Send Telegram test message
+    name: Send exact Telegram test message
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
@@ -55,47 +50,19 @@ jobs:
 
           echo "Telegram bot token is valid."
 
-      - name: Send Telegram test message
+      - name: Send exact Telegram test message
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          CUSTOM_MESSAGE: ${{ github.event.inputs.custom_message }}
         run: |
           set -euo pipefail
-
-          NOW_UTC="$(date -u '+%Y-%m-%d %H:%M:%S')"
-
-          MSG="$(printf '%s\n' \
-            "✅ ${CUSTOM_MESSAGE}" \
-            "" \
-            "System:" \
-            "Telegram notifications are working." \
-            "" \
-            "Repository:" \
-            "${GITHUB_REPOSITORY}" \
-            "" \
-            "Workflow:" \
-            "${GITHUB_WORKFLOW}" \
-            "" \
-            "Run:" \
-            "#${GITHUB_RUN_NUMBER}" \
-            "" \
-            "Trigger:" \
-            "${GITHUB_EVENT_NAME}" \
-            "" \
-            "Time UTC:" \
-            "${NOW_UTC}" \
-            "" \
-            "Result:" \
-            "Your Telegram bot token and chat ID are valid." \
-          )"
 
           curl --fail --silent --show-error \
             --max-time 20 \
             --retry 3 \
             --retry-delay 2 \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
+            --data-urlencode "text=✅ Telegram test successful" \
             --data-urlencode "disable_web_page_preview=true" \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
 
