@@ -2,7 +2,7 @@
 
 This project has two independent scanners.
 
-1. **Public-figure alert scanner** — watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. It runs every 20 minutes in GitHub Actions.
+1. **Public-figure alert scanner** — watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. It is scheduled every 5 minutes in GitHub Actions on a best-effort basis.
 2. **Short-term stock scanner** — checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, or place trades. Alerts are research signals only.
@@ -123,10 +123,10 @@ Public figure scan:
 .github/workflows/stable-monitor.yml
 ```
 
-Runs around every 20 minutes:
+Runs around every 5 minutes on a GitHub Actions best-effort schedule:
 
 ```text
-:07, :27, :47
+*/5 * * * *
 ```
 
 Hourly stock scan:
@@ -148,6 +148,26 @@ Runs around:
 ```
 
 Runs every 3 days around 06:31 UTC. It updates candidate tickers silently by default. Telegram alerts still only come from actionable hourly setups.
+
+Manual scanner run:
+
+```text
+.github/workflows/manual-run-all.yml
+```
+
+Runs selected scanners once from the GitHub Actions tab.
+
+Telegram test:
+
+```text
+.github/workflows/telegram-test.yml
+```
+
+Sends exactly:
+
+```text
+✅ Telegram test successful
+```
 
 ## GitHub secrets
 
@@ -213,7 +233,7 @@ pytest
 
 ## Important limitations
 
-GitHub Actions scheduled jobs are free and useful, but they are not guaranteed to start exactly on time. For the most reliable always-on system, run this project on an always-on VM.
+GitHub Actions scheduled jobs are free and useful, but they are not guaranteed to start exactly on time. A 5-minute cron is the fastest practical GitHub Actions schedule, but it can still be delayed or skipped during platform load. For the most reliable always-on system, run this project on an always-on VM or a PC running 24/7.
 
 The stock scanner uses public market data through `yfinance`. Free market data can be delayed, incomplete, or temporarily unavailable.
 
