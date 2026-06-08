@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import sqlite3
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -25,10 +26,15 @@ MENU_TEXT = """Telegram control menu
 /last_alert - latest public or stock alert
 /last_public - latest public-figure alert
 /last_stock - latest stock setup alert
-/run_public_now - run the public scanner once
-/run_stock_now - run the stock scanner once
-/pause - pause scheduled runner jobs
-/resume - resume scheduled runner jobs
+/run_public_now - run the local public scanner once
+/run_stock_now - run the local stock scanner once
+/pause - pause scheduled local runner jobs
+/resume - resume scheduled local runner jobs
+/github_public - trigger GitHub public scanner workflow
+/github_stock - trigger GitHub stock scanner workflow
+/github_all - trigger GitHub manual all-scanners workflow
+/github_candidates - trigger GitHub candidate refresh workflow
+/github_telegram_test - trigger GitHub Telegram test workflow
 /menu - show this menu
 
 Cannot do:
@@ -142,7 +148,43 @@ class TelegramCommandCenter:
             return self.context.pause()
         if command == "/resume":
             return self.context.resume()
+        if command == "/github_public":
+            return await asyncio.to_thread(self._dispatch_github_workflow, "stable-monitor.yml", {"trigger_source": "telegram"})
+        if command == "/github_stock":
+            return await asyncio.to_thread(self._dispatch_github_workflow, "hourly-stock-scan.yml", {"trigger_source": "telegram"})
+        if command == "/github_candidates":
+            return await asyncio.to_thread(self._dispatch_github_workflow, "stock-candidate-refresh.yml", {"trigger_source": "telegram"})
+        if command == "/github_all":
+            return await asyncio.to_thread(
+                self._dispatch_github_workflow,
+                "manual-run-all.yml",
+                {"run_public_figure_scan": "true", "run_stock_scan": "true", "run_candidate_refresh": "false"},
+            )
+        if command == "/github_telegram_test":
+            return await asyncio.to_thread(self._dispatch_github_workflow, "telegram-test.yml", {})
         return "Unknown command. Send /menu to see what I can do."
+
+    def _dispatch_github_workflow(self, workflow_file: str, inputs: dict[str, str]) -> str:
+        token = os.getenv("GITHUB_ACTIONS_TOKEN", "").strip()
+        repo = os.getenv("GITHUB_REPOSITORY", "260xs/trump-market-alert").strip()
+        ref = os.getenv("GITHUB_REF", "main").strip()
+        if not token:
+            return "GitHub workflow commands need GITHUB_ACTIONS_TOKEN in /etc/market-alert.env. Do not paste it in chat."
+        url = f"https://api.github.com/repos/{repo}/actions/workflows/{workflow_file}/dispatches"
+        response = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            json={"ref": ref, "inputs": inputs},
+            timeout=20,
+        )
+        if response.status_code == 204:
+            return f"Triggered GitHub workflow: {workflow_file} on {ref}."
+        message = response.text[:500]
+        return f"GitHub workflow trigger failed for {workflow_file}: HTTP {response.status_code} {message}"
 
     def _last_alert(self) -> str:
         public = self._last_public_alert()
