@@ -150,12 +150,12 @@ Use this for reliable monitoring instead of GitHub scheduled workflows:
 python always_on_runner.py
 ```
 
-Default cadence:
+Default free-tier cadence:
 
 ```text
 Public-figure scanner: every 5 minutes
-Stock scanner: every 60 minutes
-Candidate refresh: every 3 days
+Stock scanner: every 60 minutes during the configured US market window
+Candidate refresh: every 7 days
 ```
 
 Deployment files live in:
@@ -164,9 +164,26 @@ Deployment files live in:
 deploy/market-alert.service
 deploy/market-alert.env.example
 deploy/README.md
+docs/FREE_TIER_24_7.md
+docs/SETUP_STEP_BY_STEP.md
 ```
 
-The recommended host is an Oracle Cloud Always Free VM, a small VPS, or a PC/Mac that never sleeps. Free tiers that sleep are not true 24/7.
+The recommended host is one small Oracle Cloud Always Free Ampere A1 VM. A PC/Mac that never sleeps also works. Free tiers that sleep are not true 24/7.
+
+## Free-Tier Controls
+
+The runner has resource-friendly defaults for one tiny always-on VM:
+
+```text
+RUNNER_FREE_TIER_MODE=true
+RUNNER_PUBLIC_INTERVAL_SECONDS=300
+RUNNER_STOCK_MARKET_HOURS_ONLY=true
+RUNNER_CANDIDATE_INTERVAL_SECONDS=604800
+ENABLE_LIVE_AUDIO=false
+ENABLE_PROVISIONAL_LIVE_ALERTS=false
+```
+
+The systemd service also sets CPU and memory ceilings so the process stays small on free-tier hosts.
 
 ## Healthchecks
 
@@ -253,7 +270,7 @@ ENABLE_PROVISIONAL_LIVE_ALERTS=true
 LIVE_SAMPLE_SECONDS=90
 ```
 
-Live audio uses `yt-dlp`, `ffmpeg`, and `faster-whisper`. Live alerts are marked as provisional and include the approximate live minute.
+Live audio uses `yt-dlp`, `ffmpeg`, and `faster-whisper`. Keep it disabled on the smallest free VM unless you intentionally install and test the heavier stack. Live alerts are marked as provisional and include the approximate live minute.
 
 ## Local Run
 
@@ -284,7 +301,7 @@ Always-on runner:
 python always_on_runner.py
 ```
 
-3-day candidate refresh:
+Candidate refresh:
 
 ```bash
 python -m stocks.scanner --mode discover

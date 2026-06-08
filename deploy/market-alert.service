@@ -9,7 +9,7 @@ WorkingDirectory=/opt/trump-market-alert
 EnvironmentFile=/etc/market-alert.env
 ExecStart=/opt/trump-market-alert/.venv/bin/python /opt/trump-market-alert/always_on_runner.py
 Restart=always
-RestartSec=10
+RestartSec=30
 User=market-alert
 Group=market-alert
 
@@ -18,6 +18,11 @@ PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
 ReadWritePaths=/opt/trump-market-alert/data
+
+# Keep the service small on free-tier VMs. These are ceilings, not reservations.
+CPUQuota=50%
+MemoryMax=512M
+TasksMax=128
 
 [Install]
 WantedBy=multi-user.target

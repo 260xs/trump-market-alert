@@ -6,9 +6,10 @@ import os
 import signal
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, time as dt_time, timezone
 from pathlib import Path
 from typing import Awaitable, Callable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import requests
 
@@ -52,6 +53,37 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value in {"1", "true", "yes", "on"}
 
 
+def _env_time(name: str, default: str) -> dt_time:
+    value = os.getenv(name, default).strip() or default
+    try:
+        hour, minute = value.split(":", 1)
+        return dt_time(hour=int(hour), minute=int(minute))
+    except Exception:
+        fallback_hour, fallback_minute = default.split(":", 1)
+        return dt_time(hour=int(fallback_hour), minute=int(fallback_minute))
+
+
+def _env_weekdays(name: str, default: str) -> set[int]:
+    raw = os.getenv(name, default).strip() or default
+    days: set[int] = set()
+    for item in raw.split(","):
+        try:
+            day = int(item.strip())
+        except ValueError:
+            continue
+        if 0 <= day <= 6:
+            days.add(day)
+    return days or {0, 1, 2, 3, 4}
+
+
+def _env_zoneinfo(name: str, default: str) -> ZoneInfo:
+    value = os.getenv(name, default).strip() or default
+    try:
+        return ZoneInfo(value)
+    except ZoneInfoNotFoundError:
+        return ZoneInfo(default)
+
+
 def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
@@ -65,13 +97,19 @@ class AlwaysOnRunner:
         self.active_tasks: set[asyncio.Task[None]] = set()
         self.scheduled_paused = False
 
+        self.free_tier_mode = _env_bool("RUNNER_FREE_TIER_MODE", True)
         self.public_interval = _env_int("RUNNER_PUBLIC_INTERVAL_SECONDS", 300)
         self.stock_interval = _env_int("RUNNER_STOCK_INTERVAL_SECONDS", 3600)
-        self.candidate_interval = _env_int("RUNNER_CANDIDATE_INTERVAL_SECONDS", 259200)
+        self.candidate_interval = _env_int("RUNNER_CANDIDATE_INTERVAL_SECONDS", 604800)
         self.run_stock_scan = _env_bool("RUNNER_ENABLE_STOCK_SCAN", True)
         self.run_candidate_refresh = _env_bool("RUNNER_ENABLE_CANDIDATE_REFRESH", True)
         self.enable_telegram_commands = _env_bool("RUNNER_ENABLE_TELEGRAM_COMMANDS", True)
         self.sleep_seconds = _env_int("RUNNER_LOOP_SLEEP_SECONDS", 5)
+        self.stock_market_hours_only = _env_bool("RUNNER_STOCK_MARKET_HOURS_ONLY", True)
+        self.stock_market_tz = _env_zoneinfo("RUNNER_STOCK_MARKET_TIMEZONE", "America/New_York")
+        self.stock_market_open = _env_time("RUNNER_STOCK_MARKET_OPEN", "09:30")
+        self.stock_market_close = _env_time("RUNNER_STOCK_MARKET_CLOSE", "16:15")
+        self.stock_market_days = _env_weekdays("RUNNER_STOCK_MARKET_DAYS", "0,1,2,3,4")
         self.runner_healthcheck_url = os.getenv("RUNNER_HEALTHCHECKS_URL", "").strip()
         self.stock_healthcheck_url = os.getenv("STOCK_HEALTHCHECKS_URL", "").strip()
         self.candidate_healthcheck_url = os.getenv("CANDIDATE_HEALTHCHECKS_URL", "").strip()
@@ -83,9 +121,12 @@ class AlwaysOnRunner:
 
         stock_db_path = os.getenv("STOCK_SQLITE_PATH", "data/stocks.sqlite3")
         self.stock_db_path = Path(stock_db_path)
-        self.stock_db = StockResearchDB(self.stock_db_path)
-        self.stock_db.init()
-        self.stock_cfg = load_stock_config()
+        self.stock_db: StockResearchDB | None = None
+        self.stock_cfg = None
+        if self.run_stock_scan or self.run_candidate_refresh:
+            self.stock_db = StockResearchDB(self.stock_db_path)
+            self.stock_db.init()
+            self.stock_cfg = load_stock_config()
         self.telegram = TelegramClient(self.settings.telegram_bot_token, self.settings.telegram_chat_id)
 
         now = time.monotonic()
@@ -136,12 +177,14 @@ class AlwaysOnRunner:
     async def run_forever(self) -> int:
         self.install_signal_handlers()
         self.log.info(
-            "Always-on runner started: public_interval=%ss stock_interval=%ss candidate_interval=%ss stock_enabled=%s candidate_enabled=%s telegram_commands=%s",
+            "Always-on runner started: free_tier_mode=%s public_interval=%ss stock_interval=%ss candidate_interval=%ss stock_enabled=%s candidate_enabled=%s stock_market_hours_only=%s telegram_commands=%s",
+            self.free_tier_mode,
             self.public_interval,
             self.stock_interval,
             self.candidate_interval,
             self.run_stock_scan,
             self.run_candidate_refresh,
+            self.stock_market_hours_only,
             bool(self.command_center),
         )
 
@@ -226,10 +269,26 @@ class AlwaysOnRunner:
         return await self.scheduler.run_once()
 
     async def _run_stock_scan(self) -> int:
+        if self.stock_market_hours_only and not self._within_stock_market_window():
+            self.log.info("Skipping stock scan outside configured stock market window")
+            return 0
+        if self.stock_cfg is None or self.stock_db is None:
+            self.log.warning("Stock scan requested but stock scanner is not initialized")
+            return 1
         return await asyncio.to_thread(hourly_scan, self.stock_cfg, self.stock_db, self.telegram)
 
     async def _run_candidate_refresh(self) -> int:
+        if self.stock_cfg is None or self.stock_db is None:
+            self.log.warning("Candidate refresh requested but stock scanner is not initialized")
+            return 1
         return await asyncio.to_thread(discover_candidates, self.stock_cfg, self.stock_db, self.telegram)
+
+    def _within_stock_market_window(self, now: datetime | None = None) -> bool:
+        local_now = now.astimezone(self.stock_market_tz) if now else datetime.now(self.stock_market_tz)
+        if local_now.weekday() not in self.stock_market_days:
+            return False
+        current = local_now.time().replace(second=0, microsecond=0)
+        return self.stock_market_open <= current <= self.stock_market_close
 
     def _state_for(self, name: str) -> tuple[JobState, Callable[[], Awaitable[int]]] | None:
         for state, func in self.jobs:
@@ -254,6 +313,8 @@ class AlwaysOnRunner:
         lines = [
             "Market alert status",
             f"Scheduled jobs: {'paused' if self.scheduled_paused else 'running'}",
+            f"Free-tier mode: {'enabled' if self.free_tier_mode else 'disabled'}",
+            f"Stock market-hours only: {'enabled' if self.stock_market_hours_only else 'disabled'}",
             f"Telegram commands: {'enabled' if self.command_center else 'disabled'}",
         ]
         now = time.monotonic()

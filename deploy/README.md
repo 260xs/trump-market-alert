@@ -4,23 +4,29 @@ Use this when GitHub Actions scheduled runs are not accurate enough.
 
 The always-on runner is a normal Python process. It runs continuously on an always-awake machine and uses the same strict alert gates as the GitHub workflows.
 
-Default cadence:
+Default free-tier cadence:
 
 ```text
 Public-figure scanner: every 5 minutes
-Stock scanner: every 60 minutes
-Candidate refresh: every 3 days
+Stock scanner: every 60 minutes during configured US market hours
+Candidate refresh: every 7 days
 ```
 
 Recommended hosts:
 
 ```text
-Oracle Cloud Always Free VM
+Oracle Cloud Always Free Ampere A1 VM
 A small paid VPS
 A home PC or Mac that never sleeps
 ```
 
 Free app hosts that sleep are not true 24/7 runners.
+
+For the free Oracle sizing guide, see:
+
+```text
+docs/FREE_TIER_24_7.md
+```
 
 ## Install Outline
 
@@ -38,6 +44,7 @@ Clone or copy the repo into `/opt/trump-market-alert`, then install dependencies
 cd /opt/trump-market-alert
 python3 -m venv .venv
 . .venv/bin/activate
+export PIP_NO_CACHE_DIR=1
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt -r requirements-stocks.txt
 ```
@@ -138,7 +145,24 @@ The runner reads these environment variables:
 ```text
 RUNNER_PUBLIC_INTERVAL_SECONDS=300
 RUNNER_STOCK_INTERVAL_SECONDS=3600
-RUNNER_CANDIDATE_INTERVAL_SECONDS=259200
+RUNNER_STOCK_MARKET_HOURS_ONLY=true
+RUNNER_STOCK_MARKET_TIMEZONE=America/New_York
+RUNNER_STOCK_MARKET_OPEN=09:30
+RUNNER_STOCK_MARKET_CLOSE=16:15
+RUNNER_STOCK_MARKET_DAYS=0,1,2,3,4
+RUNNER_CANDIDATE_INTERVAL_SECONDS=604800
 ```
 
 Keep public scans at 300 seconds or higher unless the source APIs and Telegram behavior are known to be stable. The alert gates still prevent Telegram spam, but source providers may rate-limit overly aggressive polling.
+
+## Free-Tier Hard Limits
+
+The systemd unit sets:
+
+```text
+CPUQuota=50%
+MemoryMax=512M
+TasksMax=128
+```
+
+These are ceilings, not resource reservations. They help keep the service small on a free VM. If you later enable heavier live transcription, raise these limits intentionally and monitor usage.

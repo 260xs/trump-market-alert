@@ -27,8 +27,10 @@ if [ ! -d ".venv" ]; then
 fi
 
 . .venv/bin/activate
+export PIP_NO_CACHE_DIR=1
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt -r requirements-stocks.txt
+python -m pip cache purge >/dev/null 2>&1 || true
 
 mkdir -p data
 chown -R "${SERVICE_USER}:${SERVICE_USER}" data
@@ -48,6 +50,6 @@ systemctl enable market-alert.service
 echo "Install finished."
 echo "Next:"
 echo "1. Edit ${ENV_FILE}"
-echo "2. Run: python ${APP_DIR}/scripts/check_setup.py --env-file ${ENV_FILE} --clear-telegram-webhook --send-telegram-test"
+echo "2. Run: cd ${APP_DIR} && . .venv/bin/activate && python scripts/check_setup.py --env-file ${ENV_FILE} --clear-telegram-webhook --send-telegram-test"
 echo "3. Run: sudo systemctl restart market-alert.service"
 echo "4. Send /menu to your Telegram bot"

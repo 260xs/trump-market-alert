@@ -2,11 +2,26 @@
 
 This project can be controlled from Telegram for free, but it still needs one always-on machine.
 
-Good free/low-cost options:
+Best free option:
 
-- Oracle Cloud Always Free VM
-- a home PC/Mac that never sleeps
-- any small Linux VPS
+```text
+Oracle Cloud Always Free Ampere A1 VM
+```
+
+Recommended free sizing:
+
+```text
+1 OCPU
+1 GB to 2 GB RAM
+One VM only
+Live audio off
+```
+
+See the free-tier guide first if you have not created the VM yet:
+
+```text
+docs/FREE_TIER_24_7.md
+```
 
 Do not use a sleeping free app host if you need true 24/7 monitoring.
 
@@ -48,6 +63,17 @@ Set:
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 TELEGRAM_CHAT_ID=your_chat_id_here
 RUNNER_ENABLE_TELEGRAM_COMMANDS=true
+```
+
+Keep the free-tier defaults unless you know you need to change them:
+
+```text
+RUNNER_FREE_TIER_MODE=true
+RUNNER_PUBLIC_INTERVAL_SECONDS=300
+RUNNER_STOCK_MARKET_HOURS_ONLY=true
+RUNNER_CANDIDATE_INTERVAL_SECONDS=604800
+ENABLE_LIVE_AUDIO=false
+ENABLE_PROVISIONAL_LIVE_ALERTS=false
 ```
 
 Do not paste real secret values into chat, GitHub files, screenshots, or logs.
