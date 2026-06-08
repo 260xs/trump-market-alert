@@ -96,6 +96,7 @@ class AlwaysOnRunner:
         self.stop_event = asyncio.Event()
         self.active_tasks: set[asyncio.Task[None]] = set()
         self.scheduled_paused = False
+        self.force_stock_scan_once = False
 
         self.free_tier_mode = _env_bool("RUNNER_FREE_TIER_MODE", True)
         self.public_interval = _env_int("RUNNER_PUBLIC_INTERVAL_SECONDS", 300)
@@ -269,7 +270,7 @@ class AlwaysOnRunner:
         return await self.scheduler.run_once()
 
     async def _run_stock_scan(self) -> int:
-        if self.stock_market_hours_only and not self._within_stock_market_window():
+        if self.stock_market_hours_only and not self.force_stock_scan_once and not self._within_stock_market_window():
             self.log.info("Skipping stock scan outside configured stock market window")
             return 0
         if self.stock_cfg is None or self.stock_db is None:
@@ -336,7 +337,11 @@ class AlwaysOnRunner:
         return await self._run_named_now("public-figure-scan")
 
     async def _command_run_stock_now(self) -> str:
-        return await self._run_named_now("stock-hourly-scan")
+        self.force_stock_scan_once = True
+        try:
+            return await self._run_named_now("stock-hourly-scan")
+        finally:
+            self.force_stock_scan_once = False
 
     def _command_pause(self) -> str:
         self.scheduled_paused = True
