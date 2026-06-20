@@ -6,8 +6,8 @@ settings:
   min_setup_confidence: Medium
   # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
   allow_short_model_view: true
-  duplicate_silence_hours: 24
-  max_alerts_per_run: 5
+  duplicate_silence_hours: 36
+  max_alerts_per_run: 3
   min_successful_scans: 1
 
   # Short-term focus: 1 week to 3 months.
@@ -22,8 +22,8 @@ settings:
   # 3-day discovery job.
   discovery_period: 6mo
   discovery_interval: 1d
-  max_scan_symbols_per_run: 35
-  top_candidate_count: 5
+  max_scan_symbols_per_run: 60
+  top_candidate_count: 8
 
   # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
   breakout_lookback_bars: 20
@@ -67,20 +67,54 @@ universe:
   - TSLA
   - AMD
   - AVGO
+  - INTC
+  - MU
+  - TSM
+  - ASML
+  - QCOM
+  - ARM
+  - MRVL
   - PLTR
   - COIN
   - SMCI
   - ORCL
   - CRM
+  - NOW
+  - SNOW
+  - PANW
+  - CRWD
   - NFLX
+  - DIS
   - JPM
   - BAC
+  - GS
+  - MS
   - XOM
   - CVX
+  - OXY
+  - COP
+  - GE
+  - BA
+  - CAT
+  - DE
+  - LMT
+  - NOC
+  - UNH
+  - LLY
+  - NVO
+  - PFE
+  - WMT
+  - COST
+  - HD
+  - MCD
   - GLD
   - SLV
   - USO
   - QQQ
   - SPY
+  - IWM
+  - DIA
   - SOXX
+  - XLF
+  - XLE
   - ARKK
