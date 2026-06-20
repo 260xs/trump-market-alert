@@ -4,7 +4,7 @@ run-name: "Public figure scan - ${{ github.event_name }} - run #${{ github.run_n
 
 on:
   schedule:
-    - cron: "7,27,47 * * * *"
+    - cron: "2,12,22,32,42,52 * * * *"
   workflow_dispatch:
     inputs:
       trigger_source:
@@ -30,7 +30,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'true' }}
 
   SQLITE_PATH: data/market_alerts.sqlite3
 
@@ -58,6 +58,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Schedule: public figure scan every 10 minutes, best effort"
           echo "Live audio enabled: ${ENABLE_LIVE_AUDIO}"
           echo "Live sample seconds: ${LIVE_SAMPLE_SECONDS}"
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"

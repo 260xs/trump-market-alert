@@ -4,7 +4,7 @@ run-name: "Candidate refresh - ${{ github.event_name }} - run #${{ github.run_nu
 
 on:
   schedule:
-    - cron: "31 6 */3 * *"
+    - cron: "31 9 * * *"
   workflow_dispatch:
     inputs:
       trigger_source:
@@ -29,7 +29,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'true' }}
 
   STOCK_SQLITE_PATH: data/stocks.sqlite3
 
@@ -47,6 +47,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Schedule: candidate refresh daily at 09:31 UTC, best effort"
           echo "Candidate refresh Telegram is disabled by default."
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
@@ -97,8 +98,8 @@ jobs:
 
       - name: Refresh top stock candidates
         env:
-          TELEGRAM_BOT_TOKEN: ""
-          TELEGRAM_CHAT_ID: ""
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           timeout --foreground 720s python -m stocks.scanner --mode discover
 
@@ -121,7 +122,7 @@ jobs:
           fi
 
           MSG="$(printf '%s\n' \
-            "🚨 3-day stock candidate refresh failed" \
+            "🚨 Daily stock candidate refresh failed" \
             "" \
             "Workflow: ${GITHUB_WORKFLOW}" \
             "Trigger: ${GITHUB_EVENT_NAME}" \

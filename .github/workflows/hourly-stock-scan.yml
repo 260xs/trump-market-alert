@@ -1,10 +1,10 @@
 name: Hourly Stock Research Scanner
 
-run-name: "Hourly stock scan - ${{ github.event_name }} - run #${{ github.run_number }}"
+run-name: "Stock scan - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
   schedule:
-    - cron: "13 * * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch:
     inputs:
       trigger_source:
@@ -20,7 +20,7 @@ defaults:
     shell: bash
 
 concurrency:
-  group: hourly-stock-research-scanner
+  group: stock-research-scanner
   cancel-in-progress: false
 
 env:
@@ -29,13 +29,13 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'true' }}
 
   STOCK_SQLITE_PATH: data/stocks.sqlite3
 
 jobs:
-  hourly-stock-scan:
-    name: Scan priority stocks hourly
+  stock-scan:
+    name: Scan priority stocks every 30 minutes
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
@@ -47,6 +47,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Schedule: stock scan every 30 minutes, best effort"
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Validate Telegram secrets
@@ -109,7 +110,7 @@ jobs:
           print("Stock scanner import check passed")
           PY
 
-      - name: Run hourly stock scanner
+      - name: Run stock scanner
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -135,7 +136,7 @@ jobs:
           fi
 
           MSG="$(printf '%s\n' \
-            "🚨 Hourly stock scanner failed" \
+            "🚨 Stock scanner failed" \
             "" \
             "Workflow: ${GITHUB_WORKFLOW}" \
             "Trigger: ${GITHUB_EVENT_NAME}" \
