@@ -6,8 +6,8 @@ settings:
   min_setup_confidence: Medium
   # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
   allow_short_model_view: true
-  duplicate_silence_hours: 36
-  max_alerts_per_run: 3
+  duplicate_silence_hours: 24
+  max_alerts_per_run: 5
   min_successful_scans: 1
 
   # Short-term focus: 1 week to 3 months.
@@ -22,7 +22,8 @@ settings:
   # 3-day discovery job.
   discovery_period: 6mo
   discovery_interval: 1d
-  max_scan_symbols_per_run: 60
+  # Keep this modest for free GitHub Actions/yfinance reliability. Increase only after runs are stable.
+  max_scan_symbols_per_run: 45
   top_candidate_count: 8
 
   # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
@@ -56,6 +57,7 @@ priority_stocks:
 
 # Free scanner universe. It is not literally every stock in the world.
 # Add/remove tickers here any time. The 3-day discovery job ranks this universe.
+# The scheduled refresh scans only the first max_scan_symbols_per_run names per run.
 universe:
   - NVDA
   - NOK
@@ -67,46 +69,50 @@ universe:
   - TSLA
   - AMD
   - AVGO
-  - INTC
-  - MU
-  - TSM
-  - ASML
-  - QCOM
-  - ARM
-  - MRVL
   - PLTR
   - COIN
   - SMCI
   - ORCL
   - CRM
-  - NOW
-  - SNOW
-  - PANW
-  - CRWD
   - NFLX
-  - DIS
   - JPM
   - BAC
   - GS
   - MS
   - XOM
   - CVX
-  - OXY
   - COP
-  - GE
-  - BA
-  - CAT
-  - DE
-  - LMT
-  - NOC
-  - UNH
+  - SLB
   - LLY
-  - NVO
-  - PFE
+  - UNH
+  - JNJ
+  - MRK
   - WMT
   - COST
   - HD
-  - MCD
+  - CAT
+  - DE
+  - BA
+  - RTX
+  - LMT
+  - GE
+  - MU
+  - INTC
+  - QCOM
+  - TSM
+  - ARM
+  - ASML
+  - SHOP
+  - SNOW
+  - NOW
+  - CRWD
+  - PANW
+  - UBER
+  - RIVN
+  - F
+  - GM
+  - DIS
+  - NKE
   - GLD
   - SLV
   - USO
@@ -115,6 +121,10 @@ universe:
   - IWM
   - DIA
   - SOXX
+  - XLK
   - XLF
   - XLE
+  - XLI
+  - XLV
+  - TLT
   - ARKK

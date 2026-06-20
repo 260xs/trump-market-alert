@@ -1,11 +1,11 @@
 # Market-Moving Public Figure + Short-Term Stock Alert System
 
-This project has two independent scanners.
+This project has two independent scanners that send Telegram only when strict alert rules pass.
 
-1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets. The preferred 24/7 deployment is the always-on runner in `always_on_runner.py`, not GitHub scheduled workflows.
+1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets.
 2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
 
-This is **not** a trading bot. It does not buy, sell, short, hold, or place trades. Alerts are research signals only.
+This is **not** a trading bot. It does not buy, sell, short, hold, connect to a broker, or place trades. Alerts are research signals only and use legal public information.
 
 ## Public figures currently enabled
 
@@ -32,7 +32,7 @@ Good = strong positive direct statement
 Bad = strong negative direct statement
 ```
 
-No Telegram alert is sent for neutral statements, vague mentions, inferred-only topics, unclear ticker mapping, or low-confidence quotes.
+No Telegram alert is sent for neutral statements, vague mentions, inferred-only topics, unclear ticker mapping, duplicate quotes, rumors, unverified clips, or low-confidence quotes.
 
 ## Stock scanner behavior
 
@@ -49,6 +49,8 @@ NVDA
 NOK
 ```
 
+The broader research universe is also listed in `config/stocks.yaml`. The candidate refresh ranks that universe, but it is silent by default and does not send candidate-list Telegram messages.
+
 The stock scanner is strict. Telegram is silent unless all of these are true:
 
 ```text
@@ -58,6 +60,7 @@ Model view is Buy, Sell, or Short
 Confidence is High or Medium
 Trigger level exists
 Exit/invalidation level exists
+Risk/reward exists
 Duplicate protection passed
 Telegram delivery succeeds
 ```
@@ -68,6 +71,7 @@ The stock scanner does **not** send:
 Neutral summaries
 Weak setups
 Low-confidence setups
+Hold views
 Repeated duplicate setups
 Candidate refresh lists by default
 ```
@@ -78,9 +82,66 @@ Short-term focus:
 1 week to 3 months
 ```
 
+## GitHub Actions MVP Deployment
+
+GitHub Actions scheduled workflows are the current MVP deployment path. GitHub schedules are best-effort and can be delayed, but they are a low-cost way to keep the Telegram-only system running.
+
+Scheduled workflows:
+
+```text
+.github/workflows/stable-monitor.yml
+  Public-figure scanner: 7,27,47 * * * *
+
+.github/workflows/hourly-stock-scan.yml
+  Hourly stock scanner: 13 * * * *
+
+.github/workflows/stock-candidate-refresh.yml
+  Stock candidate refresh: 31 6 */3 * *
+```
+
+Manual workflow:
+
+```text
+.github/workflows/telegram-test.yml
+```
+
+The Telegram test workflow sends exactly:
+
+```text
+✅ Telegram test successful
+```
+
+Workflow failure Telegram alerts are off by default. To intentionally enable them, set repository variable:
+
+```text
+ENABLE_WORKFLOW_FAILURE_TELEGRAM=true
+```
+
+## GitHub Secrets / Environment Values
+
+Required for alert delivery:
+
+```text
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Optional:
+
+```text
+DISCORD_WEBHOOK_URL
+X_BEARER_TOKEN
+HEALTHCHECKS_URL
+RUNNER_HEALTHCHECKS_URL
+STOCK_HEALTHCHECKS_URL
+CANDIDATE_HEALTHCHECKS_URL
+```
+
+Do not commit real secrets. Use GitHub Secrets for scheduled workflows.
+
 ## Telegram Command Center
 
-The always-on runner includes a free private Telegram command menu. It uses the same `TELEGRAM_BOT_TOKEN` and only responds to the configured `TELEGRAM_CHAT_ID`.
+The always-on runner includes a private Telegram command menu. It uses the same `TELEGRAM_BOT_TOKEN` and only responds to the configured `TELEGRAM_CHAT_ID`.
 
 Enable or disable it with:
 
@@ -144,7 +205,7 @@ These are mechanical technical research labels, not personal investment advice o
 
 ## Always-On Runner
 
-Use this for reliable monitoring instead of GitHub scheduled workflows:
+For more reliable monitoring than GitHub's best-effort schedules, use the always-on runner on a small VM or a PC/Mac that never sleeps:
 
 ```bash
 python always_on_runner.py
@@ -168,7 +229,7 @@ docs/FREE_TIER_24_7.md
 docs/SETUP_STEP_BY_STEP.md
 ```
 
-The recommended host is one small Oracle Cloud Always Free Ampere A1 VM. A PC/Mac that never sleeps also works. Free tiers that sleep are not true 24/7.
+A true 24/7 later option is something like an Oracle Cloud Always Free Ampere A1 VM or a PC running 24/7. Free tiers that sleep should not be treated as true 24/7.
 
 ## Free-Tier Controls
 
@@ -197,70 +258,6 @@ CANDIDATE_HEALTHCHECKS_URL
 ```
 
 `HEALTHCHECKS_URL` is used by the public scheduler. The runner-specific URLs let you monitor public, stock, and candidate jobs independently. Leave them blank if you do not use Healthchecks.
-
-## Manual GitHub Workflows
-
-GitHub Actions workflows are kept for manual runs and testing only. They do not use `schedule` triggers.
-
-Public figure scan:
-
-```text
-.github/workflows/stable-monitor.yml
-```
-
-Hourly stock scan:
-
-```text
-.github/workflows/hourly-stock-scan.yml
-```
-
-Stock candidate refresh:
-
-```text
-.github/workflows/stock-candidate-refresh.yml
-```
-
-Manual scanner run:
-
-```text
-.github/workflows/manual-run-all.yml
-```
-
-Runs selected scanners once from the GitHub Actions tab.
-
-Telegram test:
-
-```text
-.github/workflows/telegram-test.yml
-```
-
-Sends exactly:
-
-```text
-✅ Telegram test successful
-```
-
-## GitHub Secrets / Environment Values
-
-Required:
-
-```text
-TELEGRAM_BOT_TOKEN
-TELEGRAM_CHAT_ID
-```
-
-Optional:
-
-```text
-DISCORD_WEBHOOK_URL
-X_BEARER_TOKEN
-HEALTHCHECKS_URL
-RUNNER_HEALTHCHECKS_URL
-STOCK_HEALTHCHECKS_URL
-CANDIDATE_HEALTHCHECKS_URL
-```
-
-For the always-on runner, put these values in `/etc/market-alert.env` on the host. Do not commit real secrets.
 
 ## Optional Live Audio
 
@@ -310,25 +307,17 @@ python -m stocks.scanner --mode discover
 ## Testing
 
 ```bash
-pytest
+python -m pip install -r requirements.txt -r requirements-stocks.txt -r requirements-dev.txt
+python -m pytest -q
 ```
 
 ## Important Limitations
 
-GitHub Actions scheduled jobs are not reliable enough for time-sensitive monitoring, so scheduled triggers are intentionally disabled. For the most reliable always-on system, run `always_on_runner.py` on an always-on VM or a PC running 24/7.
+GitHub Actions scheduled jobs are best-effort and may be delayed. For the most reliable always-on system, run `always_on_runner.py` on an always-on VM or a PC running 24/7.
 
 The stock scanner uses public market data through `yfinance`. Free market data can be delayed, incomplete, or temporarily unavailable.
 
 Nothing here is financial advice. Verify every alert manually before making any decision.
-
-## Developer Validation
-
-For local tests, install dev dependencies:
-
-```bash
-python -m pip install -r requirements.txt -r requirements-stocks.txt -r requirements-dev.txt
-python -m pytest -q
-```
 
 ## Senior Audit Notes
 

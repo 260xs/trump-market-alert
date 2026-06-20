@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from stocks.scanner import analyze_bars, hourly_scan
+from stocks.scanner import analyze_bars, discover_candidates, hourly_scan
 from stocks.research_db import StockResearchDB
 
 
@@ -113,7 +113,7 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
     assert "Short-Term Stock Entry Setup" in telegram.messages[0]
-    assert "Model view (research only):" in telegram.messages[0]
+    assert "Model view:" in telegram.messages[0]
     assert "Buy" in telegram.messages[0]
     assert "Entry trigger" in telegram.messages[0]
     assert "Exit / invalidation level" in telegram.messages[0]
@@ -121,3 +121,25 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     # Same setup should be suppressed by duplicate protection.
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
+
+
+def test_candidate_refresh_is_silent_by_default(monkeypatch, tmp_path: Path):
+    import stocks.scanner as scanner
+
+    bars = make_bars([100 + i * 0.4 for i in range(90)], volume=2_500_000)
+
+    def fake_fetch(_ticker, _period, _interval):
+        return bars
+
+    monkeypatch.setattr(scanner, "fetch_bars", fake_fetch)
+    db = StockResearchDB(tmp_path / "stocks.sqlite3")
+    db.init()
+    telegram = FakeTelegram()
+    cfg = {
+        "settings": {"max_scan_symbols_per_run": 5, "top_candidate_count": 3},
+        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "universe": ["NVDA", "NOK", "AAPL"],
+    }
+
+    assert discover_candidates(cfg, db, telegram) == 0
+    assert telegram.messages == []

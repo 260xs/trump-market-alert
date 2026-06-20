@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, external runner, or test"
+        description: "manual, schedule, external runner, or test"
         required: false
         default: "manual"
 
@@ -30,15 +30,18 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+
   SQLITE_PATH: data/market_alerts.sqlite3
+
   TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
   TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
   DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
   X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
   HEALTHCHECKS_URL: ${{ secrets.HEALTHCHECKS_URL }}
+
   ENABLE_LIVE_AUDIO: ${{ vars.ENABLE_LIVE_AUDIO || 'false' }}
   ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'false' }}
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
   LIVE_SAMPLE_SECONDS: ${{ vars.LIVE_SAMPLE_SECONDS || '90' }}
 
 jobs:
@@ -46,6 +49,7 @@ jobs:
     name: Run public-figure market alert scan
     runs-on: ubuntu-latest
     timeout-minutes: 18
+
     steps:
       - name: Show trigger info
         run: |
@@ -55,17 +59,27 @@ jobs:
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
           echo "Live audio enabled: ${ENABLE_LIVE_AUDIO}"
+          echo "Live sample seconds: ${LIVE_SAMPLE_SECONDS}"
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Ping Healthchecks start
         if: env.HEALTHCHECKS_URL != ''
-        run: curl --fail --silent --show-error --max-time 15 --retry 2 "${HEALTHCHECKS_URL%/}/start" || true
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 15 \
+            --retry 2 \
+            "${HEALTHCHECKS_URL%/}/start" || true
 
       - name: Validate required Telegram secrets
         run: |
           test -n "${TELEGRAM_BOT_TOKEN}" || { echo "Missing TELEGRAM_BOT_TOKEN secret"; exit 1; }
           test -n "${TELEGRAM_CHAT_ID}" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
-          echo "${TELEGRAM_CHAT_ID}" | grep -Eq '^-?[0-9]+$' || { echo "TELEGRAM_CHAT_ID must be a number."; exit 1; }
+
+          if ! echo "${TELEGRAM_CHAT_ID}" | grep -Eq '^-?[0-9]+$'; then
+            echo "TELEGRAM_CHAT_ID must be a number."
+            exit 1
+          fi
+
           echo "Required Telegram secrets exist."
 
       - name: Check out project
@@ -75,7 +89,8 @@ jobs:
           persist-credentials: false
 
       - name: Prepare data directory
-        run: mkdir -p data
+        run: |
+          mkdir -p data
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -91,12 +106,17 @@ jobs:
         with:
           path: data
           key: public-alert-db-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: public-alert-db-${{ github.ref_name }}-
+          restore-keys: |
+            public-alert-db-${{ github.ref_name }}-
 
       - name: Install core dependencies
         run: |
           timeout 180s python -m pip install --upgrade pip setuptools wheel
-          timeout 240s python -m pip install --requirement requirements.txt --prefer-binary --retries 5 --timeout 45
+          timeout 240s python -m pip install \
+            --requirement requirements.txt \
+            --prefer-binary \
+            --retries 5 \
+            --timeout 45
           python -m pip check
 
       - name: Install live audio dependencies
@@ -104,7 +124,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-          timeout 480s python -m pip install --requirement requirements-live.txt --prefer-binary --retries 5 --timeout 60
+          timeout 480s python -m pip install \
+            --requirement requirements-live.txt \
+            --prefer-binary \
+            --retries 5 \
+            --timeout 60
           python -m pip check
 
       - name: Import check
@@ -117,7 +141,8 @@ jobs:
           PY
 
       - name: Run public-figure market alert scan
-        run: timeout --foreground 780s python main.py
+        run: |
+          timeout --foreground 780s python main.py
 
       - name: Save SQLite database cache
         if: always()
@@ -128,27 +153,46 @@ jobs:
 
       - name: Ping Healthchecks success
         if: success() && env.HEALTHCHECKS_URL != ''
-        run: curl --fail --silent --show-error --max-time 15 --retry 2 "${HEALTHCHECKS_URL}" || true
+        run: |
+          curl --fail --silent --show-error \
+            --max-time 15 \
+            --retry 2 \
+            "${HEALTHCHECKS_URL}" || true
 
       - name: Ping Healthchecks failure
         if: failure() && env.HEALTHCHECKS_URL != ''
         run: |
-          curl --fail --silent --show-error --max-time 15 --retry 2 -X POST \
+          curl --fail --silent --show-error \
+            --max-time 15 \
+            --retry 2 \
+            -X POST \
             --data-binary "GitHub Actions run failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             "${HEALTHCHECKS_URL%/}/fail" || true
 
       - name: Send Telegram failure alert
         if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
         run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then exit 0; fi
-          MSG="🚨 Public-figure alert workflow failed
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "Telegram secrets missing; cannot send failure alert."
+            exit 0
+          fi
 
-Workflow: ${GITHUB_WORKFLOW}
-Trigger: ${GITHUB_EVENT_NAME}
-Run: #${GITHUB_RUN_NUMBER}
-Branch: ${GITHUB_REF_NAME}
-Logs: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          curl --fail --silent --show-error --max-time 20 --retry 2 --retry-delay 5 \
+          MSG="$(printf '%s\n' \
+            "🚨 Public-figure alert workflow failed" \
+            "" \
+            "Workflow: ${GITHUB_WORKFLOW}" \
+            "Trigger: ${GITHUB_EVENT_NAME}" \
+            "Run: #${GITHUB_RUN_NUMBER}" \
+            "Branch: ${GITHUB_REF_NAME}" \
+            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
+            "" \
+            "Logs:" \
+            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
+
+          curl --fail --silent --show-error \
+            --max-time 20 \
+            --retry 2 \
+            --retry-delay 5 \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
             --data-urlencode "text=${MSG}" \
             --data-urlencode "disable_web_page_preview=true" \
