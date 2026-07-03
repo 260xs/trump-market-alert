@@ -15,6 +15,7 @@ def test_scheduled_workflows_use_expected_crons() -> None:
         ".github/workflows/stable-monitor.yml": "7,27,47 * * * *",
         ".github/workflows/hourly-stock-scan.yml": "13 * * * *",
         ".github/workflows/stock-candidate-refresh.yml": "31 6 */3 * *",
+        ".github/workflows/telegram-test.yml": "5 13 * * *",
     }
 
     for path, cron in expected.items():
@@ -23,13 +24,15 @@ def test_scheduled_workflows_use_expected_crons() -> None:
         assert "workflow_dispatch" in workflow[True]
 
 
-def test_telegram_test_workflow_is_manual_only_and_exact() -> None:
+def test_telegram_test_workflow_sends_daily_exact_message() -> None:
     workflow = load_yaml(".github/workflows/telegram-test.yml")
-    assert workflow[True] == {"workflow_dispatch": None}
+    assert workflow[True]["schedule"] == [{"cron": "5 13 * * *"}]
+    assert "workflow_dispatch" in workflow[True]
 
     workflow_text = (ROOT / ".github/workflows/telegram-test.yml").read_text(encoding="utf-8")
     assert 'text=✅ Telegram test successful' in workflow_text
     assert workflow_text.count('text=✅ Telegram test successful') == 1
+    assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
 
 
 def test_failure_telegram_alerts_are_opt_in() -> None:

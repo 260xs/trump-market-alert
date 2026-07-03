@@ -3,8 +3,8 @@
 This package was rebuilt after a full code review. The highest-impact fixes are:
 
 - Removed generated `__pycache__` and `.pytest_cache` artifacts from the release package.
-- Replaced unreliable GitHub scheduled monitoring with the always-on runner path.
-- Kept GitHub Actions workflows as manual-only validation and fallback tools.
+- Kept GitHub Actions scheduled monitoring as the current low-cost MVP path, with the always-on runner documented as the more reliable future path.
+- Enabled a daily Telegram heartbeat workflow that sends exactly `✅ Telegram test successful`.
 - Kept the public-figure scanner strict: Telegram sends only for direct, high-confidence Good/Bad statements with clear ticker mapping.
 - Kept the stock scanner hourly and silent unless a Medium/High confidence Buy, Sell, or Short setup exists.
 - Added an old-statement guard so a fresh database does not alert on stale posts.
@@ -19,4 +19,6 @@ This package was rebuilt after a full code review. The highest-impact fixes are:
 
 Remaining platform limitation:
 
-GitHub scheduled workflows are best-effort and are intentionally disabled. For better consistency, run `always_on_runner.py` on an always-on VM or a PC running 24/7.
+GitHub scheduled workflows are best-effort and may be delayed or dropped during high-load periods. For better consistency than GitHub Actions schedules, run `always_on_runner.py` on an always-on VM or a PC running 24/7.
+
+See also `docs/OPERATIONS_RELIABILITY.md` for current operations guidance and next improvements.
