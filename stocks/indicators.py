@@ -25,6 +25,20 @@ def ema(values: list[float], period: int) -> float | None:
     return ema_series(values, period)[-1]
 
 
+def macd(values: list[float], fast: int = 12, slow: int = 26, signal: int = 9) -> tuple[float | None, float | None, float | None]:
+    if len(values) < slow + signal:
+        return None, None, None
+    fast_series = ema_series(values, fast)
+    slow_series = ema_series(values, slow)
+    macd_series = [f - s for f, s in zip(fast_series, slow_series)]
+    signal_series = ema_series(macd_series, signal)
+    if not signal_series:
+        return None, None, None
+    macd_line = macd_series[-1]
+    signal_line = signal_series[-1]
+    return macd_line, signal_line, macd_line - signal_line
+
+
 def rsi(values: list[float], period: int = 14) -> float | None:
     if len(values) <= period:
         return None

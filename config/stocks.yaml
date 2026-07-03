@@ -22,9 +22,9 @@ settings:
   # 3-day discovery job.
   discovery_period: 6mo
   discovery_interval: 1d
-  # Keep this modest for free GitHub Actions/yfinance reliability. Increase only after runs are stable.
-  max_scan_symbols_per_run: 45
-  top_candidate_count: 8
+  # Wider scan for a bigger research circle while keeping Telegram capped and deduped.
+  max_scan_symbols_per_run: 90
+  top_candidate_count: 12
 
   # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
   breakout_lookback_bars: 20
@@ -36,6 +36,7 @@ settings:
   # Medium-confidence setups still need reasonable liquidity/volume confirmation.
   min_volume_ratio_medium: 0.85
   min_risk_reward: 1.8
+  # Hard cap for actionable stock alerts. Code also clamps this below 15% as a safety backstop.
   max_risk_pct: 9.0
 
   # Entry setup RSI window.
@@ -54,6 +55,60 @@ priority_stocks:
   - ticker: NOK
     name: Nokia
     priority: 10
+  - ticker: TSLA
+    name: Tesla
+    priority: 9
+  - ticker: AAPL
+    name: Apple
+    priority: 9
+  - ticker: MSFT
+    name: Microsoft
+    priority: 9
+  - ticker: GOOGL
+    name: Alphabet
+    priority: 9
+  - ticker: AMZN
+    name: Amazon
+    priority: 9
+  - ticker: META
+    name: Meta Platforms
+    priority: 9
+  - ticker: AMD
+    name: Advanced Micro Devices
+    priority: 9
+  - ticker: AVGO
+    name: Broadcom
+    priority: 9
+  - ticker: TSM
+    name: Taiwan Semiconductor
+    priority: 8
+  - ticker: ASML
+    name: ASML
+    priority: 8
+  - ticker: SMCI
+    name: Super Micro Computer
+    priority: 8
+  - ticker: PLTR
+    name: Palantir
+    priority: 8
+  - ticker: COIN
+    name: Coinbase
+    priority: 8
+  - ticker: JPM
+    name: JPMorgan Chase
+    priority: 8
+  - ticker: XOM
+    name: Exxon Mobil
+    priority: 8
+  - ticker: LLY
+    name: Eli Lilly
+    priority: 8
+  - ticker: QQQ
+    name: Nasdaq 100 ETF
+    priority: 8
+  - ticker: SPY
+    name: S&P 500 ETF
+    priority: 8
 
 # Free scanner universe. It is not literally every stock in the world.
 # Add/remove tickers here any time. The 3-day discovery job ranks this universe.
@@ -61,63 +116,120 @@ priority_stocks:
 universe:
   - NVDA
   - NOK
+  - TSLA
   - AAPL
   - MSFT
   - GOOGL
   - AMZN
   - META
-  - TSLA
   - AMD
   - AVGO
+  - TSM
+  - ASML
+  - SMCI
   - PLTR
   - COIN
-  - SMCI
+  - JPM
+  - XOM
+  - LLY
+  - QQQ
+  - SPY
   - ORCL
   - CRM
   - NFLX
-  - JPM
+  - MU
+  - INTC
+  - QCOM
+  - ARM
+  - MRVL
+  - AMAT
+  - LRCX
+  - KLAC
+  - TXN
+  - ADI
+  - PANW
+  - CRWD
+  - SNOW
+  - NOW
+  - SHOP
+  - UBER
+  - ABNB
+  - RBLX
+  - NET
+  - DDOG
+  - MDB
+  - VRT
+  - DELL
+  - HPE
+  - IBM
+  - CSCO
+  - ANET
   - BAC
   - GS
   - MS
-  - XOM
+  - C
+  - WFC
+  - BLK
+  - SCHW
+  - BX
+  - KKR
+  - V
+  - MA
+  - AXP
+  - PYPL
+  - SQ
+  - HOOD
   - CVX
   - COP
   - SLB
-  - LLY
+  - EOG
+  - OXY
+  - LNG
+  - ENPH
+  - FSLR
+  - NEE
   - UNH
   - JNJ
   - MRK
+  - ABBV
+  - PFE
+  - TMO
+  - ISRG
+  - MRNA
+  - GILD
   - WMT
   - COST
   - HD
+  - LOW
+  - TGT
+  - NKE
+  - SBUX
+  - MCD
+  - CMG
+  - DIS
   - CAT
   - DE
   - BA
   - RTX
   - LMT
   - GE
-  - MU
-  - INTC
-  - QCOM
-  - TSM
-  - ARM
-  - ASML
-  - SHOP
-  - SNOW
-  - NOW
-  - CRWD
-  - PANW
-  - UBER
+  - HON
+  - ETN
+  - URI
   - RIVN
   - F
   - GM
-  - DIS
-  - NKE
+  - TM
+  - STLA
+  - LCID
+  - ALB
+  - FCX
+  - NEM
   - GLD
   - SLV
   - USO
-  - QQQ
-  - SPY
+  - UNG
+  - URA
   - IWM
   - DIA
   - SOXX
@@ -126,5 +238,30 @@ universe:
   - XLE
   - XLI
   - XLV
+  - XLY
+  - XLP
+  - XLU
+  - XLB
+  - XLC
   - TLT
+  - HYG
+  - LQD
   - ARKK
+  - IBIT
+  - ETHE
+  - MSTR
+  - MARA
+  - RIOT
+  - CLSK
+  - GLXY
+  - RDDT
+  - APP
+  - DASH
+  - PINS
+  - SNAP
+  - ZM
+  - DOCU
+  - OKTA
+  - TEAM
+  - WDAY
+  - ZS

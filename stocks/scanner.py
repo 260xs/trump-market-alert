@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 from alerts.telegram import TelegramClient
-from stocks.indicators import atr, ema, rsi, sma
+from stocks.indicators import atr, ema, macd, rsi, sma
 from stocks.market_data import fetch_bars
 from stocks.research_db import StockResearchDB
 
@@ -44,6 +44,9 @@ class StockSetup:
     risk_pct: float | None
     reason: str
     setup_key: str
+    technical_score: int = 0
+    max_technical_score: int = 0
+    confirmations: str = ""
 
     @property
     def actionable(self) -> bool:
@@ -69,16 +72,16 @@ def _money(value: float | None) -> str:
     return f"{value:.2f}"
 
 
-def _pct(value: float | None) -> str:
-    if value is None:
-        return "n/a"
-    return f"{value:.2f}x"
-
-
 def _ratio(value: float | None) -> str:
     if value is None:
         return "n/a"
     return f"{value:.2f}"
+
+
+def _pct(value: float | None) -> str:
+    if value is None:
+        return "n/a"
+    return f"{value:.2f}%"
 
 
 def _avg(values: list[float]) -> float | None:
@@ -97,16 +100,38 @@ def _volume_ratio(bars: list[dict[str, Any]], period: int = 20) -> float | None:
     return vols[-1] / baseline
 
 
-def _daily_context(daily_bars: list[dict[str, Any]] | None) -> tuple[float | None, float | None, bool | None, bool | None]:
+def _return_pct(values: list[float], period: int) -> float | None:
+    if len(values) <= period or not values[-period - 1]:
+        return None
+    return (values[-1] / values[-period - 1] - 1) * 100
+
+
+def _slope_pct(values: list[float], period: int) -> float | None:
+    if len(values) <= period or not values[-period - 1]:
+        return None
+    return (values[-1] - values[-period - 1]) / values[-period - 1] * 100
+
+
+def _daily_context(daily_bars: list[dict[str, Any]] | None) -> dict[str, Any]:
     if not daily_bars or len(daily_bars) < 50:
-        return None, None, None, None
+        return {"ema20": None, "sma50": None, "sma200": None, "up": None, "down": None, "ret20": None, "ret60": None}
     closes = [float(b["close"]) for b in daily_bars]
     last = closes[-1]
     e20 = ema(closes, 20)
     s50 = sma(closes, 50)
-    daily_up = bool(e20 is not None and s50 is not None and last > e20 and e20 >= s50 * 0.98)
-    daily_down = bool(e20 is not None and s50 is not None and last < e20 and e20 <= s50 * 1.02)
-    return e20, s50, daily_up, daily_down
+    s200 = sma(closes, 200)
+    ret20 = _return_pct(closes, 20)
+    ret60 = _return_pct(closes, 60)
+    above_long = True if s200 is None else last > s200
+    below_long = True if s200 is None else last < s200
+    daily_up = bool(e20 is not None and s50 is not None and last > e20 and e20 >= s50 * 0.98 and above_long)
+    daily_down = bool(e20 is not None and s50 is not None and last < e20 and e20 <= s50 * 1.02 and below_long)
+    return {"ema20": e20, "sma50": s50, "sma200": s200, "up": daily_up, "down": daily_down, "ret20": ret20, "ret60": ret60}
+
+
+def _score(bits: list[tuple[bool, str]]) -> tuple[int, str]:
+    passed = [label for ok, label in bits if ok]
+    return len(passed), "; ".join(passed)
 
 
 def _neutral(
@@ -173,7 +198,13 @@ def analyze_bars(
     rsi14 = rsi(closes, 14)
     atr14 = atr(highs, lows, closes, 14)
     vol_ratio = _volume_ratio(bars, 20)
-    daily_ema20, daily_sma50, daily_up, daily_down = _daily_context(daily_bars)
+    macd_line, macd_signal, macd_hist = macd(closes)
+    ret10 = _return_pct(closes, 10)
+    ret20 = _return_pct(closes, 20)
+    ema21_slope = _slope_pct([ema(closes[: i + 1], 21) or closes[i] for i in range(len(closes))], 5)
+    daily = _daily_context(daily_bars)
+    daily_ema20 = daily["ema20"]
+    daily_sma50 = daily["sma50"]
 
     if ema8 is None or ema21 is None or ema50 is None or rsi14 is None or atr14 is None or atr14 <= 0:
         return _neutral(
@@ -203,7 +234,7 @@ def analyze_bars(
     min_vol_high = float(settings.get("min_volume_ratio_high", 1.10))
     min_vol_medium = float(settings.get("min_volume_ratio_medium", 0.85))
     min_rr = float(settings.get("min_risk_reward", 1.8))
-    max_risk_pct = float(settings.get("max_risk_pct", 9.0))
+    max_risk_pct = min(float(settings.get("max_risk_pct", 12.0)), 14.99)
 
     entry_rsi_min = float(settings.get("entry_rsi_min", 50))
     entry_rsi_high_min = float(settings.get("entry_rsi_high_min", 55))
@@ -211,16 +242,32 @@ def analyze_bars(
     exit_rsi_max = float(settings.get("exit_rsi_max", 46))
     exit_rsi_high_max = float(settings.get("exit_rsi_high_max", 40))
 
+    volume_high = vol_ratio is not None and vol_ratio >= min_vol_high
+    volume_ok = vol_ratio is not None and vol_ratio >= min_vol_medium
+
     entry_trigger = recent_high + breakout_buffer
     confirmed_breakout = last >= entry_trigger
     near_breakout = 0 <= (entry_trigger - last) <= near_trigger_atr
     uptrend = last > ema21 and ema8 > ema21 and ema21 >= ema50 * 0.985
     healthy_rsi = entry_rsi_min <= rsi14 <= entry_rsi_max
-    daily_context_ok = daily_up is True
-    volume_high = vol_ratio is not None and vol_ratio >= min_vol_high
-    volume_ok = vol_ratio is not None and vol_ratio >= min_vol_medium
+    macd_bullish = macd_hist is not None and macd_hist >= 0 and (macd_line or 0) >= (macd_signal or 0)
+    momentum_ok = (ret10 is None or ret10 > -4.0) and (ret20 is None or ret20 > -6.0)
+    ema_slope_ok = ema21_slope is None or ema21_slope >= -0.5
+    daily_context_ok = daily["up"] is True
 
-    if uptrend and healthy_rsi and daily_context_ok and volume_ok and (confirmed_breakout or near_breakout):
+    entry_bits = [
+        (uptrend, "EMA8 > EMA21 and price above EMA21"),
+        (healthy_rsi, "RSI14 is constructive but not extremely overbought"),
+        (daily_context_ok, "daily EMA/SMA context supports upside"),
+        (volume_ok, "volume is acceptable versus 20-period average"),
+        (confirmed_breakout or near_breakout, "clear breakout trigger exists"),
+        (macd_bullish, "MACD confirms short-term momentum"),
+        (momentum_ok, "10/20-period momentum is not weak"),
+        (ema_slope_ok, "EMA21 slope is stable or rising"),
+    ]
+    entry_score, entry_summary = _score(entry_bits)
+
+    if entry_score >= 6 and daily_context_ok and volume_ok and (confirmed_breakout or near_breakout):
         stop_candidate = min(ema21, recent_low + 0.20 * atr14)
         exit_level = min(stop_candidate, last - atr_mult * atr14)
         if exit_level >= entry_trigger:
@@ -229,23 +276,13 @@ def analyze_bars(
         target = entry_trigger + rr * risk
         rr_calc = (target - entry_trigger) / risk
         risk_pct = (risk / max(entry_trigger, 0.01)) * 100
-        confidence = "High" if confirmed_breakout and rsi14 >= entry_rsi_high_min and volume_high and daily_up is True else "Medium"
-        if rr_calc < min_rr or risk_pct > max_risk_pct:
+        confidence = "High" if entry_score >= 7 and confirmed_breakout and rsi14 >= entry_rsi_high_min and volume_high else "Medium"
+        if rr_calc < min_rr or risk_pct >= max_risk_pct:
             confidence = "Low"
-        reason_bits = [
-            "short-term uptrend is confirmed by EMA8 > EMA21",
-            "RSI is constructive but not extremely overbought",
-            "a clear entry trigger and exit/invalidation level are available",
-        ]
-        if confirmed_breakout:
-            reason_bits.append("price has confirmed the breakout trigger")
-        else:
-            reason_bits.append("price is close enough to the breakout trigger to monitor as an entry setup")
-        if daily_up is True:
-            reason_bits.append("daily context supports the short-term setup")
-        if volume_high:
-            reason_bits.append("volume confirms the move")
-        reason = "; ".join(reason_bits) + "."
+        reason = (
+            f"Research-only Buy setup passed {entry_score}/8 technical checks: {entry_summary}. "
+            f"Risk is capped below {max_risk_pct:.2f}% by config; risk/reward is {_ratio(rr_calc)}x."
+        )
         key = f"{ticker}:entry:{confidence}:{round(entry_trigger, 2)}:{round(exit_level, 2)}"
         return StockSetup(
             ticker,
@@ -271,6 +308,9 @@ def analyze_bars(
             risk_pct,
             reason,
             key,
+            entry_score,
+            8,
+            entry_summary,
         )
 
     exit_trigger = recent_low - breakout_buffer
@@ -278,29 +318,37 @@ def analyze_bars(
     weak_near_breakdown = 0 <= (last - exit_trigger) <= near_trigger_atr
     downtrend = last < ema21 and ema8 < ema21 and ema21 <= ema50 * 1.015
     weak_rsi = rsi14 <= exit_rsi_max
-    daily_risk_ok = daily_down is True
+    macd_bearish = macd_hist is not None and macd_hist <= 0 and (macd_line or 0) <= (macd_signal or 0)
+    downside_momentum = (ret10 is None or ret10 < 4.0) and (ret20 is None or ret20 < 6.0)
+    ema_slope_weak = ema21_slope is None or ema21_slope <= 0.5
+    daily_risk_ok = daily["down"] is True
 
-    if downtrend and weak_rsi and daily_risk_ok and volume_ok and (confirmed_breakdown or weak_near_breakdown):
+    exit_bits = [
+        (downtrend, "price below EMA21 with EMA8 below EMA21"),
+        (weak_rsi, "RSI14 is weak"),
+        (daily_risk_ok, "daily EMA/SMA context shows risk"),
+        (volume_ok, "volume is acceptable versus 20-period average"),
+        (confirmed_breakdown or weak_near_breakdown, "clear exit/risk trigger exists"),
+        (macd_bearish, "MACD confirms downside momentum"),
+        (downside_momentum, "10/20-period momentum is not strong"),
+        (ema_slope_weak, "EMA21 slope is flat or falling"),
+    ]
+    exit_score, exit_summary = _score(exit_bits)
+
+    if exit_score >= 6 and daily_risk_ok and volume_ok and (confirmed_breakdown or weak_near_breakdown):
         risk_invalid = max(ema21, recent_high - 0.20 * atr14, last + atr_mult * atr14)
         risk = max(risk_invalid - exit_trigger, 0.01)
         downside_reference = exit_trigger - rr * risk
         rr_calc = (exit_trigger - downside_reference) / risk
         risk_pct = (risk / max(exit_trigger, 0.01)) * 100
-        confidence = "High" if confirmed_breakdown and rsi14 <= exit_rsi_high_max and (volume_high or daily_down is True) else "Medium"
-        if rr_calc < min_rr or risk_pct > max_risk_pct:
+        confidence = "High" if exit_score >= 7 and confirmed_breakdown and rsi14 <= exit_rsi_high_max and (volume_high or daily_risk_ok) else "Medium"
+        if rr_calc < min_rr or risk_pct >= max_risk_pct:
             confidence = "Low"
-        reason_bits = [
-            "short-term risk is confirmed by price below EMA21",
-            "EMA8 is below EMA21",
-            "RSI is weak",
-            "a clear exit/risk trigger and invalidation level are available",
-        ]
-        if confirmed_breakdown:
-            reason_bits.append("price has confirmed the breakdown trigger")
-        if daily_down is True:
-            reason_bits.append("daily context also shows risk")
-        reason = "; ".join(reason_bits) + "."
         model_view = "Short" if confirmed_breakdown and bool(settings.get("allow_short_model_view", True)) else "Sell"
+        reason = (
+            f"Research-only {model_view} setup passed {exit_score}/8 technical checks: {exit_summary}. "
+            f"Risk is capped below {max_risk_pct:.2f}% by config; risk/reward is {_ratio(rr_calc)}x."
+        )
         key = f"{ticker}:exit:{model_view}:{confidence}:{round(exit_trigger, 2)}:{round(risk_invalid, 2)}"
         return StockSetup(
             ticker,
@@ -326,6 +374,9 @@ def analyze_bars(
             risk_pct,
             reason,
             key,
+            exit_score,
+            8,
+            exit_summary,
         )
 
     return _neutral(
@@ -346,11 +397,12 @@ def analyze_bars(
 
 
 def _action_message(setup: StockSetup) -> str:
+    checks = f"{setup.technical_score}/{setup.max_technical_score}" if setup.max_technical_score else "n/a"
     if setup.setup_type == "Entry":
         return (
             "📈 Short-Term Stock Entry Setup\n\n"
             f"Ticker:\n{setup.ticker}\n\n"
-            "Model view:\nBuy\n\n"
+            "Research view:\nBuy setup detected\n\n"
             "Signal:\nGood\n\n"
             f"Confidence:\n{setup.confidence}\n\n"
             f"Timeframe:\n{setup.timeframe}\n\n"
@@ -358,15 +410,17 @@ def _action_message(setup: StockSetup) -> str:
             f"Entry trigger:\n{_money(setup.trigger_level)}\n\n"
             f"Exit / invalidation level:\n{_money(setup.exit_level)}\n\n"
             f"Research target:\n{_money(setup.target_level)}\n\n"
-            f"Risk:\n{_ratio(setup.risk_pct)}%\n\n"
+            f"Risk if invalidated:\n{_pct(setup.risk_pct)}\n\n"
+            f"Risk/reward:\n{_ratio(setup.risk_reward)}x\n\n"
+            f"Technical checks:\n{checks}\n\n"
             f"Reason:\n{setup.reason}\n\n"
-            "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
+            "Warning:\nNot financial advice. This is a research signal only, not an instruction to buy, sell, short, hold, or trade."
         )
 
     return (
         "📉 Short-Term Stock Exit/Risk Setup\n\n"
         f"Ticker:\n{setup.ticker}\n\n"
-        f"Model view:\n{setup.model_view}\n\n"
+        f"Research view:\n{setup.model_view} risk setup detected\n\n"
         "Signal:\nBad\n\n"
         f"Confidence:\n{setup.confidence}\n\n"
         f"Timeframe:\n{setup.timeframe}\n\n"
@@ -374,9 +428,11 @@ def _action_message(setup: StockSetup) -> str:
         f"Exit/risk trigger:\n{_money(setup.trigger_level)}\n\n"
         f"Invalidation / recovery level:\n{_money(setup.exit_level)}\n\n"
         f"Downside reference:\n{_money(setup.target_level)}\n\n"
-        f"Risk:\n{_ratio(setup.risk_pct)}%\n\n"
+        f"Risk if invalidated:\n{_pct(setup.risk_pct)}\n\n"
+        f"Risk/reward:\n{_ratio(setup.risk_reward)}x\n\n"
+        f"Technical checks:\n{checks}\n\n"
         f"Reason:\n{setup.reason}\n\n"
-        "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
+        "Warning:\nNot financial advice. This is a research signal only, not an instruction to buy, sell, short, hold, or trade."
     )
 
 
@@ -409,6 +465,7 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
     max_alerts = int(settings.get("max_alerts_per_run", 5))
     silence_hours = int(settings.get("duplicate_silence_hours", 24))
     min_successful_scans = int(settings.get("min_successful_scans", 1))
+    max_risk_pct = min(float(settings.get("max_risk_pct", 12.0)), 14.99)
     sent = 0
     successful_data_scans = 0
     failed_scans = 0
@@ -422,12 +479,14 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
             setup = analyze_bars(ticker, ticker_names.get(ticker, ticker), bars, settings, daily_bars)
             db.store_scan(ticker, asdict(setup))
             log.info(
-                "Stock scan %s: signal=%s setup=%s model_view=%s confidence=%s actionable=%s reason=%s",
+                "Stock scan %s: signal=%s setup=%s model_view=%s confidence=%s checks=%s/%s actionable=%s reason=%s",
                 ticker,
                 setup.signal,
                 setup.setup_type,
                 setup.model_view,
                 setup.confidence,
+                setup.technical_score,
+                setup.max_technical_score,
                 setup.actionable,
                 setup.reason,
             )
@@ -442,7 +501,7 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
             continue
         if setup.risk_reward is None or setup.risk_reward < float(settings.get("min_risk_reward", 1.8)):
             continue
-        if setup.risk_pct is None or setup.risk_pct > float(settings.get("max_risk_pct", 9.0)):
+        if setup.risk_pct is None or setup.risk_pct >= max_risk_pct:
             continue
         if db.seen_recent(setup.setup_key, silence_hours):
             continue
@@ -484,11 +543,15 @@ def _discovery_score(ticker: str, bars: list[dict[str, Any]]) -> dict[str, Any] 
     ret20 = (closes[-1] / closes[-21] - 1) if len(closes) > 21 and closes[-21] else 0.0
     ret60 = (closes[-1] / closes[-61] - 1) if len(closes) > 61 and closes[-61] else 0.0
     s50 = sma(closes, 50) or last
+    s200 = sma(closes, 200)
+    macd_line, macd_signal, macd_hist = macd(closes)
     avg_vol20 = sum(vols[-20:]) / max(len(vols[-20:]), 1)
     trend_bonus = 1.0 if last > s50 else -0.5
+    long_trend_bonus = 0.75 if s200 is not None and last > s200 else 0.0
+    macd_bonus = 0.75 if macd_hist is not None and macd_line is not None and macd_signal is not None and macd_line > macd_signal else 0.0
     liquidity_score = min(avg_vol20 / 2_000_000, 3.0)
     momentum_score = (ret20 * 100) + (ret60 * 40)
-    score = momentum_score + liquidity_score + trend_bonus
+    score = momentum_score + liquidity_score + trend_bonus + long_trend_bonus + macd_bonus
     return {
         "ticker": ticker,
         "score": round(score, 3),
@@ -496,6 +559,8 @@ def _discovery_score(ticker: str, bars: list[dict[str, Any]]) -> dict[str, Any] 
         "return_20d_pct": round(ret20 * 100, 2),
         "return_60d_pct": round(ret60 * 100, 2),
         "above_sma50": last > s50,
+        "above_sma200": bool(s200 is not None and last > s200),
+        "macd_bullish": bool(macd_bonus),
         "avg_volume_20d": int(avg_vol20),
     }
 

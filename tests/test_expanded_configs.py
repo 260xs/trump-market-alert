@@ -1,0 +1,90 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import yaml
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_yaml(relative: str):
+    with (ROOT / relative).open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def test_watchlist_has_broader_market_mover_circle_and_unique_source_ids():
+    cfg = load_yaml("watchlist.yaml")
+    people = cfg.get("people", [])
+    ids = {person["id"] for person in people}
+
+    assert len(people) >= 20
+    assert {
+        "donald_trump",
+        "elon_musk",
+        "jensen_huang",
+        "jerome_powell",
+        "jamie_dimon",
+        "satya_nadella",
+        "sam_altman",
+        "michael_saylor",
+        "bill_ackman",
+    }.issubset(ids)
+
+    source_ids: list[str] = []
+    for person in people:
+        assert person.get("enabled") is True
+        assert person.get("allow_telegram_alerts") is True
+        for source in person.get("sources", []):
+            source_ids.append(source["id"])
+            assert source.get("enabled") is True
+            assert source.get("source_confidence") is not None
+            assert source.get("speaker_confidence") is not None
+    assert len(source_ids) == len(set(source_ids))
+
+
+def test_stock_universe_is_expanded_but_risk_capped():
+    cfg = load_yaml("config/stocks.yaml")
+    settings = cfg["settings"]
+    priority = [item["ticker"] for item in cfg["priority_stocks"]]
+    universe = cfg["universe"]
+
+    assert len(priority) >= 20
+    assert len(universe) >= 130
+    assert set(priority).issubset(set(universe))
+    assert len(universe) == len(set(universe))
+    assert settings["max_risk_pct"] < 15
+    assert settings["max_alerts_per_run"] <= 5
+    assert settings["send_hourly_summary"] is False
+    assert settings["send_candidate_refresh_telegram"] is False
+
+
+def test_asset_map_covers_expanded_priority_names_and_blocks_common_ambiguity():
+    cfg = load_yaml("config/asset_map.yaml")
+    mapped = {asset["ticker"] for asset in cfg.get("assets", [])}
+    blocked = {item["name"] for item in cfg.get("blocked_ambiguous", [])}
+
+    assert {
+        "NVDA",
+        "NOK",
+        "TSLA",
+        "AAPL",
+        "MSFT",
+        "GOOGL",
+        "AMZN",
+        "META",
+        "AMD",
+        "AVGO",
+        "TSM",
+        "ASML",
+        "SMCI",
+        "PLTR",
+        "COIN",
+        "JPM",
+        "XOM",
+        "LLY",
+        "QQQ",
+        "SPY",
+        "MSTR",
+    }.issubset(mapped)
+    assert {"Marvel", "X", "Meta", "F", "CAT", "ARM"}.issubset(blocked)

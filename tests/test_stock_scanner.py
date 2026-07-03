@@ -39,6 +39,11 @@ def test_entry_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert setup.confidence in {"High", "Medium"}
     assert setup.trigger_level is not None
     assert setup.exit_level is not None
+    assert setup.risk_reward is not None
+    assert setup.risk_pct is not None
+    assert setup.risk_pct < 15
+    assert setup.technical_score >= 6
+    assert setup.max_technical_score == 8
     assert "1 week to 3 months" in setup.timeframe
 
 
@@ -56,6 +61,11 @@ def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert setup.confidence in {"High", "Medium"}
     assert setup.trigger_level is not None
     assert setup.exit_level is not None
+    assert setup.risk_reward is not None
+    assert setup.risk_pct is not None
+    assert setup.risk_pct < 15
+    assert setup.technical_score >= 6
+    assert setup.max_technical_score == 8
     assert "1 week to 3 months" in setup.timeframe
 
 
@@ -113,10 +123,14 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
     assert "Short-Term Stock Entry Setup" in telegram.messages[0]
-    assert "Model view:" in telegram.messages[0]
-    assert "Buy" in telegram.messages[0]
+    assert "Research view:" in telegram.messages[0]
+    assert "Buy setup detected" in telegram.messages[0]
     assert "Entry trigger" in telegram.messages[0]
     assert "Exit / invalidation level" in telegram.messages[0]
+    assert "Risk if invalidated:" in telegram.messages[0]
+    assert "Risk/reward:" in telegram.messages[0]
+    assert "Technical checks:" in telegram.messages[0]
+    assert "research signal only" in telegram.messages[0]
 
     # Same setup should be suppressed by duplicate protection.
     assert hourly_scan(cfg, db, telegram) == 0

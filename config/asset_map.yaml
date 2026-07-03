@@ -4,7 +4,7 @@ assets:
     ticker: DELL
     asset_type: public_company
     confidence: 0.99
-    direct_patterns: ["\\bDell\\b", "\\bDell Technologies\\b"]
+    direct_patterns: ["\\bDell\\b", "\\bDell Technologies\\b", "\\bDELL\\b"]
     avoid_contexts: []
 
   - canonical: NVIDIA
@@ -87,6 +87,30 @@ assets:
     direct_patterns: ["\\bBroadcom\\b", "\\bAVGO\\b"]
     avoid_contexts: []
 
+  - canonical: Taiwan Semiconductor
+    aliases: [Taiwan Semiconductor, TSMC, Taiwan Semiconductor Manufacturing]
+    ticker: TSM
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bTaiwan Semiconductor\\b", "\\bTSMC\\b", "\\bTSM\\b"]
+    avoid_contexts: []
+
+  - canonical: ASML
+    aliases: [ASML, ASML Holding]
+    ticker: ASML
+    asset_type: public_company
+    confidence: 0.99
+    direct_patterns: ["\\bASML\\b", "\\bASML Holding\\b"]
+    avoid_contexts: []
+
+  - canonical: Super Micro Computer
+    aliases: [Super Micro Computer, Supermicro, Super Micro]
+    ticker: SMCI
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bSuper Micro Computer\\b", "\\bSupermicro\\b", "\\bSMCI\\b"]
+    avoid_contexts: []
+
   - canonical: Palantir
     aliases: [Palantir]
     ticker: PLTR
@@ -102,6 +126,78 @@ assets:
     confidence: 0.99
     direct_patterns: ["\\bCoinbase\\b", "\\bCOIN\\b"]
     avoid_contexts: []
+
+  - canonical: JPMorgan Chase
+    aliases: [JPMorgan, JPMorgan Chase, JP Morgan]
+    ticker: JPM
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bJPMorgan\\b", "\\bJPMorgan Chase\\b", "\\bJP Morgan\\b", "\\bJPM\\b"]
+    avoid_contexts: []
+
+  - canonical: Bank of America
+    aliases: [Bank of America, BofA]
+    ticker: BAC
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bBank of America\\b", "\\bBofA\\b", "\\bBAC\\b"]
+    avoid_contexts: []
+
+  - canonical: Goldman Sachs
+    aliases: [Goldman Sachs, Goldman]
+    ticker: GS
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bGoldman Sachs\\b", "\\bGoldman\\b", "\\bGS\\b"]
+    avoid_contexts: []
+
+  - canonical: Exxon Mobil
+    aliases: [Exxon, Exxon Mobil, ExxonMobil]
+    ticker: XOM
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bExxon\\b", "\\bExxon Mobil\\b", "\\bExxonMobil\\b", "\\bXOM\\b"]
+    avoid_contexts: []
+
+  - canonical: Chevron
+    aliases: [Chevron]
+    ticker: CVX
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bChevron\\b", "\\bCVX\\b"]
+    avoid_contexts: []
+
+  - canonical: Eli Lilly
+    aliases: [Eli Lilly, Lilly]
+    ticker: LLY
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bEli Lilly\\b", "\\bLLY\\b"]
+    avoid_contexts: []
+
+  - canonical: Netflix
+    aliases: [Netflix]
+    ticker: NFLX
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bNetflix\\b", "\\bNFLX\\b"]
+    avoid_contexts: []
+
+  - canonical: Oracle
+    aliases: [Oracle]
+    ticker: ORCL
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bOracle\\b", "\\bORCL\\b"]
+    avoid_contexts: ["oracle database error", "oracle card"]
+
+  - canonical: Marvell Technology
+    aliases: [Marvell, Marvell Technology]
+    ticker: MRVL
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bMarvell\\b", "\\bMarvell Technology\\b", "\\bMRVL\\b"]
+    avoid_contexts: ["Marvel", "Marvel Studios", "Marvel movie", "Marvel superhero"]
 
   - canonical: Bitcoin
     aliases: [Bitcoin, BTC]
@@ -127,6 +223,63 @@ assets:
     direct_patterns: ["\\bDogecoin\\b", "\\bDOGE\\b"]
     avoid_contexts: []
 
+  - canonical: Nasdaq 100
+    aliases: [Nasdaq 100, Nasdaq-100, QQQ]
+    ticker: QQQ
+    asset_type: index_etf
+    confidence: 0.96
+    direct_patterns: ["\\bNasdaq 100\\b", "\\bNasdaq-100\\b", "\\bQQQ\\b"]
+    avoid_contexts: []
+
+  - canonical: S&P 500
+    aliases: [S&P 500, SPX, SPY]
+    ticker: SPY
+    asset_type: index_etf
+    confidence: 0.96
+    direct_patterns: ["\\bS&P 500\\b", "\\bSPX\\b", "\\bSPY\\b"]
+    avoid_contexts: []
+
+  - canonical: Russell 2000
+    aliases: [Russell 2000, IWM]
+    ticker: IWM
+    asset_type: index_etf
+    confidence: 0.95
+    direct_patterns: ["\\bRussell 2000\\b", "\\bIWM\\b"]
+    avoid_contexts: []
+
+  - canonical: Semiconductor Sector
+    aliases: [semiconductors, semiconductor sector, chips, SOXX]
+    ticker: SOXX
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\bsemiconductors\\b", "\\bsemiconductor sector\\b", "\\bAI chips\\b", "\\bSOXX\\b"]
+    required_context_any: [market, markets, stocks, stock, earnings, export, exports, tariffs, demand, supply, AI]
+    avoid_contexts: []
+
+  - canonical: Technology Sector
+    aliases: [technology sector, tech stocks, XLK]
+    ticker: XLK
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\btechnology sector\\b", "\\btech stocks\\b", "\\bXLK\\b"]
+    avoid_contexts: []
+
+  - canonical: Banking Sector
+    aliases: [banks, banking sector, big banks]
+    ticker: XLF
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\bbanks\\b", "\\bbanking sector\\b", "\\bbig banks\\b", "\\bXLF\\b"]
+    avoid_contexts: []
+
+  - canonical: Energy Sector
+    aliases: [energy sector, energy stocks, XLE]
+    ticker: XLE
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\benergy sector\\b", "\\benergy stocks\\b", "\\bXLE\\b"]
+    avoid_contexts: []
+
   - canonical: Gold
     aliases: [Gold]
     ticker: GLD
@@ -145,13 +298,13 @@ assets:
     required_context_any: [price, prices, barrel, barrels, production, drilling, energy, market, markets, commodity, export, exports]
     avoid_contexts: ["olive oil", "cooking oil", "oil painting", "baby oil"]
 
-  - canonical: Banking Sector
-    aliases: [banks, banking sector, big banks]
-    ticker: XLF
-    asset_type: sector_etf
-    confidence: 0.95
-    direct_patterns: ["\\bbanks\\b", "\\bbanking sector\\b", "\\bbig banks\\b", "\\bXLF\\b"]
-    avoid_contexts: []
+  - canonical: MicroStrategy
+    aliases: [MicroStrategy, Strategy]
+    ticker: MSTR
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bMicroStrategy\\b", "\\bMSTR\\b"]
+    avoid_contexts: ["business strategy", "strategy meeting", "strategy document"]
 
 blocked_ambiguous:
   - name: Marvel
@@ -163,3 +316,12 @@ blocked_ambiguous:
   - name: Meta
     reason: Meta alone can be a general word. Require Meta Platforms, Facebook, or ticker META.
     patterns: ["\\bmeta\\b"]
+  - name: F
+    reason: Ticker-only F is too ambiguous in speech and text. Require Ford by company name for alerts.
+    patterns: ["\\bF\\b"]
+  - name: CAT
+    reason: Ticker-only CAT can mean the animal or ordinary word. Require Caterpillar by company name before mapping.
+    patterns: ["\\bCAT\\b"]
+  - name: ARM
+    reason: ARM can be a body part or verb. Require Arm Holdings or explicit market context before mapping.
+    patterns: ["\\bARM\\b"]

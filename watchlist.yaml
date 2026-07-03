@@ -1,11 +1,7 @@
 people:
   - id: donald_trump
     full_name: Donald J. Trump
-    aliases:
-      - Donald Trump
-      - President Trump
-      - Trump
-      - realDonaldTrump
+    aliases: [Donald Trump, President Trump, Trump, realDonaldTrump]
     role: President of the United States / political market mover
     category: political_leader
     market_impact_score: 10
@@ -27,7 +23,6 @@ people:
         source_confidence: 0.95
         speaker_confidence: 0.99
         url: https://truthsocial.com/@realDonaldTrump
-
       - id: trump_x_official
         platform: X official API
         source_type: x_api
@@ -37,8 +32,7 @@ people:
         source_confidence: 0.96
         speaker_confidence: 0.99
         username: realDonaldTrump
-        query: 'from:realDonaldTrump (Nvidia OR NVIDIA OR NVDA OR Nokia OR NOK OR Tesla OR TSLA OR Bitcoin OR BTC OR Apple OR AAPL OR Dell OR DELL OR stocks OR market OR oil OR gold OR banks) -is:retweet'
-
+        query: 'from:realDonaldTrump (Nvidia OR NVIDIA OR NVDA OR Nokia OR NOK OR Tesla OR TSLA OR Bitcoin OR BTC OR Apple OR AAPL OR Dell OR DELL OR stocks OR market OR oil OR gold OR banks OR tariffs OR rates OR Fed) -is:retweet'
       - id: trump_google_news_market
         platform: Google News RSS
         source_type: rss
@@ -47,8 +41,7 @@ people:
         polling_interval_seconds: 600
         source_confidence: 0.78
         speaker_confidence: 0.75
-        url: https://news.google.com/rss/search?q=Trump%20%28Nvidia%20OR%20NVDA%20OR%20Nokia%20OR%20NOK%20OR%20Bitcoin%20OR%20Tesla%20OR%20Dell%20OR%20stocks%20OR%20market%20OR%20oil%20OR%20gold%20OR%20banks%29&hl=en-US&gl=US&ceid=US:en
-
+        url: https://news.google.com/rss/search?q=Trump%20%28Nvidia%20OR%20NVDA%20OR%20Nokia%20OR%20NOK%20OR%20Bitcoin%20OR%20Tesla%20OR%20Dell%20OR%20stocks%20OR%20market%20OR%20oil%20OR%20gold%20OR%20banks%20OR%20tariffs%20OR%20rates%29&hl=en-US&gl=US&ceid=US:en
       - id: trump_youtube_channel
         platform: YouTube official/channel RSS
         source_type: youtube_rss
@@ -58,7 +51,6 @@ people:
         source_confidence: 0.88
         speaker_confidence: 0.86
         channel_id: UCAql2DyGU2un1Ei2nMYsqOA
-
       - id: rsbn_live_public
         platform: RSBN / public livestream
         source_type: live_audio
@@ -72,14 +64,10 @@ people:
 
   - id: kevin_warsh
     full_name: Kevin Warsh
-    aliases:
-      - Kevin Warsh
-      - Warsh
-      - Fed Chair Warsh
-      - Federal Reserve Chair
-    role: Federal Reserve Chair / central bank market mover
+    aliases: [Kevin Warsh, Warsh]
+    role: central bank market mover
     category: central_bank
-    market_impact_score: 10
+    market_impact_score: 9
     enabled: true
     allow_telegram_alerts: true
     source_priority: high
@@ -98,11 +86,7 @@ people:
 
   - id: scott_bessent
     full_name: Scott Bessent
-    aliases:
-      - Scott Bessent
-      - Treasury Secretary Bessent
-      - Secretary Bessent
-      - Bessent
+    aliases: [Scott Bessent, Treasury Secretary Bessent, Secretary Bessent, Bessent]
     role: U.S. Treasury Secretary / fiscal-policy market mover
     category: treasury
     market_impact_score: 9
@@ -124,10 +108,7 @@ people:
 
   - id: elon_musk
     full_name: Elon Musk
-    aliases:
-      - Elon Musk
-      - Elon
-      - Musk
+    aliases: [Elon Musk, Elon, Musk]
     role: Tesla CEO / technology and crypto market mover
     category: mega_cap_ceo
     market_impact_score: 10
@@ -148,7 +129,6 @@ people:
         speaker_confidence: 0.99
         username: elonmusk
         query: 'from:elonmusk (Tesla OR TSLA OR Nvidia OR NVDA OR Nokia OR NOK OR Bitcoin OR BTC OR Dogecoin OR DOGE OR Apple OR AAPL OR stock OR stocks OR market OR AI) -is:retweet'
-
       - id: musk_google_news_market
         platform: Google News RSS
         source_type: rss
@@ -161,11 +141,7 @@ people:
 
   - id: jensen_huang
     full_name: Jensen Huang
-    aliases:
-      - Jensen Huang
-      - Jen-Hsun Huang
-      - Nvidia CEO
-      - NVIDIA CEO
+    aliases: [Jensen Huang, Jen-Hsun Huang, Nvidia CEO, NVIDIA CEO]
     role: NVIDIA CEO / AI semiconductor market mover
     category: mega_cap_ceo
     market_impact_score: 10
@@ -184,3 +160,393 @@ people:
         source_confidence: 0.78
         speaker_confidence: 0.75
         url: https://news.google.com/rss/search?q=%22Jensen%20Huang%22%20%28Nvidia%20OR%20NVDA%20OR%20AI%20OR%20chips%20OR%20semiconductors%20OR%20stocks%20OR%20market%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: jerome_powell
+    full_name: Jerome Powell
+    aliases: [Jerome Powell, Jay Powell, Powell, Fed Chair Powell]
+    role: Federal Reserve Chair / rates market mover
+    category: central_bank
+    market_impact_score: 10
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      federal_reserve_news: https://www.federalreserve.gov/newsevents.htm
+    sources:
+      - id: powell_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: high
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.82
+        speaker_confidence: 0.78
+        url: https://news.google.com/rss/search?q=%22Jerome%20Powell%22%20%28stocks%20OR%20markets%20OR%20rates%20OR%20inflation%20OR%20banks%20OR%20dollar%20OR%20Fed%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: christopher_waller
+    full_name: Christopher Waller
+    aliases: [Christopher Waller, Chris Waller, Waller]
+    role: Federal Reserve Governor / rates market mover
+    category: central_bank
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: waller_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Christopher%20Waller%22%20%28Fed%20OR%20rates%20OR%20inflation%20OR%20markets%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: michelle_bowman
+    full_name: Michelle Bowman
+    aliases: [Michelle Bowman, Bowman]
+    role: Federal Reserve Governor / banking market mover
+    category: central_bank
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: bowman_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Michelle%20Bowman%22%20%28Fed%20OR%20banks%20OR%20rates%20OR%20inflation%20OR%20markets%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: neel_kashkari
+    full_name: Neel Kashkari
+    aliases: [Neel Kashkari, Kashkari]
+    role: Minneapolis Fed President / rates market mover
+    category: central_bank
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: kashkari_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Neel%20Kashkari%22%20%28Fed%20OR%20rates%20OR%20inflation%20OR%20markets%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: austan_goolsbee
+    full_name: Austan Goolsbee
+    aliases: [Austan Goolsbee, Goolsbee]
+    role: Chicago Fed President / rates market mover
+    category: central_bank
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: goolsbee_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Austan%20Goolsbee%22%20%28Fed%20OR%20rates%20OR%20inflation%20OR%20markets%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: jamie_dimon
+    full_name: Jamie Dimon
+    aliases: [Jamie Dimon, Dimon, JPMorgan CEO]
+    role: JPMorgan Chase CEO / banking market mover
+    category: bank_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: dimon_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Jamie%20Dimon%22%20%28JPMorgan%20OR%20banks%20OR%20markets%20OR%20stocks%20OR%20recession%20OR%20rates%20OR%20crypto%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: david_solomon
+    full_name: David Solomon
+    aliases: [David Solomon, Goldman CEO, Solomon]
+    role: Goldman Sachs CEO / banking market mover
+    category: bank_ceo
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: solomon_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22David%20Solomon%22%20%28Goldman%20OR%20banks%20OR%20markets%20OR%20stocks%20OR%20trading%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: brian_moynihan
+    full_name: Brian Moynihan
+    aliases: [Brian Moynihan, Bank of America CEO, Moynihan]
+    role: Bank of America CEO / banking market mover
+    category: bank_ceo
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: moynihan_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Brian%20Moynihan%22%20%28Bank%20of%20America%20OR%20banks%20OR%20markets%20OR%20stocks%20OR%20consumer%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: satya_nadella
+    full_name: Satya Nadella
+    aliases: [Satya Nadella, Nadella, Microsoft CEO]
+    role: Microsoft CEO / AI and cloud market mover
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: nadella_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Satya%20Nadella%22%20%28Microsoft%20OR%20MSFT%20OR%20AI%20OR%20cloud%20OR%20OpenAI%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: sundar_pichai
+    full_name: Sundar Pichai
+    aliases: [Sundar Pichai, Pichai, Google CEO, Alphabet CEO]
+    role: Alphabet CEO / AI and advertising market mover
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: pichai_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Sundar%20Pichai%22%20%28Google%20OR%20Alphabet%20OR%20GOOGL%20OR%20AI%20OR%20search%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: tim_cook
+    full_name: Tim Cook
+    aliases: [Tim Cook, Cook, Apple CEO]
+    role: Apple CEO / mega-cap technology market mover
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: cook_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Tim%20Cook%22%20%28Apple%20OR%20AAPL%20OR%20iPhone%20OR%20AI%20OR%20China%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: mark_zuckerberg
+    full_name: Mark Zuckerberg
+    aliases: [Mark Zuckerberg, Zuckerberg, Meta CEO]
+    role: Meta Platforms CEO / AI and social media market mover
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: zuckerberg_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Mark%20Zuckerberg%22%20%28Meta%20Platforms%20OR%20Facebook%20OR%20META%20OR%20AI%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: sam_altman
+    full_name: Sam Altman
+    aliases: [Sam Altman, Altman, OpenAI CEO]
+    role: OpenAI CEO / AI market mover
+    category: ai_leader
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/sama
+    sources:
+      - id: altman_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 180
+        source_confidence: 0.96
+        speaker_confidence: 0.99
+        username: sama
+        query: 'from:sama (Nvidia OR NVDA OR Microsoft OR MSFT OR Apple OR AAPL OR Google OR GOOGL OR Meta Platforms OR META OR AI OR chips OR cloud OR stocks OR market) -is:retweet'
+      - id: altman_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Sam%20Altman%22%20%28OpenAI%20OR%20Microsoft%20OR%20Nvidia%20OR%20AI%20OR%20chips%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: lisa_su
+    full_name: Lisa Su
+    aliases: [Lisa Su, AMD CEO]
+    role: AMD CEO / semiconductor market mover
+    category: mega_cap_ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: lisa_su_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Lisa%20Su%22%20%28AMD%20OR%20Advanced%20Micro%20Devices%20OR%20AI%20OR%20chips%20OR%20semiconductors%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: michael_saylor
+    full_name: Michael Saylor
+    aliases: [Michael Saylor, Saylor]
+    role: MicroStrategy founder / Bitcoin market mover
+    category: crypto_leader
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/saylor
+    sources:
+      - id: saylor_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 180
+        source_confidence: 0.96
+        speaker_confidence: 0.99
+        username: saylor
+        query: 'from:saylor (Bitcoin OR BTC OR Ethereum OR ETH OR MicroStrategy OR MSTR OR crypto OR market OR stocks) -is:retweet'
+      - id: saylor_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Michael%20Saylor%22%20%28Bitcoin%20OR%20BTC%20OR%20MicroStrategy%20OR%20MSTR%20OR%20crypto%20OR%20stocks%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: cathie_wood
+    full_name: Cathie Wood
+    aliases: [Cathie Wood, Wood, ARK Invest]
+    role: ARK Invest CEO / high-growth equity market mover
+    category: investor
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    official_accounts:
+      x: https://x.com/CathieDWood
+    sources:
+      - id: cathie_wood_x_official
+        platform: X official API
+        source_type: x_api
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.95
+        speaker_confidence: 0.98
+        username: CathieDWood
+        query: 'from:CathieDWood (Tesla OR TSLA OR Nvidia OR NVDA OR Bitcoin OR BTC OR AI OR genomics OR stocks OR market) -is:retweet'
+      - id: cathie_wood_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Cathie%20Wood%22%20%28Tesla%20OR%20Bitcoin%20OR%20AI%20OR%20stocks%20OR%20market%20OR%20ARK%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: bill_ackman
+    full_name: Bill Ackman
+    aliases: [Bill Ackman, Ackman]
+    role: Pershing Square CEO / market-moving investor
+    category: investor
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    official_accounts:
+      x: https://x.com/BillAckman
+    sources:
+      - id: ackman_x_official
+        platform: X official API
+        source_type: x_api
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.95
+        speaker_confidence: 0.98
+        username: BillAckman
+        query: 'from:BillAckman (stocks OR market OR banks OR rates OR inflation OR Bitcoin OR BTC OR Pershing OR short OR long) -is:retweet'
+      - id: ackman_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Bill%20Ackman%22%20%28stocks%20OR%20market%20OR%20banks%20OR%20rates%20OR%20inflation%20OR%20short%29&hl=en-US&gl=US&ceid=US:en
