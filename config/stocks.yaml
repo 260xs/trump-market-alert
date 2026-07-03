@@ -6,8 +6,8 @@ settings:
   min_setup_confidence: Medium
   # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
   allow_short_model_view: true
-  duplicate_silence_hours: 12
-  max_alerts_per_run: 8
+  duplicate_silence_hours: 24
+  max_alerts_per_run: 5
   min_successful_scans: 1
 
   # Short-term focus: 1 week to 3 months.
@@ -19,12 +19,12 @@ settings:
   daily_period: 6mo
   daily_interval: 1d
 
-  # Daily discovery job.
+  # 3-day discovery job.
   discovery_period: 6mo
   discovery_interval: 1d
-  # Keep this bounded for free GitHub Actions/yfinance reliability. The universe can be larger than each daily scan.
-  max_scan_symbols_per_run: 60
-  top_candidate_count: 10
+  # Keep this modest for free GitHub Actions/yfinance reliability. Increase only after runs are stable.
+  max_scan_symbols_per_run: 45
+  top_candidate_count: 8
 
   # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
   breakout_lookback_bars: 20
@@ -56,7 +56,7 @@ priority_stocks:
     priority: 10
 
 # Free scanner universe. It is not literally every stock in the world.
-# Add/remove tickers here any time. The daily discovery job ranks this universe.
+# Add/remove tickers here any time. The 3-day discovery job ranks this universe.
 # The scheduled refresh scans only the first max_scan_symbols_per_run names per run.
 universe:
   - NVDA

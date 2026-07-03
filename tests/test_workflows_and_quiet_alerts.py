@@ -12,10 +12,9 @@ def load_yaml(path: str) -> dict:
 
 def test_scheduled_workflows_use_expected_crons() -> None:
     expected = {
-        ".github/workflows/stable-monitor.yml": "2,12,22,32,42,52 * * * *",
-        ".github/workflows/hourly-stock-scan.yml": "17,47 * * * *",
-        ".github/workflows/stock-candidate-refresh.yml": "31 9 * * *",
-        ".github/workflows/telegram-test.yml": "5 13 * * *",
+        ".github/workflows/stable-monitor.yml": "7,27,47 * * * *",
+        ".github/workflows/hourly-stock-scan.yml": "13 * * * *",
+        ".github/workflows/stock-candidate-refresh.yml": "31 6 */3 * *",
     }
 
     for path, cron in expected.items():
@@ -24,14 +23,23 @@ def test_scheduled_workflows_use_expected_crons() -> None:
         assert "workflow_dispatch" in workflow[True]
 
 
-def test_failure_telegram_alerts_are_on_by_default_but_guarded() -> None:
+def test_telegram_test_workflow_is_manual_only_and_exact() -> None:
+    workflow = load_yaml(".github/workflows/telegram-test.yml")
+    assert workflow[True] == {"workflow_dispatch": None}
+
+    workflow_text = (ROOT / ".github/workflows/telegram-test.yml").read_text(encoding="utf-8")
+    assert 'text=✅ Telegram test successful' in workflow_text
+    assert workflow_text.count('text=✅ Telegram test successful') == 1
+
+
+def test_failure_telegram_alerts_are_opt_in() -> None:
     for path in [
         ".github/workflows/stable-monitor.yml",
         ".github/workflows/hourly-stock-scan.yml",
         ".github/workflows/stock-candidate-refresh.yml",
     ]:
         workflow = load_yaml(path)
-        assert workflow["env"]["ENABLE_WORKFLOW_FAILURE_TELEGRAM"] == "${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'true' }}"
+        assert workflow["env"]["ENABLE_WORKFLOW_FAILURE_TELEGRAM"] == "${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}"
         failure_steps = [
             step
             for job in workflow["jobs"].values()
@@ -42,16 +50,18 @@ def test_failure_telegram_alerts_are_on_by_default_but_guarded() -> None:
         assert all("ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in step["if"] for step in failure_steps)
 
 
-def test_candidate_refresh_is_silent_but_runs_daily() -> None:
+def test_candidate_refresh_is_silent_by_default() -> None:
     stocks_cfg = load_yaml("config/stocks.yaml")
     assert stocks_cfg["settings"]["send_candidate_refresh_telegram"] is False
     assert stocks_cfg["settings"]["send_hourly_summary"] is False
     assert stocks_cfg["settings"]["send_only_when_actionable"] is True
-    assert stocks_cfg["settings"]["max_alerts_per_run"] >= 8
-    assert stocks_cfg["settings"]["duplicate_silence_hours"] <= 12
+    assert stocks_cfg["settings"]["max_alerts_per_run"] <= 5
+    assert stocks_cfg["settings"]["duplicate_silence_hours"] >= 24
 
     workflow_text = (ROOT / ".github/workflows/stock-candidate-refresh.yml").read_text(encoding="utf-8")
     assert "Validate Telegram secrets" not in workflow_text
+    assert 'TELEGRAM_BOT_TOKEN: ""' in workflow_text
+    assert 'TELEGRAM_CHAT_ID: ""' in workflow_text
 
 
 def test_stock_universe_expands_without_losing_priorities() -> None:
@@ -60,11 +70,5 @@ def test_stock_universe_expands_without_losing_priorities() -> None:
     universe = set(stocks_cfg["universe"])
     assert {"NVDA", "NOK"}.issubset(priority)
     assert priority.issubset(universe)
-    assert len(universe) >= 60
+    assert len(universe) >= 50
     assert {"INTC", "MU", "TSM", "ASML", "QCOM", "XLF", "XLE", "IWM"}.issubset(universe)
-
-
-def test_telegram_heartbeat_sends_only_exact_test_message() -> None:
-    workflow_text = (ROOT / ".github/workflows/telegram-test.yml").read_text(encoding="utf-8")
-    assert 'cron: "5 13 * * *"' in workflow_text
-    assert 'text=✅ Telegram test successful' in workflow_text

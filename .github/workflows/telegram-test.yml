@@ -1,10 +1,8 @@
 name: Telegram Test
 
-run-name: "Telegram test - ${{ github.event_name }} - run #${{ github.run_number }}"
+run-name: "Telegram test - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "5 13 * * *"
   workflow_dispatch:
 
 permissions:
@@ -14,10 +12,6 @@ defaults:
   run:
     shell: bash
 
-concurrency:
-  group: telegram-test
-  cancel-in-progress: false
-
 jobs:
   telegram-test:
     name: Send exact Telegram test message
@@ -25,12 +19,6 @@ jobs:
     timeout-minutes: 2
 
     steps:
-      - name: Show trigger info
-        run: |
-          echo "Triggered by: ${GITHUB_EVENT_NAME}"
-          echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
-          echo "Schedule: daily Telegram heartbeat at 13:05 UTC, best effort"
-
       - name: Validate Telegram secrets
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
