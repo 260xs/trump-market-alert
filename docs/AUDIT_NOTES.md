@@ -5,6 +5,8 @@ This package was rebuilt after a full code review. The highest-impact fixes are:
 - Removed generated `__pycache__` and `.pytest_cache` artifacts from the release package.
 - Kept GitHub Actions scheduled monitoring as the current low-cost MVP path, with the always-on runner documented as the more reliable future path.
 - Enabled a daily Telegram heartbeat workflow that sends exactly `✅ Telegram test successful`.
+- Added a daily system-health workflow that runs imports, dependency checks, and tests automatically.
+- Added a daily GitHub Actions watchdog that sends one grouped Telegram alert when important workflows failed in the last 24 hours.
 - Kept the public-figure scanner strict: Telegram sends only for direct, high-confidence Good/Bad statements with clear ticker mapping.
 - Kept the stock scanner hourly and silent unless a Medium/High confidence Buy, Sell, or Short setup exists.
 - Added an old-statement guard so a fresh database does not alert on stale posts.

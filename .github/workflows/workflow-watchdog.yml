@@ -1,0 +1,147 @@
+name: GitHub Actions Watchdog
+
+run-name: "Actions watchdog - ${{ github.event_name }} - run #${{ github.run_number }}"
+
+on:
+  schedule:
+    - cron: "25 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: github-actions-watchdog
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    name: Report recent workflow failures to Telegram
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check recent workflow runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          WATCHDOG_LOOKBACK_HOURS: "24"
+        run: |
+          set -euo pipefail
+
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          from datetime import datetime, timedelta, timezone
+          from urllib import parse, request
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GH_TOKEN"]
+          server_url = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+          lookback_hours = float(os.environ.get("WATCHDOG_LOOKBACK_HOURS", "24"))
+          cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
+          watched_workflows = {
+              "Market-Moving Public Figure Alert",
+              "Hourly Stock Research Scanner",
+              "Stock Candidate Refresh",
+              "Telegram Test",
+              "System Health Check",
+          }
+          bad_conclusions = {"failure", "timed_out", "action_required"}
+
+          api_url = f"https://api.github.com/repos/{repo}/actions/runs?per_page=50"
+          api_request = request.Request(
+              api_url,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+          with request.urlopen(api_request, timeout=20) as response:
+              payload = json.loads(response.read().decode("utf-8"))
+
+          failures = []
+          for run in payload.get("workflow_runs", []):
+              name = run.get("name") or ""
+              conclusion = run.get("conclusion") or ""
+              created_raw = run.get("created_at") or ""
+              if name not in watched_workflows or conclusion not in bad_conclusions:
+                  continue
+              try:
+                  created_at = datetime.fromisoformat(created_raw.replace("Z", "+00:00"))
+              except ValueError:
+                  continue
+              if created_at < cutoff:
+                  continue
+              failures.append(
+                  {
+                      "name": name,
+                      "conclusion": conclusion,
+                      "created_at": created_at.strftime("%Y-%m-%d %H:%M UTC"),
+                      "url": run.get("html_url") or f"{server_url}/{repo}/actions",
+                  }
+              )
+
+          if not failures:
+              print(f"No watched workflow failures in the last {lookback_hours:g} hours.")
+              return_code = 0
+          else:
+              lines = [
+                  "🚨 GitHub Actions watchdog alert",
+                  "",
+                  f"Repository: {repo}",
+                  f"Lookback: last {lookback_hours:g} hours",
+                  "",
+                  "Failed workflows:",
+              ]
+              for item in failures[:8]:
+                  lines.extend(
+                      [
+                          f"- {item['name']} ({item['conclusion']})",
+                          f"  Started: {item['created_at']}",
+                          f"  Logs: {item['url']}",
+                      ]
+                  )
+              if len(failures) > 8:
+                  lines.append(f"- Plus {len(failures) - 8} more recent failures.")
+              message = "\n".join(lines)
+
+              bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+              chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+              if not bot_token or not chat_id:
+                  print("Recent workflow failures found, but Telegram secrets are missing.")
+                  print(message)
+                  return_code = 1
+              else:
+                  data = parse.urlencode(
+                      {
+                          "chat_id": chat_id,
+                          "text": message[:3900],
+                          "disable_web_page_preview": "true",
+                      }
+                  ).encode("utf-8")
+                  telegram_request = request.Request(
+                      f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                      data=data,
+                      method="POST",
+                  )
+                  with request.urlopen(telegram_request, timeout=20) as response:
+                      response_payload = json.loads(response.read().decode("utf-8"))
+                  if not response_payload.get("ok"):
+                      raise RuntimeError(f"Telegram API rejected watchdog alert: {response_payload}")
+                  print(f"Sent watchdog alert for {len(failures)} recent workflow failure(s).")
+                  return_code = 0
+
+          raise SystemExit(return_code)
+          PY
