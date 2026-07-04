@@ -23,6 +23,9 @@ class StockResearchDB:
     def connect(self) -> sqlite3.Connection:
         con = sqlite3.connect(self.path)
         con.row_factory = sqlite3.Row
+        con.execute("PRAGMA journal_mode=WAL")
+        con.execute("PRAGMA busy_timeout=5000")
+        con.execute("PRAGMA foreign_keys=ON")
         return con
 
     def init(self) -> None:
@@ -38,6 +41,7 @@ class StockResearchDB:
                     sent_at TEXT NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_stock_alerts_key_time ON stock_alerts(setup_key, sent_at);
+                CREATE INDEX IF NOT EXISTS idx_stock_alerts_ticker_signal_time ON stock_alerts(ticker, signal, sent_at);
 
                 CREATE TABLE IF NOT EXISTS top_candidates (
                     ticker TEXT PRIMARY KEY,
@@ -54,6 +58,7 @@ class StockResearchDB:
                     scanned_at TEXT NOT NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_stock_scans_ticker_time ON stock_scans(ticker, scanned_at);
+                CREATE INDEX IF NOT EXISTS idx_stock_scans_time ON stock_scans(scanned_at);
                 """
             )
 
@@ -87,6 +92,18 @@ class StockResearchDB:
             con.execute(
                 "INSERT INTO stock_scans (ticker, payload_json, scanned_at) VALUES (?, ?, ?)",
                 (ticker, json.dumps(payload, default=str), iso()),
+            )
+            self._prune_old_scans(con)
+
+    def _prune_old_scans(self, con: sqlite3.Connection, days: int = 14, max_rows: int = 5000) -> None:
+        cutoff = iso(utc_now() - timedelta(days=days))
+        con.execute("DELETE FROM stock_scans WHERE scanned_at < ?", (cutoff,))
+        row = con.execute("SELECT COUNT(*) AS count FROM stock_scans").fetchone()
+        if row and int(row["count"]) > max_rows:
+            rows_to_delete = int(row["count"]) - max_rows
+            con.execute(
+                "DELETE FROM stock_scans WHERE id IN (SELECT id FROM stock_scans ORDER BY scanned_at ASC LIMIT ?)",
+                (rows_to_delete,),
             )
 
     def save_candidates(self, candidates: list[dict[str, Any]]) -> None:
