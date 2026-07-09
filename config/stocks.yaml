@@ -56,6 +56,21 @@ priority_stocks:
   - ticker: NOK
     name: Nokia
     priority: 10
+  - ticker: DELL
+    name: Dell Technologies
+    priority: 10
+  - ticker: ORCL
+    name: Oracle
+    priority: 9
+  - ticker: VRT
+    name: Vertiv
+    priority: 9
+  - ticker: ANET
+    name: Arista Networks
+    priority: 9
+  - ticker: HPE
+    name: Hewlett Packard Enterprise
+    priority: 9
   - ticker: TSLA
     name: Tesla
     priority: 9
@@ -80,6 +95,21 @@ priority_stocks:
   - ticker: AVGO
     name: Broadcom
     priority: 9
+  - ticker: MU
+    name: Micron Technology
+    priority: 9
+  - ticker: QCOM
+    name: Qualcomm
+    priority: 9
+  - ticker: CRM
+    name: Salesforce
+    priority: 8
+  - ticker: CRWD
+    name: CrowdStrike
+    priority: 8
+  - ticker: PANW
+    name: Palo Alto Networks
+    priority: 8
   - ticker: TSM
     name: Taiwan Semiconductor
     priority: 8

@@ -4,6 +4,8 @@ from pathlib import Path
 
 import yaml
 
+from config import load_asset_map, load_watchlist
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -14,11 +16,11 @@ def load_yaml(relative: str):
 
 
 def test_watchlist_has_broader_market_mover_circle_and_unique_source_ids():
-    cfg = load_yaml("watchlist.yaml")
+    cfg = load_watchlist()
     people = cfg.get("people", [])
     ids = {person["id"] for person in people}
 
-    assert len(people) >= 20
+    assert len(people) >= 35
     assert {
         "donald_trump",
         "elon_musk",
@@ -29,6 +31,12 @@ def test_watchlist_has_broader_market_mover_circle_and_unique_source_ids():
         "sam_altman",
         "michael_saylor",
         "bill_ackman",
+        "michael_dell",
+        "howard_lutnick",
+        "jamieson_greer",
+        "paul_atkins",
+        "brian_armstrong",
+        "official_market_policy_feeds",
     }.issubset(ids)
 
     source_ids: list[str] = []
@@ -49,9 +57,10 @@ def test_stock_universe_is_expanded_but_risk_capped():
     priority = [item["ticker"] for item in cfg["priority_stocks"]]
     universe = cfg["universe"]
 
-    assert len(priority) >= 20
+    assert len(priority) >= 30
     assert len(universe) >= 130
     assert set(priority).issubset(set(universe))
+    assert {"DELL", "ORCL", "VRT", "ANET", "HPE", "MU", "QCOM", "CRM"}.issubset(priority)
     assert len(universe) == len(set(universe))
     assert settings["max_risk_pct"] <= 6.0
     assert settings["max_risk_pct"] < 15
@@ -72,7 +81,7 @@ def test_stock_alert_safety_mode_is_high_confidence_only():
 
 
 def test_asset_map_covers_expanded_priority_names_and_blocks_common_ambiguity():
-    cfg = load_yaml("config/asset_map.yaml")
+    cfg = load_asset_map()
     mapped = {asset["ticker"] for asset in cfg.get("assets", [])}
     blocked = {item["name"] for item in cfg.get("blocked_ambiguous", [])}
 
@@ -98,5 +107,13 @@ def test_asset_map_covers_expanded_priority_names_and_blocks_common_ambiguity():
         "QQQ",
         "SPY",
         "MSTR",
+        "DELL",
+        "ORCL",
+        "VRT",
+        "ANET",
+        "HPE",
+        "CRM",
+        "CRWD",
+        "PANW",
     }.issubset(mapped)
-    assert {"Marvel", "X", "Meta", "F", "CAT", "ARM"}.issubset(blocked)
+    assert {"Marvel", "X", "Meta", "F", "CAT", "ARM", "Oracle", "KLA"}.issubset(blocked)
