@@ -122,13 +122,4 @@ assets:
     required_context_any: [power, servers, demand, buildout, capacity, cooling, electricity, market, markets, stocks]
     avoid_contexts: []
 
-blocked_ambiguous:
-  - name: Dell
-    reason: Can be a surname or non-market reference. Require direct company/product context or ticker DELL.
-    patterns: ["\\bDell\\b"]
-  - name: Oracle
-    reason: Can be a generic database or mythological reference. Require company, cloud, AI infrastructure, or ticker ORCL context.
-    patterns: ["\\bOracle\\b"]
-  - name: KLA
-    reason: Short ticker-like word. Require semiconductor/equipment market context.
-    patterns: ["\\bKLA\\b"]
+blocked_ambiguous: []

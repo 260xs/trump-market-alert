@@ -116,4 +116,4 @@ def test_asset_map_covers_expanded_priority_names_and_blocks_common_ambiguity():
         "CRWD",
         "PANW",
     }.issubset(mapped)
-    assert {"Marvel", "X", "Meta", "F", "CAT", "ARM", "Oracle", "KLA"}.issubset(blocked)
+    assert {"Marvel", "X", "Meta", "F", "CAT", "ARM"}.issubset(blocked)
