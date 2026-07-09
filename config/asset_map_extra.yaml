@@ -1,0 +1,134 @@
+assets:
+  - canonical: Hewlett Packard Enterprise
+    aliases: [Hewlett Packard Enterprise, HPE]
+    ticker: HPE
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bHewlett Packard Enterprise\\b", "\\bHPE\\b"]
+    avoid_contexts: []
+
+  - canonical: Vertiv
+    aliases: [Vertiv]
+    ticker: VRT
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bVertiv\\b", "\\bVRT\\b"]
+    avoid_contexts: []
+
+  - canonical: Arista Networks
+    aliases: [Arista, Arista Networks]
+    ticker: ANET
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bArista Networks\\b", "\\bArista\\b", "\\bANET\\b"]
+    avoid_contexts: []
+
+  - canonical: Cisco Systems
+    aliases: [Cisco, Cisco Systems]
+    ticker: CSCO
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bCisco\\b", "\\bCisco Systems\\b", "\\bCSCO\\b"]
+    avoid_contexts: []
+
+  - canonical: Micron Technology
+    aliases: [Micron, Micron Technology]
+    ticker: MU
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bMicron\\b", "\\bMicron Technology\\b", "\\bMU\\b"]
+    avoid_contexts: []
+
+  - canonical: Intel
+    aliases: [Intel, Intel Corporation]
+    ticker: INTC
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bIntel\\b", "\\bIntel Corporation\\b", "\\bINTC\\b"]
+    avoid_contexts: []
+
+  - canonical: Qualcomm
+    aliases: [Qualcomm]
+    ticker: QCOM
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bQualcomm\\b", "\\bQCOM\\b"]
+    avoid_contexts: []
+
+  - canonical: Applied Materials
+    aliases: [Applied Materials]
+    ticker: AMAT
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bApplied Materials\\b", "\\bAMAT\\b"]
+    avoid_contexts: []
+
+  - canonical: Lam Research
+    aliases: [Lam Research]
+    ticker: LRCX
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bLam Research\\b", "\\bLRCX\\b"]
+    avoid_contexts: []
+
+  - canonical: KLA
+    aliases: [KLA, KLA Corporation]
+    ticker: KLAC
+    asset_type: public_company
+    confidence: 0.96
+    direct_patterns: ["\\bKLA\\b", "\\bKLA Corporation\\b", "\\bKLAC\\b"]
+    required_context_any: [chips, semiconductor, semiconductors, wafer, wafers, foundry, equipment, stock, stocks, market, markets]
+    avoid_contexts: []
+
+  - canonical: Salesforce
+    aliases: [Salesforce]
+    ticker: CRM
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bSalesforce\\b", "\\bCRM\\b"]
+    avoid_contexts: []
+
+  - canonical: CrowdStrike
+    aliases: [CrowdStrike]
+    ticker: CRWD
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bCrowdStrike\\b", "\\bCRWD\\b"]
+    avoid_contexts: []
+
+  - canonical: Palo Alto Networks
+    aliases: [Palo Alto Networks]
+    ticker: PANW
+    asset_type: public_company
+    confidence: 0.98
+    direct_patterns: ["\\bPalo Alto Networks\\b", "\\bPANW\\b"]
+    avoid_contexts: []
+
+  - canonical: Defense Sector
+    aliases: [defense stocks, defense sector, aerospace and defense]
+    ticker: ITA
+    asset_type: sector_etf
+    confidence: 0.95
+    direct_patterns: ["\\bdefense stocks\\b", "\\bdefense sector\\b", "\\baerospace and defense\\b"]
+    required_context_any: [contracts, Pentagon, military, missiles, aircraft, spending, budget, market, markets, stocks]
+    avoid_contexts: []
+
+  - canonical: Data Center Infrastructure
+    aliases: [data center stocks, data center infrastructure, AI infrastructure]
+    ticker: VRT
+    asset_type: sector_proxy
+    confidence: 0.95
+    direct_patterns: ["\\bdata center stocks\\b", "\\bdata center infrastructure\\b", "\\bAI infrastructure\\b"]
+    required_context_any: [power, servers, demand, buildout, capacity, cooling, electricity, market, markets, stocks]
+    avoid_contexts: []
+
+blocked_ambiguous:
+  - name: Dell
+    reason: Can be a surname or non-market reference. Require direct company/product context or ticker DELL.
+    patterns: ["\\bDell\\b"]
+  - name: Oracle
+    reason: Can be a generic database or mythological reference. Require company, cloud, AI infrastructure, or ticker ORCL context.
+    patterns: ["\\bOracle\\b"]
+  - name: KLA
+    reason: Short ticker-like word. Require semiconductor/equipment market context.
+    patterns: ["\\bKLA\\b"]
