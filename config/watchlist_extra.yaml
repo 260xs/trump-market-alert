@@ -1,0 +1,369 @@
+people:
+  - id: howard_lutnick
+    full_name: Howard Lutnick
+    aliases: [Howard Lutnick, Lutnick, Commerce Secretary Lutnick]
+    role: U.S. Commerce / tariffs / chips / AI infrastructure market mover
+    category: government_policy
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: lutnick_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Howard%20Lutnick%22%20%28Commerce%20OR%20tariffs%20OR%20chips%20OR%20semiconductors%20OR%20AI%20OR%20data%20centers%20OR%20exports%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: jamieson_greer
+    full_name: Jamieson Greer
+    aliases: [Jamieson Greer, Ambassador Greer, Greer]
+    role: U.S. Trade Representative / tariff market mover
+    category: government_policy
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: greer_ustr_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: high
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%28%22Jamieson%20Greer%22%20OR%20%22Ambassador%20Greer%22%20OR%20USTR%29%20%28tariffs%20OR%20trade%20OR%20Section%20301%20OR%20China%20OR%20semiconductors%20OR%20autos%20OR%20steel%20OR%20aluminum%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: chris_wright
+    full_name: Chris Wright
+    aliases: [Chris Wright, Energy Secretary Wright, Secretary Wright]
+    role: U.S. Energy / oil / LNG / nuclear / grid market mover
+    category: government_policy
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: wright_energy_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Chris%20Wright%22%20%28Energy%20OR%20oil%20OR%20LNG%20OR%20nuclear%20OR%20grid%20OR%20drilling%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: paul_atkins
+    full_name: Paul Atkins
+    aliases: [Paul Atkins, SEC Chair Atkins, Chairman Atkins]
+    role: SEC / crypto / IPO / market structure market mover
+    category: regulator
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: atkins_sec_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Paul%20Atkins%22%20%28SEC%20OR%20crypto%20OR%20Bitcoin%20OR%20Coinbase%20OR%20IPO%20OR%20markets%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: andrew_ferguson
+    full_name: Andrew Ferguson
+    aliases: [Andrew Ferguson, FTC Chair Ferguson, Chairman Ferguson]
+    role: FTC / antitrust / big tech market mover
+    category: regulator
+    market_impact_score: 7
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: ferguson_ftc_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.78
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Andrew%20Ferguson%22%20%28FTC%20OR%20antitrust%20OR%20Amazon%20OR%20Google%20OR%20Meta%20OR%20Microsoft%20OR%20AI%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: michael_dell
+    full_name: Michael Dell
+    aliases: [Michael Dell, Dell, MichaelDell]
+    role: Dell Technologies founder, chairman and CEO / AI server market mover
+    category: ceo
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/MichaelDell
+      website: https://www.dell.com/en-us/lp/dt/michael-dell
+    sources:
+      - id: michael_dell_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.96
+        speaker_confidence: 0.98
+        username: MichaelDell
+        query: 'from:MichaelDell (Dell OR DELL OR NVIDIA OR Nvidia OR NVDA OR AI OR server OR servers OR data center OR data centers OR storage OR PC OR PCs OR demand OR supply OR earnings) -is:retweet'
+      - id: michael_dell_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Michael%20Dell%22%20%28Dell%20OR%20DELL%20OR%20Nvidia%20OR%20AI%20servers%20OR%20data%20centers%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: hock_tan
+    full_name: Hock Tan
+    aliases: [Hock Tan, Broadcom CEO Hock Tan]
+    role: Broadcom CEO / AI networking and chips market mover
+    category: ceo
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: hock_tan_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Hock%20Tan%22%20%28Broadcom%20OR%20AVGO%20OR%20AI%20OR%20VMware%20OR%20chips%20OR%20networking%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: cc_wei
+    full_name: C.C. Wei
+    aliases: [C.C. Wei, CC Wei, C C Wei, TSMC CEO]
+    role: TSMC CEO / semiconductor supply market mover
+    category: ceo
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: cc_wei_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%28%22C.C.%20Wei%22%20OR%20%22CC%20Wei%22%20OR%20%22TSMC%20CEO%22%29%20%28TSMC%20OR%20TSM%20OR%20Nvidia%20OR%20AI%20chips%20OR%20capacity%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: safra_catz
+    full_name: Safra Catz
+    aliases: [Safra Catz, Oracle CEO]
+    role: Oracle CEO / cloud and AI infrastructure market mover
+    category: ceo
+    market_impact_score: 7
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: safra_catz_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Safra%20Catz%22%20%28Oracle%20OR%20ORCL%20OR%20cloud%20OR%20AI%20infrastructure%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: marc_benioff
+    full_name: Marc Benioff
+    aliases: [Marc Benioff, Benioff]
+    role: Salesforce CEO / enterprise software and AI market mover
+    category: ceo
+    market_impact_score: 7
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    official_accounts:
+      x: https://x.com/Benioff
+    sources:
+      - id: benioff_x_official
+        platform: X official API
+        source_type: x_api
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.95
+        speaker_confidence: 0.98
+        username: Benioff
+        query: 'from:Benioff (Salesforce OR CRM OR AI OR agentic OR enterprise OR software OR earnings OR demand) -is:retweet'
+
+  - id: alex_karp
+    full_name: Alex Karp
+    aliases: [Alex Karp, Palantir CEO]
+    role: Palantir CEO / defense AI and data platform market mover
+    category: ceo
+    market_impact_score: 7
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: alex_karp_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Alex%20Karp%22%20%28Palantir%20OR%20PLTR%20OR%20AI%20OR%20defense%20OR%20government%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: brian_armstrong
+    full_name: Brian Armstrong
+    aliases: [Brian Armstrong, Coinbase CEO, brian_armstrong]
+    role: Coinbase CEO / crypto market mover
+    category: ceo
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    official_accounts:
+      x: https://x.com/brian_armstrong
+    sources:
+      - id: brian_armstrong_x_official
+        platform: X official API
+        source_type: x_api
+        priority: high
+        enabled: true
+        polling_interval_seconds: 300
+        source_confidence: 0.96
+        speaker_confidence: 0.98
+        username: brian_armstrong
+        query: 'from:brian_armstrong (Coinbase OR COIN OR Bitcoin OR BTC OR Ethereum OR ETH OR crypto OR stablecoin OR SEC OR regulation OR banks) -is:retweet'
+
+  - id: cristiano_amon
+    full_name: Cristiano Amon
+    aliases: [Cristiano Amon, Cristiano R. Amon, Qualcomm CEO]
+    role: Qualcomm CEO / wireless and AI edge chip market mover
+    category: ceo
+    market_impact_score: 7
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    official_accounts:
+      x: https://x.com/cristianoamon
+    sources:
+      - id: cristiano_amon_x_official
+        platform: X official API
+        source_type: x_api
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 600
+        source_confidence: 0.95
+        speaker_confidence: 0.98
+        username: cristianoamon
+        query: 'from:cristianoamon (Qualcomm OR QCOM OR AI OR Snapdragon OR chips OR automotive OR edge) -is:retweet'
+
+  - id: larry_fink
+    full_name: Larry Fink
+    aliases: [Larry Fink, BlackRock CEO]
+    role: BlackRock CEO / ETF and macro market mover
+    category: investor
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: larry_fink_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Larry%20Fink%22%20%28BlackRock%20OR%20stocks%20OR%20bonds%20OR%20Bitcoin%20OR%20ETF%20OR%20market%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: warren_buffett
+    full_name: Warren Buffett
+    aliases: [Warren Buffett, Buffett, Berkshire Hathaway]
+    role: Berkshire Hathaway CEO / investor market mover
+    category: investor
+    market_impact_score: 8
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: medium
+    sources:
+      - id: buffett_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=%22Warren%20Buffett%22%20%28Berkshire%20OR%20stocks%20OR%20Apple%20OR%20market%20OR%20banks%20OR%20oil%29&hl=en-US&gl=US&ceid=US:en
+
+  - id: official_market_policy_feeds
+    full_name: Official Market Policy Feeds
+    aliases: [Federal Reserve, Treasury, SEC, USTR, White House]
+    role: Official public policy feed bundle for market-moving public statements
+    category: official_feed_bundle
+    market_impact_score: 9
+    enabled: true
+    allow_telegram_alerts: true
+    source_priority: high
+    sources:
+      - id: fed_speeches_official_rss
+        platform: Federal Reserve RSS
+        source_type: rss
+        priority: high
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.95
+        speaker_confidence: 0.75
+        url: https://www.federalreserve.gov/feeds/speeches.xml
+      - id: fed_press_all_official_rss
+        platform: Federal Reserve RSS
+        source_type: rss
+        priority: high
+        enabled: true
+        polling_interval_seconds: 900
+        source_confidence: 0.95
+        speaker_confidence: 0.75
+        url: https://www.federalreserve.gov/feeds/press_all.xml
+      - id: sec_press_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=site%3Asec.gov%2Fnewsroom%20%28crypto%20OR%20Bitcoin%20OR%20Coinbase%20OR%20IPO%20OR%20market%20structure%20OR%20ETF%29&hl=en-US&gl=US&ceid=US:en
+      - id: ustr_tariff_google_news_market
+        platform: Google News RSS
+        source_type: rss
+        priority: medium
+        enabled: true
+        polling_interval_seconds: 1200
+        source_confidence: 0.80
+        speaker_confidence: 0.75
+        url: https://news.google.com/rss/search?q=site%3Austr.gov%20%28tariffs%20OR%20Section%20301%20OR%20trade%20OR%20semiconductors%20OR%20autos%20OR%20steel%20OR%20aluminum%29&hl=en-US&gl=US&ceid=US:en
