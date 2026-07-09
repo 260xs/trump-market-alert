@@ -92,9 +92,35 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
     return data
 
 
+def _extend_unique(base: dict[str, Any], extra: dict[str, Any], key: str, identity: str) -> dict[str, Any]:
+    merged = {**base}
+    items = list(merged.get(key, []) or [])
+    seen = {item.get(identity) for item in items if isinstance(item, dict)}
+    for item in extra.get(key, []) or []:
+        if not isinstance(item, dict):
+            continue
+        item_id = item.get(identity)
+        if item_id in seen:
+            continue
+        items.append(item)
+        seen.add(item_id)
+    merged[key] = items
+    return merged
+
+
 def load_watchlist(path: str | Path = "watchlist.yaml") -> dict[str, Any]:
-    return load_yaml(path)
+    watchlist = load_yaml(path)
+    extra_path = Path("config/watchlist_extra.yaml")
+    if Path(path) == Path("watchlist.yaml") and extra_path.exists():
+        watchlist = _extend_unique(watchlist, load_yaml(extra_path), "people", "id")
+    return watchlist
 
 
 def load_asset_map(path: str | Path = "config/asset_map.yaml") -> dict[str, Any]:
-    return load_yaml(path)
+    asset_map = load_yaml(path)
+    extra_path = Path("config/asset_map_extra.yaml")
+    if Path(path) == Path("config/asset_map.yaml") and extra_path.exists():
+        extra = load_yaml(extra_path)
+        asset_map = _extend_unique(asset_map, extra, "assets", "ticker")
+        asset_map = _extend_unique(asset_map, extra, "blocked_ambiguous", "name")
+    return asset_map
