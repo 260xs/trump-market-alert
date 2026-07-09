@@ -59,6 +59,16 @@ class StockResearchDB:
                 );
                 CREATE INDEX IF NOT EXISTS idx_stock_scans_ticker_time ON stock_scans(ticker, scanned_at);
                 CREATE INDEX IF NOT EXISTS idx_stock_scans_time ON stock_scans(scanned_at);
+
+                CREATE TABLE IF NOT EXISTS active_stock_setups (
+                    ticker TEXT PRIMARY KEY,
+                    setup_key TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    opened_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'open'
+                );
+                CREATE INDEX IF NOT EXISTS idx_active_stock_setups_status_time ON active_stock_setups(status, updated_at);
                 """
             )
 
@@ -104,6 +114,43 @@ class StockResearchDB:
             con.execute(
                 "DELETE FROM stock_scans WHERE id IN (SELECT id FROM stock_scans ORDER BY scanned_at ASC LIMIT ?)",
                 (rows_to_delete,),
+            )
+
+    def open_entry_setup(self, ticker: str, setup_key: str, payload: dict[str, Any]) -> None:
+        now = iso()
+        with self.connect() as con:
+            con.execute(
+                """
+                INSERT INTO active_stock_setups (ticker, setup_key, payload_json, opened_at, updated_at, status)
+                VALUES (?, ?, ?, ?, ?, 'open')
+                ON CONFLICT(ticker) DO UPDATE SET
+                    setup_key=excluded.setup_key,
+                    payload_json=excluded.payload_json,
+                    updated_at=excluded.updated_at,
+                    status='open'
+                """,
+                (ticker, setup_key, json.dumps(payload, default=str), now, now),
+            )
+
+    def load_open_entry_setup(self, ticker: str) -> dict[str, Any] | None:
+        with self.connect() as con:
+            row = con.execute(
+                "SELECT payload_json FROM active_stock_setups WHERE ticker=? AND status='open' LIMIT 1",
+                (ticker,),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            payload = json.loads(str(row["payload_json"]))
+        except json.JSONDecodeError:
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    def close_entry_setup(self, ticker: str, payload: dict[str, Any]) -> None:
+        with self.connect() as con:
+            con.execute(
+                "UPDATE active_stock_setups SET status='closed', payload_json=?, updated_at=? WHERE ticker=? AND status='open'",
+                (json.dumps(payload, default=str), iso(), ticker),
             )
 
     def save_candidates(self, candidates: list[dict[str, Any]]) -> None:

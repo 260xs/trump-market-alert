@@ -134,6 +134,77 @@ def _score(bits: list[tuple[bool, str]]) -> tuple[int, str]:
     return len(passed), "; ".join(passed)
 
 
+def _float_or_none(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _prior_entry_followup(current: StockSetup, prior: dict[str, Any] | None) -> StockSetup | None:
+    if not prior:
+        return None
+    entry = _float_or_none(prior.get("trigger_level"))
+    invalidation = _float_or_none(prior.get("exit_level"))
+    target = _float_or_none(prior.get("target_level"))
+    if entry is None or invalidation is None or entry <= 0:
+        return None
+
+    crossed_invalidation = current.last_price <= invalidation
+    reached_target = target is not None and target > 0 and current.last_price >= target
+    if not crossed_invalidation and not reached_target:
+        return None
+
+    risk_pct = abs(entry - invalidation) / entry * 100
+    risk_reward = _float_or_none(prior.get("risk_reward")) or 2.0
+    prior_key = str(prior.get("setup_key") or "prior-buy")
+    if crossed_invalidation:
+        reason = (
+            "Prior Buy research setup follow-up: current price is at or below the stored exit/invalidation level. "
+            "This is an automatic risk alert tied to the earlier Buy-style research alert, not a trading instruction."
+        )
+        key_kind = "invalidation"
+        downside_reference = invalidation
+    else:
+        reason = (
+            "Prior Buy research setup follow-up: current price reached or exceeded the stored research target. "
+            "This is an automatic review/profit-risk alert tied to the earlier Buy-style research alert, not a trading instruction."
+        )
+        key_kind = "target-review"
+        downside_reference = target
+
+    return StockSetup(
+        ticker=current.ticker,
+        name=current.name,
+        signal="Bad",
+        setup_type="Exit/Risk",
+        model_view="Sell",
+        confidence="High" if crossed_invalidation else "Medium",
+        timeframe=current.timeframe,
+        last_price=current.last_price,
+        trigger_level=current.last_price,
+        exit_level=invalidation,
+        target_level=downside_reference,
+        rsi_14=current.rsi_14,
+        ema_8=current.ema_8,
+        ema_21=current.ema_21,
+        ema_50=current.ema_50,
+        daily_ema_20=current.daily_ema_20,
+        daily_sma_50=current.daily_sma_50,
+        atr_14=current.atr_14,
+        volume_ratio_20=current.volume_ratio_20,
+        risk_reward=risk_reward,
+        risk_pct=risk_pct,
+        reason=reason,
+        setup_key=f"{current.ticker}:followup:{key_kind}:{prior_key}:{round(current.last_price, 2)}",
+        technical_score=current.technical_score,
+        max_technical_score=current.max_technical_score,
+        confirmations=current.confirmations,
+    )
+
+
 def _neutral(
     ticker: str,
     name: str,
@@ -398,11 +469,12 @@ def analyze_bars(
 
 def _action_message(setup: StockSetup) -> str:
     checks = f"{setup.technical_score}/{setup.max_technical_score}" if setup.max_technical_score else "n/a"
+    reason = f"Technical checks: {checks}. {setup.reason}"
     if setup.setup_type == "Entry":
         return (
             "📈 Short-Term Stock Entry Setup\n\n"
             f"Ticker:\n{setup.ticker}\n\n"
-            "Research view:\nBuy setup detected\n\n"
+            "Model view:\nBuy\n\n"
             "Signal:\nGood\n\n"
             f"Confidence:\n{setup.confidence}\n\n"
             f"Timeframe:\n{setup.timeframe}\n\n"
@@ -410,17 +482,15 @@ def _action_message(setup: StockSetup) -> str:
             f"Entry trigger:\n{_money(setup.trigger_level)}\n\n"
             f"Exit / invalidation level:\n{_money(setup.exit_level)}\n\n"
             f"Research target:\n{_money(setup.target_level)}\n\n"
-            f"Risk if invalidated:\n{_pct(setup.risk_pct)}\n\n"
-            f"Risk/reward:\n{_ratio(setup.risk_reward)}x\n\n"
-            f"Technical checks:\n{checks}\n\n"
-            f"Reason:\n{setup.reason}\n\n"
-            "Warning:\nNot financial advice. This is a research signal only, not an instruction to buy, sell, short, hold, or trade."
+            f"Risk:\n{_pct(setup.risk_pct)} invalidation risk; risk/reward {_ratio(setup.risk_reward)}x\n\n"
+            f"Reason:\n{reason}\n\n"
+            "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
         )
 
     return (
         "📉 Short-Term Stock Exit/Risk Setup\n\n"
         f"Ticker:\n{setup.ticker}\n\n"
-        f"Research view:\n{setup.model_view} risk setup detected\n\n"
+        f"Model view:\n{setup.model_view}\n\n"
         "Signal:\nBad\n\n"
         f"Confidence:\n{setup.confidence}\n\n"
         f"Timeframe:\n{setup.timeframe}\n\n"
@@ -428,11 +498,9 @@ def _action_message(setup: StockSetup) -> str:
         f"Exit/risk trigger:\n{_money(setup.trigger_level)}\n\n"
         f"Invalidation / recovery level:\n{_money(setup.exit_level)}\n\n"
         f"Downside reference:\n{_money(setup.target_level)}\n\n"
-        f"Risk if invalidated:\n{_pct(setup.risk_pct)}\n\n"
-        f"Risk/reward:\n{_ratio(setup.risk_reward)}x\n\n"
-        f"Technical checks:\n{checks}\n\n"
-        f"Reason:\n{setup.reason}\n\n"
-        "Warning:\nNot financial advice. This is a research signal only, not an instruction to buy, sell, short, hold, or trade."
+        f"Risk:\n{_pct(setup.risk_pct)} invalidation/recovery risk; risk/reward {_ratio(setup.risk_reward)}x\n\n"
+        f"Reason:\n{reason}\n\n"
+        "Warning:\nNot financial advice. This is a research signal, not an instruction to buy, sell, short, hold, or trade."
     )
 
 
@@ -477,6 +545,10 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
             if len(bars) >= 60:
                 successful_data_scans += 1
             setup = analyze_bars(ticker, ticker_names.get(ticker, ticker), bars, settings, daily_bars)
+            prior_entry = db.load_open_entry_setup(ticker)
+            followup = _prior_entry_followup(setup, prior_entry)
+            if followup is not None:
+                setup = followup
             db.store_scan(ticker, asdict(setup))
             log.info(
                 "Stock scan %s: signal=%s setup=%s model_view=%s confidence=%s checks=%s/%s actionable=%s reason=%s",
@@ -517,7 +589,12 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
             log.exception("Telegram stock alert failed; setup will not be recorded as sent: %s", setup.setup_key)
             raise
 
-        db.store_alert(setup.ticker, setup.signal, setup.setup_key, asdict(setup))
+        payload = asdict(setup)
+        db.store_alert(setup.ticker, setup.signal, setup.setup_key, payload)
+        if setup.setup_type == "Entry" and setup.model_view == "Buy":
+            db.open_entry_setup(setup.ticker, setup.setup_key, payload)
+        elif setup.setup_type == "Exit/Risk" and setup.model_view in {"Sell", "Short"}:
+            db.close_entry_setup(setup.ticker, payload)
         sent += 1
         if sent >= max_alerts:
             break

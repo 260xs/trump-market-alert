@@ -123,18 +123,60 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
     assert "Short-Term Stock Entry Setup" in telegram.messages[0]
-    assert "Research view:" in telegram.messages[0]
-    assert "Buy setup detected" in telegram.messages[0]
+    assert "Model view:" in telegram.messages[0]
+    assert "Buy" in telegram.messages[0]
     assert "Entry trigger" in telegram.messages[0]
     assert "Exit / invalidation level" in telegram.messages[0]
-    assert "Risk if invalidated:" in telegram.messages[0]
-    assert "Risk/reward:" in telegram.messages[0]
+    assert "Risk:" in telegram.messages[0]
+    assert "risk/reward" in telegram.messages[0]
     assert "Technical checks:" in telegram.messages[0]
-    assert "research signal only" in telegram.messages[0]
+    assert "research signal" in telegram.messages[0]
+    assert db.load_open_entry_setup("NVDA") is not None
 
     # Same setup should be suppressed by duplicate protection.
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
+
+
+def test_prior_buy_followup_sends_exit_risk_when_invalidation_breaks(monkeypatch, tmp_path: Path):
+    import stocks.scanner as scanner
+
+    hourly = make_bars([100 + math.sin(i / 3) for i in range(79)] + [94.0], volume=2_000_000)
+    daily = make_bars([100 + math.sin(i / 4) for i in range(80)], volume=2_000_000)
+
+    def fake_fetch(_ticker, _period, interval):
+        return daily if interval == "1d" else hourly
+
+    monkeypatch.setattr(scanner, "fetch_bars", fake_fetch)
+    db = StockResearchDB(tmp_path / "stocks.sqlite3")
+    db.init()
+    db.open_entry_setup(
+        "NVDA",
+        "NVDA:entry:Medium:100:95",
+        {
+            "ticker": "NVDA",
+            "setup_key": "NVDA:entry:Medium:100:95",
+            "trigger_level": 100.0,
+            "exit_level": 95.0,
+            "target_level": 110.0,
+            "risk_reward": 2.0,
+            "risk_pct": 5.0,
+        },
+    )
+    telegram = FakeTelegram()
+    cfg = {
+        "settings": {"min_setup_confidence": "Medium", "duplicate_silence_hours": 24, "max_alerts_per_run": 5, "min_risk_reward": 1.8, "max_risk_pct": 9.0},
+        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "universe": ["NVDA"],
+    }
+
+    assert hourly_scan(cfg, db, telegram) == 0
+    assert len(telegram.messages) == 1
+    assert "Short-Term Stock Exit/Risk Setup" in telegram.messages[0]
+    assert "Model view:\nSell" in telegram.messages[0]
+    assert "Prior Buy research setup follow-up" in telegram.messages[0]
+    assert "not an instruction" in telegram.messages[0]
+    assert db.load_open_entry_setup("NVDA") is None
 
 
 def test_candidate_refresh_is_silent_by_default(monkeypatch, tmp_path: Path):
