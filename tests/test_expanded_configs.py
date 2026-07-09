@@ -53,10 +53,22 @@ def test_stock_universe_is_expanded_but_risk_capped():
     assert len(universe) >= 130
     assert set(priority).issubset(set(universe))
     assert len(universe) == len(set(universe))
+    assert settings["max_risk_pct"] <= 6.0
     assert settings["max_risk_pct"] < 15
-    assert settings["max_alerts_per_run"] <= 5
+    assert settings["max_alerts_per_run"] <= 3
     assert settings["send_hourly_summary"] is False
     assert settings["send_candidate_refresh_telegram"] is False
+
+
+def test_stock_alert_safety_mode_is_high_confidence_only():
+    settings = load_yaml("config/stocks.yaml")["settings"]
+    assert settings["min_setup_confidence"] == "High"
+    assert settings["min_risk_reward"] >= 2.2
+    assert settings["risk_reward_multiple"] >= 2.5
+    assert settings["min_volume_ratio_high"] >= 1.2
+    assert settings["entry_rsi_min"] >= 52
+    assert settings["entry_rsi_max"] <= 68
+    assert settings["exit_rsi_max"] <= 44
 
 
 def test_asset_map_covers_expanded_priority_names_and_blocks_common_ambiguity():

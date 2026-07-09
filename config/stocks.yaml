@@ -3,11 +3,12 @@ settings:
   send_hourly_summary: false
   send_only_when_actionable: true
   send_candidate_refresh_telegram: false
-  min_setup_confidence: Medium
+  # Real-money safety mode: Telegram only sends High-confidence stock setups.
+  min_setup_confidence: High
   # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
   allow_short_model_view: true
   duplicate_silence_hours: 24
-  max_alerts_per_run: 5
+  max_alerts_per_run: 3
   min_successful_scans: 1
 
   # Short-term focus: 1 week to 3 months.
@@ -28,25 +29,25 @@ settings:
 
   # Technical setup rules. The scanner is intentionally strict and favors fewer, higher-quality alerts.
   breakout_lookback_bars: 20
-  risk_reward_multiple: 2.0
+  risk_reward_multiple: 2.5
   atr_multiple_stop: 1.4
   breakout_buffer_atr: 0.10
-  near_trigger_atr_fraction: 0.35
-  min_volume_ratio_high: 1.10
-  # Medium-confidence setups still need reasonable liquidity/volume confirmation.
-  min_volume_ratio_medium: 0.85
-  min_risk_reward: 1.8
+  near_trigger_atr_fraction: 0.30
+  min_volume_ratio_high: 1.20
+  # Medium-confidence setups may be stored, but Telegram requires High confidence.
+  min_volume_ratio_medium: 1.00
+  min_risk_reward: 2.2
   # Hard cap for actionable stock alerts. Code also clamps this below 15% as a safety backstop.
-  max_risk_pct: 9.0
+  max_risk_pct: 6.0
 
   # Entry setup RSI window.
-  entry_rsi_min: 50
-  entry_rsi_high_min: 55
-  entry_rsi_max: 72
+  entry_rsi_min: 52
+  entry_rsi_high_min: 58
+  entry_rsi_max: 68
 
   # Exit/risk setup RSI window.
-  exit_rsi_max: 46
-  exit_rsi_high_max: 40
+  exit_rsi_max: 44
+  exit_rsi_high_max: 38
 
 priority_stocks:
   - ticker: NVDA
