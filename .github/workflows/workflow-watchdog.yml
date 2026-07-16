@@ -3,8 +3,6 @@ name: GitHub Actions Watchdog
 run-name: "Actions watchdog - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "25 13 * * *"
   workflow_dispatch:
 
 permissions:
