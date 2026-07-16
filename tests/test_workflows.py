@@ -22,13 +22,18 @@ def _crons(name: str) -> list[str]:
     return [entry["cron"] for entry in on.get("schedule", [])]
 
 
+MANUAL_ONLY_WORKFLOWS = [
+    "stable-monitor.yml",
+    "hourly-stock-scan.yml",
+    "stock-candidate-refresh.yml",
+    "manual-run-all.yml",
+    "system-health.yml",
+    "telegram-test.yml",
+]
+
+
 def test_operational_workflows_are_manual_dispatch_only():
-    for workflow in [
-        "stable-monitor.yml",
-        "hourly-stock-scan.yml",
-        "stock-candidate-refresh.yml",
-        "telegram-test.yml",
-    ]:
+    for workflow in MANUAL_ONLY_WORKFLOWS:
         on = _workflow(workflow)["on"]
         assert "workflow_dispatch" in on
         assert _crons(workflow) == []
@@ -46,7 +51,13 @@ def test_telegram_test_workflow_sends_exact_message_only_when_dispatched():
 
 
 def test_failure_telegram_alerts_are_opt_in():
-    for workflow in ["stable-monitor.yml", "hourly-stock-scan.yml", "stock-candidate-refresh.yml"]:
+    for workflow in [
+        "stable-monitor.yml",
+        "hourly-stock-scan.yml",
+        "stock-candidate-refresh.yml",
+        "manual-run-all.yml",
+        "system-health.yml",
+    ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
         assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text
