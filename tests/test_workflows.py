@@ -22,21 +22,27 @@ def _crons(name: str) -> list[str]:
     return [entry["cron"] for entry in on.get("schedule", [])]
 
 
-def test_production_workflow_schedules_are_enabled():
-    assert _crons("stable-monitor.yml") == ["7,27,47 * * * *"]
-    assert _crons("hourly-stock-scan.yml") == ["13 * * * *"]
-    assert _crons("stock-candidate-refresh.yml") == ["31 6 */3 * *"]
+def test_operational_workflows_are_manual_dispatch_only():
+    for workflow in [
+        "stable-monitor.yml",
+        "hourly-stock-scan.yml",
+        "stock-candidate-refresh.yml",
+        "telegram-test.yml",
+    ]:
+        on = _workflow(workflow)["on"]
+        assert "workflow_dispatch" in on
+        assert _crons(workflow) == []
 
 
-def test_telegram_test_workflow_sends_daily_exact_message():
+def test_telegram_test_workflow_sends_exact_message_only_when_dispatched():
     on = _workflow("telegram-test.yml")["on"]
     assert "workflow_dispatch" in on
-    assert on.get("schedule") == [{"cron": "5 13 * * *"}]
+    assert on.get("schedule", []) == []
 
     workflow_text = (ROOT / ".github" / "workflows" / "telegram-test.yml").read_text(encoding="utf-8")
     assert 'text=✅ Telegram test successful' in workflow_text
     assert workflow_text.count('text=✅ Telegram test successful') == 1
-    assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
+    assert "Manual Telegram test workflow." in workflow_text
 
 
 def test_failure_telegram_alerts_are_opt_in():
