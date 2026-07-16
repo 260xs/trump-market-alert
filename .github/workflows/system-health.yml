@@ -24,6 +24,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
 
 jobs:
   health:
@@ -40,6 +41,7 @@ jobs:
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
           echo "Schedule: daily health check at 04:37 UTC, best effort"
+          echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Check out project
         uses: actions/checkout@v6
@@ -84,7 +86,7 @@ jobs:
           python -m pytest -q
 
       - name: Send Telegram health failure alert
-        if: failure()
+        if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

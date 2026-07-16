@@ -31,7 +31,7 @@ def test_telegram_test_workflow_sends_daily_exact_message() -> None:
     assert workflow[True]["schedule"] == [{"cron": "5 13 * * *"}]
     assert "workflow_dispatch" in workflow[True]
 
-    workflow_text = (ROOT / ".github/workflows/telegram-test.yml").read_text(encoding="utf-8")
+    workflow_text = (ROOT / ".github" / "workflows" / "telegram-test.yml").read_text(encoding="utf-8")
     assert 'text=✅ Telegram test successful' in workflow_text
     assert workflow_text.count('text=✅ Telegram test successful') == 1
     assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
@@ -42,6 +42,7 @@ def test_core_workflow_failure_alerts_are_guarded() -> None:
         ".github/workflows/stable-monitor.yml",
         ".github/workflows/hourly-stock-scan.yml",
         ".github/workflows/stock-candidate-refresh.yml",
+        ".github/workflows/system-health.yml",
     ]:
         workflow = load_yaml(path)
         assert workflow["env"]["ENABLE_WORKFLOW_FAILURE_TELEGRAM"] == "${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}"
@@ -49,7 +50,7 @@ def test_core_workflow_failure_alerts_are_guarded() -> None:
             step
             for job in workflow["jobs"].values()
             for step in job["steps"]
-            if step.get("name") == "Send Telegram failure alert"
+            if step.get("name") in {"Send Telegram failure alert", "Send Telegram health failure alert"}
         ]
         assert failure_steps
         assert all("ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in step["if"] for step in failure_steps)
@@ -61,6 +62,8 @@ def test_automatic_health_and_watchdog_are_enabled() -> None:
     assert "System health check failed" in health_text
     assert "TELEGRAM_BOT_TOKEN" in health_text
     assert "TELEGRAM_CHAT_ID" in health_text
+    assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in health_text
+    assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in health_text
 
     watchdog = load_yaml(".github/workflows/workflow-watchdog.yml")
     assert watchdog["permissions"]["actions"] == "read"

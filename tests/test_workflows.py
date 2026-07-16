@@ -28,10 +28,15 @@ def test_production_workflow_schedules_are_enabled():
     assert _crons("stock-candidate-refresh.yml") == ["31 6 */3 * *"]
 
 
-def test_telegram_test_workflow_is_manual_only():
+def test_telegram_test_workflow_sends_daily_exact_message():
     on = _workflow("telegram-test.yml")["on"]
     assert "workflow_dispatch" in on
-    assert "schedule" not in on
+    assert on.get("schedule") == [{"cron": "5 13 * * *"}]
+
+    workflow_text = (ROOT / ".github" / "workflows" / "telegram-test.yml").read_text(encoding="utf-8")
+    assert 'text=✅ Telegram test successful' in workflow_text
+    assert workflow_text.count('text=✅ Telegram test successful') == 1
+    assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
 
 
 def test_failure_telegram_alerts_are_opt_in():
