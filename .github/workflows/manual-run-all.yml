@@ -57,6 +57,7 @@ env:
   HEALTHCHECKS_URL: ${{ secrets.HEALTHCHECKS_URL }}
   ENABLE_LIVE_AUDIO: ${{ vars.ENABLE_LIVE_AUDIO || 'false' }}
   ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'false' }}
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
   LIVE_SAMPLE_SECONDS: ${{ vars.LIVE_SAMPLE_SECONDS || '90' }}
 
 jobs:
@@ -76,6 +77,7 @@ jobs:
           echo "Run public figure scan: ${{ github.event.inputs.run_public_figure_scan }}"
           echo "Run stock scan: ${{ github.event.inputs.run_stock_scan }}"
           echo "Run candidate refresh: ${{ github.event.inputs.run_candidate_refresh }}"
+          echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Validate Telegram secrets
         run: |
@@ -176,7 +178,7 @@ jobs:
           key: manual-run-all-db-${{ github.ref_name }}-${{ github.run_id }}
 
       - name: Send Telegram failure alert
-        if: failure()
+        if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
         run: |
           if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
             echo "Telegram secrets missing; cannot send failure alert."

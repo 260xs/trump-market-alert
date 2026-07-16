@@ -3,8 +3,6 @@ name: System Health Check
 run-name: "System health - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "37 4 * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,7 +26,7 @@ env:
 
 jobs:
   health:
-    name: Run daily imports, dependency checks, and tests
+    name: Run imports, dependency checks, and tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -40,7 +38,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
-          echo "Schedule: daily health check at 04:37 UTC, best effort"
+          echo "Manual system health workflow."
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Check out project
