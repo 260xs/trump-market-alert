@@ -1,0 +1,254 @@
+name: Missed Opportunity Audit
+
+run-name: "Missed opportunity audit - ${{ github.event_name }} - run #${{ github.run_number }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: "manual or external audit runner"
+        required: false
+        default: "manual"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: missed-opportunity-audit
+  cancel-in-progress: false
+
+env:
+  PYTHONUNBUFFERED: "1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_CHAT_ID: ""
+
+jobs:
+  audit:
+    name: Audit missed opportunities without alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Show trigger info
+        run: |
+          echo "Triggered by: ${GITHUB_EVENT_NAME}"
+          echo "Run number: ${GITHUB_RUN_NUMBER}"
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Telegram is disabled for this retrospective audit."
+
+      - name: Check out project
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Prepare data directory
+        run: mkdir -p data
+
+      - name: Restore public alert database cache
+        uses: actions/cache/restore@v5
+        with:
+          path: data
+          key: public-alert-db-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            public-alert-db-${{ github.ref_name }}-
+
+      - name: Restore stock database cache
+        uses: actions/cache/restore@v5
+        with:
+          path: data
+          key: stock-research-db-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            stock-research-db-${{ github.ref_name }}-
+
+      - name: Run retrospective missed-opportunity audit
+        env:
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
+        run: |
+          python - <<'PY'
+          import json, os, sqlite3
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from statistics import median
+
+          os.environ["TELEGRAM_BOT_TOKEN"] = ""
+          os.environ["TELEGRAM_CHAT_ID"] = ""
+          AUDIT_VERSION = "missed-opportunity-audit-v1"
+          PREVENTABLE = {
+              "Source coverage miss", "Collection failure", "Detection latency miss", "Registry miss",
+              "Mapping failure", "Classification failure", "Market-data failure", "Candidate-selection failure",
+              "Risk-gate rejection", "Incorrect duplicate rejection", "Telegram failure", "Possible strategy false negative",
+          }
+
+          def now():
+              return datetime.now(timezone.utc).isoformat()
+
+          def connect(path):
+              Path(path).parent.mkdir(parents=True, exist_ok=True)
+              con = sqlite3.connect(path)
+              con.row_factory = sqlite3.Row
+              return con
+
+          def exists(con, table):
+              return bool(con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone())
+
+          def rows(con, table, limit=1000):
+              if not exists(con, table):
+                  return []
+              return [dict(r) for r in con.execute(f"SELECT * FROM {table} ORDER BY rowid DESC LIMIT ?", (limit,))]
+
+          def payload(raw):
+              if not raw:
+                  return {}
+              try:
+                  data = json.loads(raw)
+              except json.JSONDecodeError:
+                  return {}
+              return data if isinstance(data, dict) else {}
+
+          def num(value):
+              try:
+                  return None if value is None else float(value)
+              except (TypeError, ValueError):
+                  return None
+
+          def stock_event(row):
+              p = payload(row.get("payload_json"))
+              ticker = str(row.get("ticker") or p.get("ticker") or "UNKNOWN").upper()
+              signal = str(p.get("signal") or "Neutral")
+              model_view = str(p.get("model_view") or "Hold")
+              confidence = str(p.get("confidence") or "None")
+              setup_type = str(p.get("setup_type") or "None")
+              complete = (
+                  signal in {"Good", "Bad"} and setup_type in {"Entry", "Exit/Risk"}
+                  and model_view in {"Buy", "Sell", "Short"}
+                  and num(p.get("trigger_level")) is not None and num(p.get("exit_level")) is not None
+                  and num(p.get("risk_reward")) is not None and num(p.get("risk_pct")) is not None
+              )
+              if not complete:
+                  category, stage, reason = "Correctly rejected", "stock alert gate", "Stored scan lacked complete trigger, invalidation, risk, risk/reward, and Buy/Sell/Short view."
+              elif confidence != "High":
+                  category, stage, reason = "Correctly rejected", "confidence gate", f"Stored scan was {confidence} confidence; current config requires High confidence."
+              else:
+                  category, stage, reason = "Insufficient evidence", "alert delivery comparison", "Scan appears High-confidence, but alert/dedupe context is required before calling it preventable."
+              scanned_at = str(row.get("scanned_at") or "")
+              vol = num(p.get("volume_ratio_20"))
+              return {
+                  "event_id": f"stock_scan:{row.get('id', ticker)}", "asset": ticker, "asset_class": "stock_or_etf",
+                  "sector": "unknown", "direction": model_view if model_view in {"Buy", "Sell", "Short"} else "None",
+                  "category": category, "failed_stage": stage, "exact_reason": reason,
+                  "catalyst_source": "system stock scan payload", "catalyst_time": scanned_at,
+                  "movement_start": scanned_at, "system_detection_time": scanned_at,
+                  "latency_minutes": 0.0 if scanned_at else None,
+                  "first_realistic_actionable_price": num(p.get("last_price")),
+                  "benchmark_adjusted_move_pct": None,
+                  "volume_evidence": f"volume_ratio_20={vol:.2f}" if vol is not None else "volume_ratio_20 unavailable",
+                  "strategy_version": AUDIT_VERSION, "source_version": str(row.get("id") or ""),
+                  "technical_or_logic_cause": "technical" if category == "Correctly rejected" else "undetermined",
+                  "estimated_diagnostic_opportunity_after_costs_pct": None,
+                  "diagnosis_confidence": "Medium" if category == "Correctly rejected" else "Low",
+              }
+
+          def public_event(row):
+              sent = int(row.get("telegram_sent") or 0)
+              signal = str(row.get("signal") or "UNKNOWN")
+              sent_at = str(row.get("sent_at") or "")
+              return {
+                  "event_id": f"public_alert:{row.get('id', 'unknown')}", "asset": str(row.get("ticker") or "UNKNOWN"),
+                  "asset_class": "public_figure_statement", "sector": "unknown",
+                  "direction": "Buy" if signal == "Good" else "Sell" if signal == "Bad" else "None",
+                  "category": "Correctly rejected" if sent else "Insufficient evidence",
+                  "failed_stage": "telegram delivery comparison",
+                  "exact_reason": "Verified alert record was sent." if sent else "Alert row exists without Telegram sent flag; delivery logs are required before calling it preventable.",
+                  "catalyst_source": str(row.get("speaker_name") or "UNKNOWN"), "catalyst_time": sent_at,
+                  "movement_start": sent_at, "system_detection_time": sent_at, "latency_minutes": 0.0 if sent_at else None,
+                  "first_realistic_actionable_price": None, "benchmark_adjusted_move_pct": None,
+                  "volume_evidence": "not applicable", "strategy_version": AUDIT_VERSION,
+                  "source_version": str(row.get("statement_id") or ""), "technical_or_logic_cause": "undetermined",
+                  "estimated_diagnostic_opportunity_after_costs_pct": None, "diagnosis_confidence": "Low",
+              }
+
+          events = []
+          if Path("data/stocks.sqlite3").exists():
+              with connect("data/stocks.sqlite3") as con:
+                  events += [stock_event(r) for r in rows(con, "stock_scans")]
+          if Path("data/market_alerts.sqlite3").exists():
+              with connect("data/market_alerts.sqlite3") as con:
+                  events += [public_event(r) for r in rows(con, "alerts")]
+
+          preventable = [e for e in events if e["category"] in PREVENTABLE]
+          correct = [e for e in events if e["category"] == "Correctly rejected"]
+          unavoidable = [e for e in events if e["category"] == "Unavoidable miss"]
+          valid = [e for e in events if e["category"] not in {"Not valid", "Insufficient evidence"}]
+          latencies = [e["latency_minutes"] for e in events if e["latency_minutes"] is not None]
+          by_category = {}
+          by_ticker = {}
+          by_stage = {}
+          for event in events:
+              by_category[event["category"]] = by_category.get(event["category"], 0) + 1
+              by_ticker[event["asset"]] = by_ticker.get(event["asset"], 0) + 1
+              by_stage[event["failed_stage"]] = by_stage.get(event["failed_stage"], 0) + 1
+          summary = {
+              "audit_version": AUDIT_VERSION,
+              "events_reviewed": len(events),
+              "valid_ex_ante_opportunities": len(valid),
+              "correct_rejections": len(correct),
+              "unavoidable_misses": len(unavoidable),
+              "preventable_misses": len(preventable),
+              "miss_rate": (len(preventable) / len(valid)) if valid else 0.0,
+              "median_latency_minutes": median(latencies) if latencies else None,
+              "misses_by_category": by_category,
+              "misses_by_ticker": by_ticker,
+              "misses_by_stage": by_stage,
+              "recurring_pattern": "No proven recurring preventable-miss pattern." if not preventable else max(by_stage, key=by_stage.get),
+              "diagnostic_opportunity_after_costs_pct": sum(e["estimated_diagnostic_opportunity_after_costs_pct"] or 0 for e in preventable),
+          }
+
+          with connect("data/missed_opportunity_audit.sqlite3") as con:
+              con.executescript("""
+              CREATE TABLE IF NOT EXISTS missed_opportunity_audit_runs (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT, audit_version TEXT NOT NULL, started_at TEXT NOT NULL,
+                  finished_at TEXT, status TEXT NOT NULL, events_reviewed INTEGER NOT NULL DEFAULT 0,
+                  valid_ex_ante_opportunities INTEGER NOT NULL DEFAULT 0, correct_rejections INTEGER NOT NULL DEFAULT 0,
+                  unavoidable_misses INTEGER NOT NULL DEFAULT 0, preventable_misses INTEGER NOT NULL DEFAULT 0,
+                  miss_rate REAL, median_latency_minutes REAL, recurring_pattern TEXT,
+                  diagnostic_opportunity_after_costs_pct REAL, summary_json TEXT NOT NULL DEFAULT '{}'
+              );
+              CREATE TABLE IF NOT EXISTS missed_opportunity_events (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT, audit_run_id INTEGER NOT NULL, event_json TEXT NOT NULL,
+                  asset TEXT NOT NULL, category TEXT NOT NULL, failed_stage TEXT NOT NULL,
+                  strategy_version TEXT NOT NULL, reviewed_at TEXT NOT NULL
+              );
+              """)
+              cur = con.execute("INSERT INTO missed_opportunity_audit_runs (audit_version, started_at, status) VALUES (?, ?, 'running')", (AUDIT_VERSION, now()))
+              run_id = int(cur.lastrowid)
+              for event in events:
+                  con.execute("INSERT INTO missed_opportunity_events (audit_run_id, event_json, asset, category, failed_stage, strategy_version, reviewed_at) VALUES (?, ?, ?, ?, ?, ?, ?)", (run_id, json.dumps(event, sort_keys=True), event["asset"], event["category"], event["failed_stage"], event["strategy_version"], now()))
+              con.execute("""
+              UPDATE missed_opportunity_audit_runs
+              SET finished_at=?, status='completed', events_reviewed=?, valid_ex_ante_opportunities=?, correct_rejections=?,
+                  unavoidable_misses=?, preventable_misses=?, miss_rate=?, median_latency_minutes=?, recurring_pattern=?,
+                  diagnostic_opportunity_after_costs_pct=?, summary_json=?
+              WHERE id=?
+              """, (now(), summary["events_reviewed"], summary["valid_ex_ante_opportunities"], summary["correct_rejections"], summary["unavoidable_misses"], summary["preventable_misses"], summary["miss_rate"], summary["median_latency_minutes"], summary["recurring_pattern"], summary["diagnostic_opportunity_after_costs_pct"], json.dumps(summary, sort_keys=True), run_id))
+
+          Path("data/missed_opportunity_audit_report.json").write_text(json.dumps({"summary": summary, "events": events}, indent=2, sort_keys=True), encoding="utf-8")
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload audit artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: missed-opportunity-audit-${{ github.run_id }}
+          path: |
+            data/missed_opportunity_audit.sqlite3
+            data/missed_opportunity_audit_report.json
+          if-no-files-found: error
