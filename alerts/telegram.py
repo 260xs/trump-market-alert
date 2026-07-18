@@ -16,6 +16,15 @@ def _fmt_time(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
+def _redact_telegram_error(exc: Exception, token: str, chat_id: str) -> str:
+    message = str(exc)
+    if token:
+        message = message.replace(token, "[REDACTED_TELEGRAM_BOT_TOKEN]")
+    if chat_id:
+        message = message.replace(chat_id, "[REDACTED_TELEGRAM_CHAT_ID]")
+    return message.replace(f"/bot{token}/", "/bot[REDACTED_TELEGRAM_BOT_TOKEN]/") if token else message
+
+
 def build_market_alert_text(stmt: Statement, entity: EntityMatch, signal: Signal, lane: str, reason: str) -> str:
     if lane == "live_provisional":
         return (
@@ -63,7 +72,7 @@ class TelegramClient:
         if not self.enabled:
             raise RuntimeError("Telegram is not configured")
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
-        last_error: Exception | None = None
+        last_error = ""
         for attempt in range(1, 4):
             try:
                 response = requests.post(
@@ -78,7 +87,7 @@ class TelegramClient:
                 result = data.get("result") or {}
                 return str(result.get("message_id", ""))
             except Exception as exc:
-                last_error = exc
+                last_error = _redact_telegram_error(exc, self.token, self.chat_id)
                 if attempt == 3:
                     break
                 time.sleep(2 * attempt)
