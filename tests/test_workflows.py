@@ -22,25 +22,44 @@ def _crons(name: str) -> list[str]:
     return [entry["cron"] for entry in on.get("schedule", [])]
 
 
-def test_production_workflow_schedules_are_enabled():
-    assert _crons("stable-monitor.yml") == ["7,27,47 * * * *"]
-    assert _crons("hourly-stock-scan.yml") == ["13 * * * *"]
-    assert _crons("stock-candidate-refresh.yml") == ["31 6 */3 * *"]
-
-
-def test_telegram_test_workflow_sends_daily_exact_message():
-    on = _workflow("telegram-test.yml")["on"]
+def test_daily_system_health_workflow_sends_telegram_heartbeat():
+    on = _workflow("system-health.yml")["on"]
     assert "workflow_dispatch" in on
     assert on.get("schedule") == [{"cron": "5 13 * * *"}]
 
+    workflow_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
+    assert "daily Telegram health check at 13:05 UTC" in workflow_text
+    assert "Validate Telegram secrets for scheduled health check" in workflow_text
+    assert "success() && github.event_name == 'schedule'" in workflow_text
+    assert 'TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}' in workflow_text
+    assert 'TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}' in workflow_text
+    assert "✅ Daily system health check passed" in workflow_text
+    assert workflow_text.count("✅ Daily system health check passed") == 1
+
+
+def test_telegram_test_workflow_is_manual_only_exact_message():
+    on = _workflow("telegram-test.yml")["on"]
+    assert "workflow_dispatch" in on
+    assert on.get("schedule", []) == []
+
     workflow_text = (ROOT / ".github" / "workflows" / "telegram-test.yml").read_text(encoding="utf-8")
-    assert 'text=✅ Telegram test successful' in workflow_text
-    assert workflow_text.count('text=✅ Telegram test successful') == 1
-    assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
+    assert "text=✅ Telegram test successful" in workflow_text
+    assert workflow_text.count("text=✅ Telegram test successful") == 1
+
+
+def test_operational_scanner_workflows_are_manual_only():
+    assert _crons("stable-monitor.yml") == []
+    assert _crons("hourly-stock-scan.yml") == []
+    assert _crons("stock-candidate-refresh.yml") == []
 
 
 def test_failure_telegram_alerts_are_opt_in():
-    for workflow in ["stable-monitor.yml", "hourly-stock-scan.yml", "stock-candidate-refresh.yml"]:
+    for workflow in [
+        "stable-monitor.yml",
+        "hourly-stock-scan.yml",
+        "stock-candidate-refresh.yml",
+        "system-health.yml",
+    ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
         assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text
