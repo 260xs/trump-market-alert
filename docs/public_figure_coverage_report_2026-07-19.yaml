@@ -1,0 +1,325 @@
+report_id: public_figure_coverage_2026_07_19
+verified_at_utc: "2026-07-19T00:05:01Z"
+scope:
+  requested_run_type: coverage_expansion_verification_repair
+  telegram_disabled: true
+  stock_scans_run: false
+  strategy_rules_changed: false
+  profitability_evaluated: false
+  cron_added: false
+repository_snapshot:
+  repository: 260xs/trump-market-alert
+  default_branch: main
+  inspected_head: d86f7146084bb3198c4d01d99cc48a6685097a91
+  active_enabled_people_reviewed:
+    root_watchlist_count: 22
+    extra_watchlist_count: 16
+    total_enabled_runtime_entries: 38
+  current_runtime_notes:
+    - Root watchlist contains United States public officials, central bankers, bank CEOs, mega-cap technology CEOs, AI leaders, crypto leaders, and investors.
+    - Extra watchlist is heavily United States-focused and includes several active entries that depend mostly on Google News RSS rather than original official sources.
+    - Official-source pages can be documented for wider worldwide coverage, but current source adapters support rss, youtube_rss, x_api, truthsocial, and live_audio only.
+workflows_checked:
+  stable-monitor.yml:
+    path: .github/workflows/stable-monitor.yml
+    workflow_dispatch: true
+    schedule_present: false
+    dispatch_started: false
+    reason_not_started: Could send real public-figure Telegram alerts if a strict alert qualifies; discovery and coverage runs must not send Telegram.
+  hourly-stock-scan.yml:
+    path: .github/workflows/hourly-stock-scan.yml
+    workflow_dispatch: true
+    schedule_present: false
+    dispatch_started: false
+    reason_not_started: Out of scope; user explicitly prohibited live stock scans.
+  stock-candidate-refresh.yml:
+    path: .github/workflows/stock-candidate-refresh.yml
+    workflow_dispatch: true
+    schedule_present: false
+    dispatch_started: false
+    reason_not_started: Stock discovery workflow; out of scope for this public-figure/source coverage run.
+  telegram-test.yml:
+    path: .github/workflows/telegram-test.yml
+    workflow_dispatch: true
+    schedule_present: false
+    dispatch_started: false
+    reason_not_started: Would send the exact Telegram test message; user prohibited Telegram messages for discovery, registry updates, reports, tests, PRs, or shadow collection.
+source_adapters_reviewed:
+  supported_runtime_source_types:
+    - rss
+    - youtube_rss
+    - x_api
+    - truthsocial
+    - live_audio
+  unsupported_or_not_confirmed:
+    - html_listing_parser
+    - official_site_search_api
+    - podcast_platform_api
+    - linkedin_api
+    - threads_api
+    - bluesky_api
+    - wechat_or_weibo_public_pages
+    - telegram_public_channels
+verified_original_source_candidates:
+  - id: christine_lagarde
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Christine Lagarde
+    aliases: [Christine Lagarde, ECB President Lagarde, President Lagarde]
+    current_role: President of the European Central Bank
+    organization: European Central Bank
+    country_or_region: Euro area
+    category: central_bank
+    related_assets_or_sectors: [EUR, European equities, European banks, sovereign bonds, rates]
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.ecb.europa.eu/home/html/rss.en.html
+        evidence: ECB publishes RSS feeds for press releases, speeches, interviews, and press conference transcripts.
+      - type: speeches_or_press_conferences
+        url: https://www.ecb.europa.eu/press/key/date/2026/html/ecb.sp260622~b060a27b78.en.html
+        evidence: ECB page identifies a 2026 speech by Christine Lagarde as President of the ECB.
+    cursor_policy: use RSS item guid/link and published timestamp; do not infer speaker from article title alone.
+  - id: andrew_bailey
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Andrew Bailey
+    aliases: [Andrew Bailey, Governor Bailey, Bank of England Governor]
+    current_role: Governor of the Bank of England
+    organization: Bank of England
+    country_or_region: United Kingdom
+    category: central_bank
+    related_assets_or_sectors: [GBP, UK equities, UK banks, gilt yields, rates]
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.bankofengland.co.uk/rss
+        evidence: Bank of England RSS page includes a Speeches feed.
+      - type: speeches_page
+        url: https://www.bankofengland.co.uk/news/speeches
+        evidence: Bank of England speeches page listed Andrew Bailey speech activity in July 2026.
+    cursor_policy: use RSS item link and publication date; require full official speech page before strict alerts.
+  - id: kazuo_ueda
+    status: Candidate
+    non_active_reason_code: source_adapter_gap_official_html_or_bis_feed_needed
+    canonical_name: Kazuo Ueda
+    aliases: [Kazuo Ueda, UEDA Kazuo, Governor Ueda, Bank of Japan Governor]
+    current_role: Governor of the Bank of Japan
+    organization: Bank of Japan
+    country_or_region: Japan
+    category: central_bank
+    related_assets_or_sectors: [JPY, Japanese equities, JGBs, rates]
+    identity_confidence: 0.99
+    source_confidence: 0.96
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: speeches_page
+        url: https://www.boj.or.jp/en/about/press/koen_speaker/gv_ueda/index.htm
+        evidence: Bank of Japan lists 2026 speeches by UEDA Kazuo, Governor.
+      - type: speeches_index
+        url: https://www.boj.or.jp/en/about/press/index.htm
+        evidence: Bank of Japan speeches and statements index lists governor speeches with dates.
+    cursor_policy: needs stable official page/article URL and date parser; do not activate until collector compatibility is implemented or an official RSS-equivalent is verified.
+  - id: tiff_macklem
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Tiff Macklem
+    aliases: [Tiff Macklem, Governor Macklem, Bank of Canada Governor]
+    current_role: Governor of the Bank of Canada
+    organization: Bank of Canada
+    country_or_region: Canada
+    category: central_bank
+    related_assets_or_sectors: [CAD, Canadian equities, Canadian banks, rates, oil-sensitive CAD assets]
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.bankofcanada.ca/rss-feeds/
+        evidence: Bank of Canada RSS page includes Speeches and appearances and Webcasts feeds.
+      - type: speeches_page
+        url: https://www.bankofcanada.ca/press/speeches/
+        evidence: Bank of Canada speeches page lists Tiff Macklem monetary policy press conference statements in 2026.
+    cursor_policy: use RSS item link and publication timestamp; require speaker match on official page.
+  - id: michele_bullock
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Michele Bullock
+    aliases: [Michele Bullock, Governor Bullock, RBA Governor]
+    current_role: Governor of the Reserve Bank of Australia
+    organization: Reserve Bank of Australia
+    country_or_region: Australia
+    category: central_bank
+    related_assets_or_sectors: [AUD, Australian equities, Australian banks, rates, commodities]
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.rba.gov.au/updates/rss-feeds.html
+        evidence: RBA RSS page lists Speeches, Speeches Webcast, and Media Releases feeds.
+      - type: speeches_page
+        url: https://www.rba.gov.au/speeches/
+        evidence: RBA speeches page lists Michele Bullock governor speeches and media conferences.
+    cursor_policy: use RSS item link and publication date; require official transcript page before strict alerts.
+  - id: martin_schlegel
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Martin Schlegel
+    aliases: [Martin Schlegel, SNB Chairman Schlegel, Chairman Schlegel]
+    current_role: Chairman of the Governing Board of the Swiss National Bank
+    organization: Swiss National Bank
+    country_or_region: Switzerland
+    category: central_bank
+    related_assets_or_sectors: [CHF, Swiss equities, Swiss banks, rates]
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.snb.ch/en/services-events/digital-services/rss-calendar-feeds
+        evidence: SNB RSS page lists Speeches as an RSS category.
+      - type: speeches_page
+        url: https://www.snb.ch/en/news-publications/speeches
+        evidence: SNB speeches page listed multiple 2026 Martin Schlegel speeches as Chairman of the Governing Board.
+    cursor_policy: use RSS item URL and timestamp; allow multilingual title/body but require identity match.
+  - id: michael_selig
+    status: Candidate
+    non_active_reason_code: pending_runtime_watchlist_patch
+    canonical_name: Michael S. Selig
+    aliases: [Michael Selig, Michael S. Selig, CFTC Chairman Selig, Chairman Selig]
+    current_role: Chairman of the Commodity Futures Trading Commission
+    organization: Commodity Futures Trading Commission
+    country_or_region: United States
+    category: regulator
+    related_assets_or_sectors: [crypto, commodities, derivatives, prediction markets]
+    identity_confidence: 0.98
+    source_confidence: 0.96
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: rss_directory
+        url: https://www.cftc.gov/RSS/index.htm
+        evidence: CFTC RSS page includes a Speeches and Testimony feed.
+      - type: statements_page
+        url: https://www.cftc.gov/PressRoom/SpeechesTestimony/index.htm
+        evidence: CFTC public statements page listed 2026 remarks by Chairman Michael S. Selig.
+    cursor_policy: use RSS item link and publication date; require official CFTC page before strict alerts.
+  - id: sultan_al_jaber
+    status: Candidate
+    non_active_reason_code: source_adapter_gap_official_html_no_rss_confirmed
+    canonical_name: Sultan Ahmed Al Jaber
+    aliases: [Sultan Al Jaber, Dr Sultan Al Jaber, Dr. Sultan Ahmed Al Jaber]
+    current_role: UAE Minister of Industry and Advanced Technology; ADNOC Managing Director and Group CEO
+    organization: ADNOC
+    country_or_region: United Arab Emirates
+    category: energy_leader
+    related_assets_or_sectors: [oil, LNG, natural gas, energy sector, UAE equities]
+    identity_confidence: 0.98
+    source_confidence: 0.95
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: press_releases_page
+        url: https://www.adnoc.ae/en/news-and-media/press-releases
+        evidence: ADNOC official press releases identify Sultan Ahmed Al Jaber as Managing Director and Group CEO in 2026 energy-market statements.
+    cursor_policy: needs official HTML listing parser or verified feed; do not activate until collector compatibility is implemented.
+  - id: abdulaziz_bin_salman
+    status: Candidate
+    non_active_reason_code: source_adapter_gap_official_html_or_opec_feed_needed
+    canonical_name: Abdulaziz bin Salman Al Saud
+    aliases: [Prince Abdulaziz bin Salman, Abdulaziz bin Salman, Saudi Energy Minister]
+    current_role: Minister of Energy of Saudi Arabia
+    organization: Ministry of Energy of Saudi Arabia / OPEC delegation
+    country_or_region: Saudi Arabia
+    category: energy_official
+    related_assets_or_sectors: [oil, Brent, WTI, energy sector, OPEC]
+    identity_confidence: 0.98
+    source_confidence: 0.95
+    market_relevance: high
+    source_priority: high
+    official_sources:
+      - type: opec_member_page
+        url: https://www.opec.org/saudi-arabia.html
+        evidence: OPEC Saudi Arabia page identifies HRH Prince Abdulaziz bin Salman Al-Saud as Minister of Energy and Head of Delegation.
+      - type: opec_speeches_page
+        url: https://www.opec.org/speech-detail/388-9-july-2025.html
+        evidence: OPEC published remarks involving Saudi Arabia's Minister of Energy.
+    cursor_policy: needs official RSS or OPEC/Saudi ministry HTML parser; do not activate until stable IDs and timestamps are confirmed.
+rejected_or_stale_discoveries:
+  - id: caroline_pham_cftc_acting_chair
+    status: Stale
+    non_active_reason_code: role_changed_current_cftc_chairman_is_michael_selig_in_2026_sources_reviewed
+    canonical_name: Caroline D. Pham
+    evidence_url: https://www.cftc.gov/PressRoom/SpeechesTestimony/index.htm
+mapping_review:
+  existing_guards_confirmed:
+    - Apple Inc. has fruit/farm/juice/pie avoid contexts.
+    - Amazon.com has rainforest/river/jungle avoid contexts.
+    - Meta Platforms requires Meta Platforms, Facebook, or ticker META; ordinary meta is blocked.
+    - Marvel is blocked from Marvell Technology unless Marvell/MRVL is explicit.
+    - X is blocked as too ambiguous.
+    - Gold and Oil require market/commodity context and avoid color/cooking/art contexts.
+  mappings_added_or_changed: []
+  unresolved_mapping_gaps:
+    - Central-bank speech assets are primarily currencies, rates, bonds, broad equity indices, and banks; no single ticker mapping should be added without direct tradable-asset context.
+    - Energy officials can affect oil/LNG/energy sector mappings, but oil must continue to require market context.
+coverage_summary:
+  countries_or_regions_currently_active_runtime:
+    - United States
+    - Taiwan
+  countries_or_regions_verified_candidates:
+    - Euro area
+    - United Kingdom
+    - Japan
+    - Canada
+    - Australia
+    - Switzerland
+    - United States
+    - United Arab Emirates
+    - Saudi Arabia
+  categories_currently_active_runtime:
+    - political_leader
+    - central_bank
+    - treasury
+    - mega_cap_ceo
+    - bank_ceo
+    - ai_leader
+    - crypto_leader
+    - investor
+    - government_policy
+    - regulator
+    - ceo
+    - official_feed_bundle
+  categories_verified_candidates:
+    - central_bank
+    - regulator
+    - energy_leader
+    - energy_official
+highest_priority_gaps:
+  - Add runtime support or config for official RSS feeds from ECB, Bank of England, Bank of Canada, RBA, SNB, SEC, and CFTC before relying on more Google News coverage.
+  - Add a public-figure registry schema with status, non_active_reason_code, identity confidence, role dates, source confidence, cursor policy, and last verification timestamp.
+  - Add official HTML listing parsers for BOJ, ADNOC, OPEC/Saudi energy sources, or keep those identities Candidate.
+  - Expand beyond United States/Taiwan active coverage into Europe, UK, Japan, Canada, Australia, Switzerland, Gulf energy, and major Asian regulators.
+  - Add source health reporting from cached source_runs when a checkout or database cache is available.
+validation:
+  yaml_parse: passed
+  tests_run: []
+  tests_not_run_reason: Repository checkout was unavailable because direct GitHub network clone/API access from the container returned 403; connector inspection was used instead.
+  telegram_test_sent: false
+  public_scanner_workflow_ran: false
+  stock_scanner_workflow_ran: false
+rollback:
+  remove_files:
+    - docs/public_figure_coverage_report_2026-07-19.yaml
+  risk: Documentation-only report; no runtime scanner behavior changed.
