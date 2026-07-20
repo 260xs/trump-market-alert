@@ -22,19 +22,16 @@ def _crons(name: str) -> list[str]:
     return [entry["cron"] for entry in on.get("schedule", [])]
 
 
-def test_daily_system_health_workflow_sends_telegram_heartbeat():
+def test_health_workflow_is_manual_only_and_has_no_routine_telegram_success():
     on = _workflow("system-health.yml")["on"]
     assert "workflow_dispatch" in on
-    assert on.get("schedule") == [{"cron": "5 13 * * *"}]
+    assert on.get("schedule", []) == []
 
     workflow_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
-    assert "daily Telegram health check at 13:05 UTC" in workflow_text
-    assert "Validate Telegram secrets for scheduled health check" in workflow_text
-    assert "success() && github.event_name == 'schedule'" in workflow_text
-    assert 'TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}' in workflow_text
-    assert 'TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}' in workflow_text
-    assert "✅ Daily system health check passed" in workflow_text
-    assert workflow_text.count("✅ Daily system health check passed") == 1
+    assert "daily Telegram health check" not in workflow_text
+    assert "Validate Telegram secrets for scheduled health check" not in workflow_text
+    assert "success() && github.event_name == 'schedule'" not in workflow_text
+    assert "✅ Daily system health check passed" not in workflow_text
 
 
 def test_telegram_test_workflow_is_manual_only_exact_message():
