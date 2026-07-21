@@ -21,6 +21,7 @@ def test_operational_workflows_are_manual_only() -> None:
         ".github/workflows/manual-run-all.yml",
         ".github/workflows/telegram-test.yml",
         ".github/workflows/system-health.yml",
+        ".github/workflows/workflow-watchdog.yml",
     ]:
         workflow = load_yaml(path)
         assert "workflow_dispatch" in workflow["on"]
@@ -69,11 +70,13 @@ def test_automatic_health_and_watchdog_do_not_send_routine_telegram() -> None:
     watchdog = load_yaml(".github/workflows/workflow-watchdog.yml")
     assert watchdog["on"].get("schedule", []) == []
     assert watchdog["permissions"]["actions"] == "read"
+    assert watchdog["env"]["ENABLE_WORKFLOW_FAILURE_TELEGRAM"] == "${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}"
     watchdog_text = (ROOT / ".github" / "workflows" / "workflow-watchdog.yml").read_text(encoding="utf-8")
     assert "WATCHDOG_LOOKBACK_HOURS" in watchdog_text
     assert "GitHub Actions watchdog alert" in watchdog_text
+    assert "failure_telegram_enabled" in watchdog_text
+    assert "Telegram failure alerts are disabled" in watchdog_text
     assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in watchdog_text
-    assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in watchdog_text
 
 
 def test_candidate_refresh_is_silent_by_default() -> None:
