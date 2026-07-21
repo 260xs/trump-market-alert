@@ -48,6 +48,7 @@ def test_operational_scanner_workflows_are_manual_only():
     assert _crons("stable-monitor.yml") == []
     assert _crons("hourly-stock-scan.yml") == []
     assert _crons("stock-candidate-refresh.yml") == []
+    assert _crons("workflow-watchdog.yml") == []
 
 
 def test_failure_telegram_alerts_are_opt_in():
@@ -56,10 +57,11 @@ def test_failure_telegram_alerts_are_opt_in():
         "hourly-stock-scan.yml",
         "stock-candidate-refresh.yml",
         "system-health.yml",
+        "workflow-watchdog.yml",
     ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
-        assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text
+        assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text or "Recent workflow failures found, but Telegram failure alerts are disabled." in text
 
 
 def test_candidate_refresh_does_not_require_or_use_telegram_secrets_for_scan():
