@@ -7,34 +7,37 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_yaml(path: str) -> dict:
-    return yaml.safe_load((ROOT / path).read_text(encoding="utf-8"))
+    workflow = yaml.safe_load((ROOT / path).read_text(encoding="utf-8"))
+    if True in workflow and "on" not in workflow:
+        workflow["on"] = workflow[True]
+    return workflow
 
 
-def test_scheduled_workflows_use_expected_crons() -> None:
-    expected = {
-        ".github/workflows/stable-monitor.yml": "7,27,47 * * * *",
-        ".github/workflows/hourly-stock-scan.yml": "13 * * * *",
-        ".github/workflows/stock-candidate-refresh.yml": "31 6 */3 * *",
-        ".github/workflows/telegram-test.yml": "5 13 * * *",
-        ".github/workflows/system-health.yml": "37 4 * * *",
-        ".github/workflows/workflow-watchdog.yml": "25 13 * * *",
-    }
+def test_operational_workflows_are_manual_only() -> None:
+    workflows = [
+        ".github/workflows/stable-monitor.yml",
+        ".github/workflows/hourly-stock-scan.yml",
+        ".github/workflows/stock-candidate-refresh.yml",
+        ".github/workflows/telegram-test.yml",
+        ".github/workflows/system-health.yml",
+        ".github/workflows/workflow-watchdog.yml",
+    ]
 
-    for path, cron in expected.items():
+    for path in workflows:
         workflow = load_yaml(path)
-        assert workflow[True]["schedule"] == [{"cron": cron}]
-        assert "workflow_dispatch" in workflow[True]
+        assert "workflow_dispatch" in workflow["on"]
+        assert workflow["on"].get("schedule", []) == []
 
 
-def test_telegram_test_workflow_sends_daily_exact_message() -> None:
+def test_telegram_test_workflow_sends_exact_message_only_when_manual() -> None:
     workflow = load_yaml(".github/workflows/telegram-test.yml")
-    assert workflow[True]["schedule"] == [{"cron": "5 13 * * *"}]
-    assert "workflow_dispatch" in workflow[True]
+    assert workflow["on"].get("schedule", []) == []
+    assert "workflow_dispatch" in workflow["on"]
 
     workflow_text = (ROOT / ".github" / "workflows" / "telegram-test.yml").read_text(encoding="utf-8")
     assert 'text=✅ Telegram test successful' in workflow_text
     assert workflow_text.count('text=✅ Telegram test successful') == 1
-    assert "daily Telegram heartbeat at 13:05 UTC" in workflow_text
+    assert "daily Telegram heartbeat" not in workflow_text
 
 
 def test_core_workflow_failure_alerts_are_guarded() -> None:
@@ -56,8 +59,8 @@ def test_core_workflow_failure_alerts_are_guarded() -> None:
         assert all("ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in step["if"] for step in failure_steps)
 
 
-def test_automatic_health_and_watchdog_are_enabled() -> None:
-    health_text = (ROOT / ".github/workflows/system-health.yml").read_text(encoding="utf-8")
+def test_health_and_watchdog_failure_alerts_are_opt_in() -> None:
+    health_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
     assert "python -m pytest -q" in health_text
     assert "System health check failed" in health_text
     assert "TELEGRAM_BOT_TOKEN" in health_text
@@ -67,9 +70,11 @@ def test_automatic_health_and_watchdog_are_enabled() -> None:
 
     watchdog = load_yaml(".github/workflows/workflow-watchdog.yml")
     assert watchdog["permissions"]["actions"] == "read"
-    watchdog_text = (ROOT / ".github/workflows/workflow-watchdog.yml").read_text(encoding="utf-8")
+    assert watchdog["env"]["ENABLE_WORKFLOW_FAILURE_TELEGRAM"] == "${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}"
+    watchdog_text = (ROOT / ".github" / "workflows" / "workflow-watchdog.yml").read_text(encoding="utf-8")
     assert "WATCHDOG_LOOKBACK_HOURS" in watchdog_text
     assert "GitHub Actions watchdog alert" in watchdog_text
+    assert "Recent workflow failures found, but Telegram failure alerts are disabled." in watchdog_text
     assert "Market-Moving Public Figure Alert" in watchdog_text
     assert "Hourly Stock Research Scanner" in watchdog_text
     assert "Stock Candidate Refresh" in watchdog_text
@@ -85,7 +90,7 @@ def test_candidate_refresh_is_silent_by_default() -> None:
     assert stocks_cfg["settings"]["max_alerts_per_run"] <= 5
     assert stocks_cfg["settings"]["duplicate_silence_hours"] >= 24
 
-    workflow_text = (ROOT / ".github/workflows/stock-candidate-refresh.yml").read_text(encoding="utf-8")
+    workflow_text = (ROOT / ".github" / "workflows" / "stock-candidate-refresh.yml").read_text(encoding="utf-8")
     assert "Validate Telegram secrets" not in workflow_text
     assert 'TELEGRAM_BOT_TOKEN: ""' in workflow_text
     assert 'TELEGRAM_CHAT_ID: ""' in workflow_text

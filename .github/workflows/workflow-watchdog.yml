@@ -17,6 +17,9 @@ concurrency:
   group: github-actions-watchdog
   cancel-in-progress: false
 
+env:
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+
 jobs:
   watchdog:
     name: Report recent workflow failures to Telegram
@@ -32,6 +35,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
           WATCHDOG_LOOKBACK_HOURS: "24"
+          ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ env.ENABLE_WORKFLOW_FAILURE_TELEGRAM }}
         run: |
           set -euo pipefail
 
@@ -115,31 +119,36 @@ jobs:
                   lines.append(f"- Plus {len(failures) - 8} more recent failures.")
               message = "\n".join(lines)
 
-              bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-              chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-              if not bot_token or not chat_id:
-                  print("Recent workflow failures found, but Telegram secrets are missing.")
+              if os.environ.get("ENABLE_WORKFLOW_FAILURE_TELEGRAM", "false").lower() != "true":
+                  print("Recent workflow failures found, but Telegram failure alerts are disabled.")
                   print(message)
-                  return_code = 1
-              else:
-                  data = parse.urlencode(
-                      {
-                          "chat_id": chat_id,
-                          "text": message[:3900],
-                          "disable_web_page_preview": "true",
-                      }
-                  ).encode("utf-8")
-                  telegram_request = request.Request(
-                      f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                      data=data,
-                      method="POST",
-                  )
-                  with request.urlopen(telegram_request, timeout=20) as response:
-                      response_payload = json.loads(response.read().decode("utf-8"))
-                  if not response_payload.get("ok"):
-                      raise RuntimeError(f"Telegram API rejected watchdog alert: {response_payload}")
-                  print(f"Sent watchdog alert for {len(failures)} recent workflow failure(s).")
                   return_code = 0
+              else:
+                  bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+                  chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                  if not bot_token or not chat_id:
+                      print("Recent workflow failures found, but Telegram secrets are missing.")
+                      print(message)
+                      return_code = 1
+                  else:
+                      data = parse.urlencode(
+                          {
+                              "chat_id": chat_id,
+                              "text": message[:3900],
+                              "disable_web_page_preview": "true",
+                          }
+                      ).encode("utf-8")
+                      telegram_request = request.Request(
+                          f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                          data=data,
+                          method="POST",
+                      )
+                      with request.urlopen(telegram_request, timeout=20) as response:
+                          response_payload = json.loads(response.read().decode("utf-8"))
+                      if not response_payload.get("ok"):
+                          raise RuntimeError(f"Telegram API rejected watchdog alert: {response_payload}")
+                      print(f"Sent watchdog alert for {len(failures)} recent workflow failure(s).")
+                      return_code = 0
 
           raise SystemExit(return_code)
           PY
