@@ -44,10 +44,10 @@ def test_telegram_test_workflow_is_manual_only_exact_message():
     assert workflow_text.count("text=✅ Telegram test successful") == 1
 
 
-def test_operational_scanner_workflows_are_manual_only():
-    assert _crons("stable-monitor.yml") == []
-    assert _crons("hourly-stock-scan.yml") == []
-    assert _crons("stock-candidate-refresh.yml") == []
+def test_operational_scanner_workflows_have_expected_crons():
+    assert _crons("stable-monitor.yml") == ["7,27,47 * * * *"]
+    assert _crons("hourly-stock-scan.yml") == ["13 * * * *"]
+    assert _crons("stock-candidate-refresh.yml") == ["31 6 */3 * *"]
 
 
 def test_failure_telegram_alerts_are_opt_in():
