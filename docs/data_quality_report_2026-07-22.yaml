@@ -1,0 +1,80 @@
+report_version: 1
+report_type: stock_universe_market_data_quality
+generated_at_utc: "2026-07-22T08:30:00Z"
+main_commit: "291e135b8912ff4423f8f7bfd0392d631ac0c5df"
+scope:
+  included:
+    - stock universe metadata
+    - provider adapter reliability surface
+    - SQLite universe/cursor/history schema foundation
+    - market-data quality validation rules
+    - corporate-action audit rules
+  excluded:
+    - Telegram alerts
+    - public-figure scans
+    - Buy/Sell strategy rules
+    - profitability evaluation
+workflow_status:
+  dispatch_attempted: false
+  dispatch_reason: "No workflow_dispatch-capable Actions tool is exposed in this session; direct GitHub/REST/clone access from the container is HTTP 403."
+  public_actions_page_checked: true
+  public_actions_page_observation: "Visible Actions page listed 546 workflow runs, including recent historical scheduled hourly stock scans and stock candidate refreshes, but the page had loading errors and did not expose authenticated queue/log/artifact/cache details."
+  same_job_queued_or_running: "not verified; authenticated Actions run-list API unavailable"
+providers_checked:
+  - provider: yfinance
+    role_on_main: "bar data through stocks/market_data.py"
+    status: "adapter present"
+    confirmed_gaps:
+      - "fetch_bars requests only auto-adjusted OHLCV"
+      - "no unadjusted-price or corporate-action validation before indicator use"
+      - "no provider symbol-directory ingestion on main"
+      - "no provider identifier persisted for stock universe symbols on main"
+  - provider: official_exchange_directory
+    role_in_added_module: "intended legal symbol-source input class for active common stocks, ADRs and ETFs"
+    status: "foundation added; live provider fetch not run from this environment"
+exchanges_checked:
+  - exchange: NASDAQ
+    status: "schema supported by new metadata model; live coverage not completed"
+  - exchange: NYSE
+    status: "schema supported by new metadata model; live coverage not completed"
+  - exchange: NYSEARCA
+    status: "schema supported by new metadata model; live coverage not completed"
+counts:
+  eligible: 0
+  processed: 0
+  passed: 0
+  quarantined: 0
+  failed: 0
+  remaining: "unknown until a dispatchable universe refresh runs with provider access"
+confirmed_defects:
+  - code: hardcoded_stock_universe
+    evidence: "config/stocks.yaml contains a manually curated universe list; no stocks/universe.py exists on main."
+  - code: missing_symbol_metadata_tables
+    evidence: "stocks/research_db.py only creates stock_alerts, top_candidates, stock_scans and active_stock_setups."
+  - code: missing_corporate_action_audit
+    evidence: "stocks/market_data.py uses yfinance auto_adjust=True and stores no split/dividend adjustment evidence."
+  - code: missing_batch_cursor
+    evidence: "candidate discovery iterates config universe[:max_scan_symbols_per_run] and does not persist a resume cursor."
+changes_added_in_pr:
+  - "stocks/universe.py"
+  - "tests/test_stock_universe_quality.py"
+  - "docs/data_quality_report_2026-07-22.yaml"
+regression_coverage_added:
+  - stale candles
+  - missing history
+  - duplicate timestamps
+  - bad timezones
+  - invalid prices
+  - impossible OHLC values
+  - provider disagreement quarantine
+  - cursor resume
+  - one-symbol failure isolation
+  - unsupported warrant/unit/delisted exclusion
+  - corporate-action adjustment mismatch
+known_gaps:
+  - "No live broad provider universe refresh completed in this session."
+  - "No authenticated Actions queue, log, artifact, cache, or workflow_dispatch access is available from the exposed tools."
+  - "The new universe module is not wired into production scanner workflows yet."
+  - "Independent provider metadata comparison is modeled but not live-populated."
+rollback:
+  - "Close the PR or remove the three added files."
