@@ -57,7 +57,7 @@ def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
 
     assert setup.signal == "Bad"
     assert setup.setup_type == "Exit/Risk"
-    assert setup.model_view in {"Sell", "Short"}
+    assert setup.model_view == "Sell"
     assert setup.confidence in {"High", "Medium"}
     assert setup.trigger_level is not None
     assert setup.exit_level is not None
@@ -69,11 +69,32 @@ def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert "1 week to 3 months" in setup.timeframe
 
 
+def test_confirmed_breakdown_never_uses_short_model_view():
+    base = [150 - i * 0.30 for i in range(79)]
+    recent_low = min(x - 1 for x in base[-21:-1])
+    closes = base + [recent_low - 2.0]
+    daily = [160 - i * 0.45 for i in range(80)]
+
+    setup = analyze_bars(
+        "NOK",
+        "Nokia",
+        make_bars(closes, volume=2_000_000),
+        {"allow_short_model_view": True},
+        make_bars(daily, volume=2_000_000),
+    )
+
+    assert setup.signal == "Bad"
+    assert setup.setup_type == "Exit/Risk"
+    assert setup.model_view == "Sell"
+    assert "Short" not in setup.setup_key
+    assert "Short" not in setup.reason
+
+
 def test_neutral_setup_is_not_actionable():
     closes = [100 + math.sin(i / 3) for i in range(80)]
     setup = analyze_bars("NVDA", "NVIDIA", make_bars(closes), {}, make_bars(closes))
-    assert setup.signal == "Neutral"
-    assert setup.model_view == "Hold"
+    assert setup.signal == "No Signal"
+    assert setup.model_view == "No Signal"
     assert not setup.actionable
 
 

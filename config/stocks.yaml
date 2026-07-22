@@ -1,12 +1,12 @@
 settings:
-  # Telegram is silent unless a clean Buy, Sell, or Short setup exists.
+  # Telegram is silent unless a clean Buy or Sell setup exists.
   send_hourly_summary: false
   send_only_when_actionable: true
   send_candidate_refresh_telegram: false
   # Real-money safety mode: Telegram only sends High-confidence stock setups.
   min_setup_confidence: High
-  # Adds Model view: Short on confirmed bearish breakdowns. Research label only, not advice.
-  allow_short_model_view: true
+  # Stock model views are limited to Buy, Sell, or internal No Signal.
+  allow_short_model_view: false
   duplicate_silence_hours: 24
   max_alerts_per_run: 3
   min_successful_scans: 1
