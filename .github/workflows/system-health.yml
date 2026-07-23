@@ -3,8 +3,6 @@ name: System Health Check
 run-name: "System health - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "5 13 * * *"
   workflow_dispatch:
 
 permissions:
@@ -24,11 +22,10 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
 
 jobs:
   health:
-    name: Run daily imports, dependency checks, and tests
+    name: Run imports, dependency checks, and tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -40,24 +37,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
-          echo "Schedule: daily Telegram health check at 13:05 UTC, best effort"
-          echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
-
-      - name: Validate Telegram secrets for scheduled health check
-        if: github.event_name == 'schedule'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          test -n "${TELEGRAM_BOT_TOKEN}" || { echo "Missing TELEGRAM_BOT_TOKEN secret"; exit 1; }
-          test -n "${TELEGRAM_CHAT_ID}" || { echo "Missing TELEGRAM_CHAT_ID secret"; exit 1; }
-
-          if ! echo "${TELEGRAM_CHAT_ID}" | grep -Eq '^-?[0-9]+$'; then
-            echo "TELEGRAM_CHAT_ID must be a number."
-            exit 1
-          fi
-
-          echo "Telegram secrets exist for scheduled health check."
+          echo "Manual-only system health check."
 
       - name: Check out project
         uses: actions/checkout@v6
@@ -100,62 +80,3 @@ jobs:
       - name: Run tests
         run: |
           python -m pytest -q
-
-      - name: Send Telegram daily health check
-        if: success() && github.event_name == 'schedule'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          MSG="$(printf '%s\n' \
-            "✅ Daily system health check passed" \
-            "" \
-            "Workflow: ${GITHUB_WORKFLOW}" \
-            "Trigger: ${GITHUB_EVENT_NAME}" \
-            "Run: #${GITHUB_RUN_NUMBER}" \
-            "Branch: ${GITHUB_REF_NAME}" \
-            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
-            "" \
-            "Logs:" \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-
-          curl --fail --silent --show-error \
-            --max-time 20 \
-            --retry 2 \
-            --retry-delay 5 \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "disable_web_page_preview=true" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
-
-      - name: Send Telegram health failure alert
-        if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
-            echo "Telegram secrets missing; cannot send health failure alert."
-            exit 0
-          fi
-
-          MSG="$(printf '%s\n' \
-            "🚨 System health check failed" \
-            "" \
-            "Workflow: ${GITHUB_WORKFLOW}" \
-            "Trigger: ${GITHUB_EVENT_NAME}" \
-            "Run: #${GITHUB_RUN_NUMBER}" \
-            "Branch: ${GITHUB_REF_NAME}" \
-            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
-            "" \
-            "Logs:" \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-
-          curl --fail --silent --show-error \
-            --max-time 20 \
-            --retry 2 \
-            --retry-delay 5 \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "disable_web_page_preview=true" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" || true

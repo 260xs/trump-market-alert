@@ -22,7 +22,7 @@ on:
           - "true"
           - "false"
       run_candidate_refresh:
-        description: "Run the 3-day candidate refresh too"
+        description: "Run the candidate refresh too"
         required: false
         default: "false"
         type: choice
@@ -165,6 +165,9 @@ jobs:
 
       - name: Refresh stock candidates once
         if: github.event.inputs.run_candidate_refresh == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
         run: |
           timeout --foreground 720s python -m stocks.scanner --mode discover
 
@@ -174,32 +177,3 @@ jobs:
         with:
           path: data
           key: manual-run-all-db-${{ github.ref_name }}-${{ github.run_id }}
-
-      - name: Send Telegram failure alert
-        if: failure()
-        run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
-            echo "Telegram secrets missing; cannot send failure alert."
-            exit 0
-          fi
-
-          MSG="$(printf '%s\n' \
-            "🚨 Manual scanner run failed" \
-            "" \
-            "Workflow: ${GITHUB_WORKFLOW}" \
-            "Trigger: ${GITHUB_EVENT_NAME}" \
-            "Run: #${GITHUB_RUN_NUMBER}" \
-            "Branch: ${GITHUB_REF_NAME}" \
-            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
-            "" \
-            "Logs:" \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-
-          curl --fail --silent --show-error \
-            --max-time 20 \
-            --retry 2 \
-            --retry-delay 5 \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "disable_web_page_preview=true" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" || true

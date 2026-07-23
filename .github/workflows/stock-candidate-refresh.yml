@@ -3,12 +3,10 @@ name: Stock Candidate Refresh
 run-name: "Candidate refresh - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "31 6 */3 * *"
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, schedule, external runner, or test"
+        description: "manual, external runner, or test"
         required: false
         default: "manual"
 
@@ -29,7 +27,6 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
   MARKET_DATA_RETRIES: "2"
   MARKET_DATA_RETRY_SLEEP_SECONDS: "1"
 
@@ -49,8 +46,7 @@ jobs:
           echo "Repository: ${GITHUB_REPOSITORY}"
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
-          echo "Candidate refresh Telegram is disabled by default."
-          echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
+          echo "Candidate refresh Telegram is disabled."
 
       - name: Check out project
         uses: actions/checkout@v6
@@ -97,7 +93,7 @@ jobs:
           print("Stock candidate refresh import check passed")
           PY
 
-      - name: Limit scheduled discovery workload
+      - name: Limit discovery workload
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -109,7 +105,7 @@ jobs:
           settings["max_scan_symbols_per_run"] = min(int(settings.get("max_scan_symbols_per_run", 45)), 45)
           settings["top_candidate_count"] = min(int(settings.get("top_candidate_count", 10)), 10)
           path.write_text(yaml.safe_dump(cfg, sort_keys=False), encoding="utf-8")
-          print("Scheduled discovery limited to", settings["max_scan_symbols_per_run"], "symbols")
+          print("Discovery limited to", settings["max_scan_symbols_per_run"], "symbols")
           PY
 
       - name: Refresh top stock candidates
@@ -125,35 +121,3 @@ jobs:
         with:
           path: data
           key: stock-research-db-${{ github.ref_name }}-${{ github.run_id }}
-
-      - name: Send Telegram failure alert
-        if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
-            echo "Telegram secrets missing; cannot send failure alert."
-            exit 0
-          fi
-
-          MSG="$(printf '%s\n' \
-            "🚨 3-day stock candidate refresh failed" \
-            "" \
-            "Workflow: ${GITHUB_WORKFLOW}" \
-            "Trigger: ${GITHUB_EVENT_NAME}" \
-            "Run: #${GITHUB_RUN_NUMBER}" \
-            "Branch: ${GITHUB_REF_NAME}" \
-            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
-            "" \
-            "Logs:" \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-
-          curl --fail --silent --show-error \
-            --max-time 20 \
-            --retry 2 \
-            --retry-delay 5 \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "disable_web_page_preview=true" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" || true
