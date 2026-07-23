@@ -1,16 +1,18 @@
 # Operations Reliability Research
 
-Updated: 2026-07-03
+Updated: 2026-07-23
 
 ## What changed now
 
-- Daily Telegram heartbeat is enabled in `.github/workflows/telegram-test.yml`.
-- It runs at `5 13 * * *`, which is 13:05 UTC and avoids the busiest top-of-hour GitHub Actions window.
-- It sends exactly `✅ Telegram test successful` and nothing else.
-- Daily system health checks are enabled in `.github/workflows/system-health.yml` at `37 4 * * *`.
-- Daily GitHub Actions watchdog checks are enabled in `.github/workflows/workflow-watchdog.yml` at `25 13 * * *`.
-- The watchdog reviews important workflow runs from the last 24 hours and sends one grouped Telegram alert if any failed.
-- The public scanner, hourly stock scanner, and candidate refresh remain strict and quiet.
+- Production GitHub Actions schedules are restored and should stay enabled.
+- The public-figure scanner runs at `7,27,47 * * * *`.
+- The hourly stock scanner runs at `13 * * * *`.
+- The stock candidate refresh runs at `31 6 */3 * *`.
+- The daily system health check runs in `.github/workflows/system-health.yml` at `5 13 * * *`.
+- The system health workflow sends `✅ Daily system health check passed` only after imports, dependency checks, and tests pass.
+- The GitHub Actions watchdog runs at `25 13 * * *` and sends one grouped Telegram alert only if watched workflows failed recently.
+- `.github/workflows/telegram-test.yml` remains manual-only and sends exactly `✅ Telegram test successful` when intentionally run.
+- The public scanner, hourly stock scanner, and candidate refresh remain strict and quiet unless a real alert gate passes.
 
 ## Research findings
 
@@ -32,9 +34,9 @@ The best ideas to copy for this repo are operational, not speculative: heartbeat
 - `stable-monitor.yml`: public-figure scanner at `7,27,47 * * * *`.
 - `hourly-stock-scan.yml`: stock scanner at `13 * * * *`.
 - `stock-candidate-refresh.yml`: silent candidate refresh at `31 6 */3 * *`.
-- `telegram-test.yml`: daily Telegram heartbeat at `5 13 * * *`.
-- `system-health.yml`: daily imports, dependency checks, and tests at `37 4 * * *`.
+- `system-health.yml`: daily imports, dependency checks, tests, and Telegram health heartbeat at `5 13 * * *`.
 - `workflow-watchdog.yml`: daily recent-failure watchdog at `25 13 * * *`.
+- `telegram-test.yml`: manual-only setup test.
 
 ## Secrets and variables
 
