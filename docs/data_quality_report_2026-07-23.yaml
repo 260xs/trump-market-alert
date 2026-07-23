@@ -1,0 +1,162 @@
+report_version: 1
+report_type: stock_universe_market_data_quality
+generated_at_utc: "2026-07-23T08:20:00Z"
+main_commit: "291e135b8912ff4423f8f7bfd0392d631ac0c5df"
+maintenance_branch: "maint/stock-universe-quality-20260722"
+maintenance_pr: 30
+scope:
+  included:
+    - symbol-universe code inspection
+    - provider adapter inspection
+    - exchange and workflow file inspection
+    - SQLite table inspection
+    - corporate-action handling inspection
+    - batch cursor and failed-symbol handling inspection
+    - open PR and public Actions page review
+  excluded:
+    - Telegram alerts
+    - Telegram tests
+    - public-figure scans
+    - stock Buy/Sell/Short/Hold strategy rule changes
+    - profitability evaluation
+    - cron additions
+safety:
+  telegram_alerts_sent: false
+  telegram_test_sent: false
+  public_figure_scan_run: false
+  stock_scanner_dispatched: false
+  buy_sell_strategy_changed: false
+  cron_added: false
+workflow_status:
+  dispatch_attempted: false
+  dispatch_reason: "The exposed GitHub connector in this session does not provide Actions run-list/log/cache/artifact or workflow_dispatch tools; direct git clone and REST access from the container returned HTTP 403. Per duplicate-job policy, no duplicate workflow was started."
+  same_job_queued_or_running: "not conclusively verified; public Actions pages load partial historical run lists but no authenticated queue/running state."
+  public_actions_page_checked: true
+  public_actions_observations:
+    - "Repository Actions page showed 546 workflow runs with partial loading errors."
+    - "Hourly Stock Research Scanner page showed 202 visible historical runs; latest visible run was #202, scheduled, duration 45s."
+    - "Stock Candidate Refresh page showed 21 visible historical runs; latest visible run was #21, scheduled, duration 52s."
+    - "The public page did not expose logs, artifacts, caches, queue/running status, or dispatch controls."
+workflows_checked:
+  - path: ".github/workflows/hourly-stock-scan.yml"
+    status: "present on main"
+    trigger_observed: "workflow_dispatch only in fetched file"
+    telegram_risk: "requires Telegram secrets for hourly alert delivery; not run in this maintenance session"
+  - path: ".github/workflows/stock-candidate-refresh.yml"
+    status: "present on main"
+    trigger_observed: "workflow_dispatch only in fetched file"
+    telegram_risk: "candidate refresh runs with TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID blank in refresh step"
+  - path: ".github/workflows/stock-universe-maintenance.yml"
+    status: "not present on PR #30 branch when fetched"
+    impact: "No dedicated dispatchable stock-universe/data-quality workflow is available from PR #30 yet."
+providers_checked:
+  - provider: yfinance
+    role_on_main: "bar data adapter in stocks/market_data.py"
+    status: "adapter present"
+    reliability_findings:
+      - code: auto_adjust_only
+        severity: confirmed_gap
+        evidence: "fetch_bars calls yf.download(..., auto_adjust=True) and returns only adjusted OHLCV rows."
+      - code: no_provider_symbol_directory
+        severity: confirmed_gap
+        evidence: "main has no stocks/universe.py and config/stocks.yaml uses a manually curated YAML universe."
+      - code: no_unadjusted_audit_input
+        severity: confirmed_gap
+        evidence: "No split/dividend adjustment evidence is fetched or persisted before indicators use bars."
+      - code: basic_retries_and_cache_present
+        severity: present_control
+        evidence: "market_data.py includes retry count, retry sleep and in-memory TTL cache controls."
+  - provider: official_exchange_directory
+    role_on_pr_30: "modeled legal source class for symbol metadata ingestion"
+    status: "foundation only; no live provider fetch completed"
+exchanges_checked:
+  - exchange: NASDAQ
+    status: "supported by PR #30 metadata schema; live coverage not completed"
+  - exchange: NYSE
+    status: "supported by PR #30 metadata schema; live coverage not completed"
+  - exchange: NYSEARCA
+    status: "supported by PR #30 metadata schema; live coverage not completed"
+sqlite_tables_checked:
+  main_existing_tables_from_stocks_research_db:
+    - stock_alerts
+    - top_candidates
+    - stock_scans
+    - active_stock_setups
+  missing_on_main:
+    - stock_universe_symbols
+    - stock_symbol_history
+    - stock_universe_cursor
+    - provider status table
+    - failed-symbol log table
+    - corporate-action table
+  added_by_pr_30:
+    - stock_universe_symbols
+    - stock_symbol_history
+    - stock_universe_cursor
+  still_missing_after_pr_30:
+    - provider status table
+    - failed-symbol log table
+    - dedicated corporate-action persistence table
+confirmed_defects:
+  - code: hardcoded_stock_universe_on_main
+    evidence: "config/stocks.yaml has a finite curated universe list and README says it is not literally every stock in the world."
+  - code: missing_broad_symbol_ingestion_on_main
+    evidence: "stocks/ directory on main contains __init__.py, indicators.py, market_data.py, research_db.py and scanner.py only."
+  - code: missing_universe_metadata_tables_on_main
+    evidence: "StockResearchDB.init creates stock_alerts, top_candidates, stock_scans and active_stock_setups only."
+  - code: missing_corporate_action_audit_on_main
+    evidence: "market_data fetches auto-adjusted yfinance bars only and records no adjusted/unadjusted comparison."
+  - code: missing_discovery_cursor_on_main
+    evidence: "discover_candidates scans universe[:max_scan_symbols_per_run] without a persisted resume cursor."
+  - code: missing_dedicated_universe_workflow_in_pr_30
+    evidence: "Fetching .github/workflows/stock-universe-maintenance.yml from PR #30 branch returned 404."
+counts:
+  eligible: 0
+  processed: 0
+  passed: 0
+  quarantined: 0
+  failed: 0
+  remaining: "unknown; no live universe refresh completed and no workflow_dispatch was available"
+exclusions_by_reason: {}
+stale_or_failed_symbols: []
+unresolved_disagreements: []
+corporate_actions_detected: []
+batch_progress:
+  cursor: "not available on main; PR #30 adds stock_universe_cursor schema"
+  processed_count: 0
+  failed_count: 0
+  remaining_count: "unknown"
+data_freshness:
+  live_data_checked: false
+  reason: "No legal provider refresh or market-data batch was dispatched from this session."
+regression_coverage_present_in_pr_30:
+  - unsupported security type exclusion for warrants, units and delisted listings
+  - provider disagreement quarantine
+  - symbol history preservation through delisting
+  - cursor resume count persistence
+  - fresh representative daily and hourly data validation
+  - stale candles
+  - insufficient history
+  - duplicate timestamps
+  - bad timezone detection
+  - invalid prices
+  - impossible OHLC values
+  - one-symbol failure isolation
+  - adjusted/unadjusted corporate-action mismatch
+validation_performed:
+  - check: "Fetched PR #30 changed file list"
+    result: "passed; files are docs/data_quality_report_2026-07-22.yaml, stocks/universe.py and tests/test_stock_universe_quality.py"
+  - check: "Fetched PR #30 head status"
+    result: "no statuses/checks returned for 3de7778f73be86d646bc834a4d688f65db2cefcf"
+  - check: "Fetched PR #30 dedicated universe workflow"
+    result: "404 not found"
+  - check: "Secret handling"
+    result: "No secrets requested, read, printed or committed; Telegram remained disabled."
+known_gaps:
+  - "No complete exchange coverage claim can be made."
+  - "No live symbol counts can be claimed."
+  - "No authenticated Actions queue/running state, logs, artifacts or caches were available."
+  - "PR #30 remains additive foundation work and should stay unmerged until provider source choices, workflow design and checks are reviewed."
+rollback:
+  - "Close PR #30 or remove its added stock universe/report/test files."
+  - "Remove docs/data_quality_report_2026-07-23.yaml from the PR branch to roll back this report-only update."
