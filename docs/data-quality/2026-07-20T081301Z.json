@@ -1,0 +1,173 @@
+{
+  "generated_at": "2026-07-20T08:13:01Z",
+  "maintenance_scope": "stock universe, market-data quality, and scanner reliability only",
+  "provider_version": "repository-inspection-2026-07-20T08:13:01Z",
+  "telegram": {
+    "status": "disabled_not_invoked",
+    "telegram_alerts_sent": false,
+    "telegram_test_sent": false
+  },
+  "public_figure_scans": {
+    "started": false,
+    "reason": "out_of_scope_for_this_maintenance_run"
+  },
+  "profitability_or_strategy_evaluation": {
+    "performed": false,
+    "buy_sell_strategy_rules_changed": false
+  },
+  "repository_state": {
+    "main_latest_commit_checked": "291e135b8912ff4423f8f7bfd0392d631ac0c5df",
+    "open_stock_universe_pr": {
+      "number": 14,
+      "url": "https://github.com/260xs/trump-market-alert/pull/14",
+      "branch": "codex/stock-universe-quality-20260719",
+      "head_sha_before_this_report": "3507d6bd1910bbb18c6e5649744eb4ba32c9c5aa",
+      "state": "open_draft",
+      "mergeable_via_connector": true,
+      "commit_statuses_via_connector": []
+    }
+  },
+  "workflows_checked": {
+    "main_hourly_stock_scan": {
+      "path": ".github/workflows/hourly-stock-scan.yml",
+      "trigger_in_main_file": "workflow_dispatch",
+      "telegram_behavior": "requires Telegram secrets for hourly scan; failure Telegram gated by ENABLE_WORKFLOW_FAILURE_TELEGRAM"
+    },
+    "main_stock_candidate_refresh": {
+      "path": ".github/workflows/stock-candidate-refresh.yml",
+      "trigger_in_main_file": "workflow_dispatch",
+      "telegram_behavior": "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID set blank for candidate refresh"
+    },
+    "draft_stock_universe_maintenance": {
+      "path": ".github/workflows/stock-universe-maintenance.yml",
+      "trigger_in_pr_branch": "workflow_dispatch",
+      "cron_added": false,
+      "telegram_behavior": "TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID set blank for universe dry run"
+    }
+  },
+  "recent_actions_visibility": {
+    "actions_page_url": "https://github.com/260xs/trump-market-alert/actions",
+    "authenticated_actions_api_or_dispatch_available": false,
+    "reason": "direct GitHub API and clone from the container returned HTTP 403; exposed connector has no Actions run-list or workflow_dispatch tool",
+    "visible_recent_stock_runs": [
+      {
+        "workflow": "Hourly Stock Research Scanner",
+        "run_number": 202,
+        "url": "https://github.com/260xs/trump-market-alert/actions/runs/29516399012",
+        "event": "schedule",
+        "triggered_at_visible": "2026-07-16 16:38",
+        "commit": "49f35de",
+        "branch": "main",
+        "status": "Success",
+        "duration": "45s"
+      },
+      {
+        "workflow": "Stock Candidate Refresh",
+        "run_number": 21,
+        "url": "https://github.com/260xs/trump-market-alert/actions/runs/29484343755",
+        "event": "schedule",
+        "triggered_at_visible": "2026-07-16 08:41",
+        "commit": "f207965",
+        "branch": "main",
+        "status": "Success",
+        "duration": "52s"
+      }
+    ],
+    "queued_or_running_stock_universe_job_verified": null,
+    "workflow_dispatched_this_run": false
+  },
+  "providers_checked": {
+    "yfinance": {
+      "status": "present_in_main_code",
+      "version_constraint": "requirements-stocks.txt: yfinance>=0.2.61,<0.3",
+      "adapter_file": "stocks/market_data.py",
+      "observed_behavior": "yf.download(auto_adjust=True) with retries and in-memory TTL cache; output rows include timestamp, open, high, low, close, volume only",
+      "confirmed_gaps": [
+        "no persisted provider symbol universe in main",
+        "no independent provider metadata comparison in main",
+        "no persisted adjusted and unadjusted OHLCV pair in main",
+        "no split or dividend evidence persisted in main market-data rows"
+      ]
+    }
+  },
+  "exchange_coverage": {
+    "main": {
+      "source": "config/stocks.yaml",
+      "type": "static_curated_list",
+      "eligible_symbols_claimed": null,
+      "coverage_complete": false
+    },
+    "draft_pr_14": {
+      "source": "provider listing CSV ingestion scaffolding",
+      "supported_asset_types": ["COMMON_STOCK", "ADR", "ETF"],
+      "unsupported_asset_types_quarantined_or_excluded": ["WARRANT", "RIGHT", "UNIT", "PREFERRED", "TEST", "UNKNOWN", "inactive_or_delisted", "duplicate_provider_symbol"],
+      "coverage_complete": false,
+      "reason": "provider listing source choices and complete exchange files remain unmerged and unreviewed"
+    }
+  },
+  "batch_progress": {
+    "eligible_symbols": null,
+    "processed": 0,
+    "passed": 0,
+    "quarantined": 0,
+    "failed": 0,
+    "remaining": null,
+    "complete_coverage_claimed": false,
+    "reason": "no safe dispatchable stock-universe workflow exists on main and Actions dispatch is unavailable from this environment"
+  },
+  "sqlite_and_cache_state": {
+    "main_stock_tables_observed": ["stock_alerts", "top_candidates", "stock_scans", "active_stock_setups"],
+    "draft_pr_14_universe_tables": ["symbol_universe", "symbol_exclusions", "symbol_quarantine", "universe_batch_cursors", "failed_symbols", "corporate_actions"],
+    "github_actions_cache_paths_checked_in_workflows": ["data"],
+    "production_sqlite_or_cache_downloaded": false,
+    "reason": "Actions logs, artifacts and caches are not exposed through available tools"
+  },
+  "corporate_actions": {
+    "issues_detected_this_run": [],
+    "main_confirmed_gap": "main yfinance adapter does not persist split, dividend, unadjusted OHLCV, or corporate-action evidence",
+    "draft_pr_14_status": "adds corporate_actions table and split-gap quarantine test scaffolding but does not yet complete live provider validation"
+  },
+  "data_quality_checks": {
+    "representative_live_symbols_checked": [],
+    "regression_coverage_in_pr_14": [
+      "unsupported security exclusion",
+      "stale candles",
+      "missing bars",
+      "duplicate timestamps",
+      "bad timezones",
+      "invalid prices",
+      "missing adjusted price",
+      "possible split gap",
+      "provider disagreement",
+      "cursor resume",
+      "one-symbol failure isolation"
+    ],
+    "tests_run_this_maintenance_run": [],
+    "reason_tests_not_run": "no local repository checkout is available; direct clone is blocked by HTTP 403; connector supports file inspection but not full test execution"
+  },
+  "exclusions_by_reason": {},
+  "stale_or_failed_symbols": [],
+  "unresolved_disagreements": [],
+  "confirmed_defects": [
+    {
+      "area": "symbol_universe",
+      "status": "already_addressed_by_open_draft_pr_14_scaffolding_not_merged",
+      "description": "main relies on a static config/stocks.yaml list rather than legal provider/exchange symbol directories"
+    },
+    {
+      "area": "market_data_adjustments",
+      "status": "open_gap",
+      "description": "main adjusted yfinance rows do not preserve independent adjusted/unadjusted prices, splits, dividends, or corporate-action evidence"
+    }
+  ],
+  "rollback": {
+    "this_report": "remove docs/data-quality/2026-07-20T081301Z.json from branch codex/stock-universe-quality-20260719",
+    "draft_pr_14": "see docs/STOCK_UNIVERSE_ROLLBACK.md on the same branch"
+  },
+  "known_gaps": [
+    "No workflow_dispatch was performed because queued/running state could not be verified and stock-universe workflow is not on main.",
+    "No complete eligible-symbol count is available; do not claim broad exchange coverage yet.",
+    "No provider listing files, exchange files, failed-symbol logs, Actions artifacts, or production SQLite caches were downloadable through the available tools.",
+    "New paid providers, broad permissions, uncertain symbol rules, and major architecture decisions remain unmerged for review."
+  ]
+}
