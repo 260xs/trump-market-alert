@@ -15,7 +15,11 @@ def load_yaml(path: str) -> dict:
 
 def test_scheduled_workflows_use_expected_crons() -> None:
     expected = {
+        ".github/workflows/stable-monitor.yml": "7,27,47 * * * *",
+        ".github/workflows/hourly-stock-scan.yml": "13 * * * *",
+        ".github/workflows/stock-candidate-refresh.yml": "31 6 */3 * *",
         ".github/workflows/system-health.yml": "5 13 * * *",
+        ".github/workflows/workflow-watchdog.yml": "25 13 * * *",
     }
 
     for path, cron in expected.items():
@@ -76,6 +80,17 @@ def test_automatic_health_and_watchdog_are_enabled() -> None:
     assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in health_text
     assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in health_text
 
+    watchdog = load_yaml(".github/workflows/workflow-watchdog.yml")
+    assert watchdog["permissions"]["actions"] == "read"
+    watchdog_text = (ROOT / ".github/workflows/workflow-watchdog.yml").read_text(encoding="utf-8")
+    assert "WATCHDOG_LOOKBACK_HOURS" in watchdog_text
+    assert "GitHub Actions watchdog alert" in watchdog_text
+    assert "Market-Moving Public Figure Alert" in watchdog_text
+    assert "Hourly Stock Research Scanner" in watchdog_text
+    assert "Stock Candidate Refresh" in watchdog_text
+    assert "Telegram Test" in watchdog_text
+    assert "System Health Check" in watchdog_text
+
 
 def test_candidate_refresh_is_silent_by_default() -> None:
     stocks_cfg = load_yaml("config/stocks.yaml")
@@ -85,7 +100,7 @@ def test_candidate_refresh_is_silent_by_default() -> None:
     assert stocks_cfg["settings"]["max_alerts_per_run"] <= 5
     assert stocks_cfg["settings"]["duplicate_silence_hours"] >= 24
 
-    workflow_text = (ROOT / ".github" / "workflows" / "stock-candidate-refresh.yml").read_text(encoding="utf-8")
+    workflow_text = (ROOT / ".github/workflows/stock-candidate-refresh.yml").read_text(encoding="utf-8")
     assert "Validate Telegram secrets" not in workflow_text
     assert 'TELEGRAM_BOT_TOKEN: ""' in workflow_text
     assert 'TELEGRAM_CHAT_ID: ""' in workflow_text

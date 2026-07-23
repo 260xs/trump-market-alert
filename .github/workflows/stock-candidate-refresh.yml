@@ -3,6 +3,8 @@ name: Stock Candidate Refresh
 run-name: "Candidate refresh - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
+  schedule:
+    - cron: "31 6 */3 * *"
   workflow_dispatch:
     inputs:
       trigger_source:

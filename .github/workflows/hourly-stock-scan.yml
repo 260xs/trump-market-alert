@@ -3,6 +3,8 @@ name: Hourly Stock Research Scanner
 run-name: "Hourly stock scan - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
+  schedule:
+    - cron: "13 * * * *"
   workflow_dispatch:
     inputs:
       trigger_source:
