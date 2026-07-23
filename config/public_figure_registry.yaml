@@ -1,0 +1,385 @@
+last_registry_review_utc: "2026-07-23T00:05:00Z"
+status_values:
+  - Active
+  - Candidate
+  - Unavailable
+  - Stale
+  - Disabled
+  - Rejected
+activation_policy:
+  active_requires:
+    - identity_verified
+    - current_role_verified
+    - official_or_original_sources_verified
+    - clear_asset_or_sector_relevance
+    - supported_collection_adapter
+    - cursor_and_duplicate_behavior_defined
+  non_active_requires_machine_reason: true
+  candidate_behavior: shadow_only_not_loaded_by_scanner
+coverage_scope:
+  verified_active_watchlist_files:
+    - watchlist.yaml
+    - config/watchlist_extra.yaml
+  this_registry_effect: documentation_and_shadow_candidates_only
+  countries_or_regions_represented_by_active_watchlist:
+    - United States
+    - Taiwan
+  categories_represented_by_active_watchlist:
+    - political_leader
+    - treasury
+    - central_bank
+    - regulator
+    - government_policy
+    - mega_cap_ceo
+    - ceo
+    - bank_ceo
+    - ai_leader
+    - crypto_leader
+    - investor
+    - official_feed_bundle
+  highest_priority_gaps:
+    - non_us_central_banks
+    - europe_trade_and_regulation
+    - china_policy_sources
+    - energy_and_opec_original_sources
+    - non_us_exchange_and_share_class_mapping
+    - official_rss_or_api_coverage_for_non_us_leaders
+unsupported_or_limited_platforms:
+  - platform: X
+    limitation: official API requires X_BEARER_TOKEN; no scraping or access bypass is allowed
+  - platform: YouTube live audio
+    limitation: heavy optional stack; provisional alerts must remain explicit and disabled unless intentionally configured
+  - platform: Google News RSS
+    limitation: aggregation only; usable for discovery and corroboration, not as high-confidence original quote source by itself
+  - platform: public HTML pages
+    limitation: parser stability and timestamp extraction vary by site
+
+existing_watchlist_review:
+  summary:
+    reviewed_files:
+      - watchlist.yaml
+      - config/watchlist_extra.yaml
+    active_entries_observed: 38
+    active_source_types_observed:
+      - x_api
+      - rss
+      - youtube_rss
+      - live_audio
+      - truthsocial
+    source_status_summary:
+      x_api: Candidate until X_BEARER_TOKEN and official-account ownership are verified at runtime
+      rss: Candidate or Active depending on original-source ownership and parser compatibility
+      google_news_rss: discovery_only_not_original
+      live_audio: provisional_only_when_live_feature_is_explicitly_enabled
+    cursor_status:
+      finding: No dedicated cursor registry file was discoverable in repository search.
+      required_follow_up: Record per-source last item IDs or timestamps before broadening active worldwide coverage.
+    source_failure_status:
+      finding: No dedicated source-failure registry file was discoverable in repository search.
+      required_follow_up: Record source health, last success, last failure, and parser error class per source.
+  entries_needing_metadata_upgrade:
+    - id: all_active_entries
+      status: Active
+      machine_reason: Existing scanner watchlist entries are active, but most do not yet carry explicit status, role-date, last-verification, cursor, source-ownership, and market-relevance evidence fields in machine-readable form.
+
+shadow_candidates:
+  - id: christine_lagarde
+    status: Candidate
+    machine_reason: Do not activate until ECB RSS/API compatibility and per-speech cursor behavior are validated.
+    canonical_name: Christine Lagarde
+    aliases:
+      - Christine Lagarde
+      - ECB President Lagarde
+      - Lagarde
+    current_role: President of the European Central Bank
+    organization: European Central Bank
+    country_or_region: Euro area
+    role_dates:
+      start: "2019-11-01"
+      end: null
+      evidence_url: https://www.ecb.europa.eu/ecb/orga/decisions/html/cvlagarde.en.html
+    official_sources:
+      - type: official_speeches
+        url: https://www.ecb.europa.eu/press/key/html/index.en.html
+        original_content: true
+        parser_candidate: rss_or_html
+      - type: official_calendar
+        url: https://www.ecb.europa.eu/press/calendars/weekly/html/index.en.html
+        original_content: true
+        parser_candidate: html
+    related_assets_or_sectors:
+      - EUR
+      - euro_area_banks
+      - European equities
+      - sovereign bonds
+    market_relevance_evidence: ECB monetary-policy speeches and calendars are original public sources for rate, inflation and bank-policy statements.
+    source_priority: high
+    identity_confidence: 0.98
+    source_confidence: 0.95
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: publication_url_or_timestamp
+      initialized: false
+
+  - id: andrew_bailey
+    status: Candidate
+    machine_reason: Do not activate until Bank of England speech/feed parser and stable item IDs are validated.
+    canonical_name: Andrew Bailey
+    aliases:
+      - Andrew Bailey
+      - Governor Bailey
+      - BoE Governor Bailey
+    current_role: Governor of the Bank of England
+    organization: Bank of England
+    country_or_region: United Kingdom
+    role_dates:
+      start: "2020-03-16"
+      end: null
+      evidence_url: https://www.bankofengland.co.uk/about/people/andrew-bailey/biography
+    official_sources:
+      - type: official_speeches
+        url: https://www.bankofengland.co.uk/news/speeches
+        original_content: true
+        parser_candidate: rss_or_html
+    related_assets_or_sectors:
+      - GBP
+      - UK banks
+      - gilts
+      - FTSE
+    market_relevance_evidence: Bank of England speeches are original public sources for rates, regulation, payments and financial-stability statements.
+    source_priority: high
+    identity_confidence: 0.98
+    source_confidence: 0.95
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: publication_url_or_timestamp
+      initialized: false
+
+  - id: kazuo_ueda
+    status: Candidate
+    machine_reason: Do not activate until Bank of Japan speech page parser and PDF/full-text extraction are validated.
+    canonical_name: Kazuo Ueda
+    aliases:
+      - Kazuo Ueda
+      - UEDA Kazuo
+      - Governor Ueda
+      - BOJ Governor Ueda
+    current_role: Governor of the Bank of Japan
+    organization: Bank of Japan
+    country_or_region: Japan
+    role_dates:
+      start: "2023-04-09"
+      end: null
+      evidence_url: https://www.boj.or.jp/en/about/organization/policyboard/gv_ueda.htm
+    official_sources:
+      - type: official_speeches
+        url: https://www.boj.or.jp/en/about/press/index.htm
+        original_content: true
+        parser_candidate: html_pdf
+    related_assets_or_sectors:
+      - JPY
+      - Japanese equities
+      - Japanese banks
+      - Japanese government bonds
+    market_relevance_evidence: BOJ speeches and statements are original public sources for monetary policy and market-rate guidance.
+    source_priority: high
+    identity_confidence: 0.98
+    source_confidence: 0.95
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: publication_url_or_timestamp
+      initialized: false
+
+  - id: pan_gongsheng
+    status: Candidate
+    machine_reason: Do not activate until PBOC English/Chinese source URLs and timestamp parsing are validated without translation ambiguity.
+    canonical_name: Pan Gongsheng
+    aliases:
+      - Pan Gongsheng
+      - PBOC Governor Pan
+      - Governor Pan
+    current_role: Governor of the People's Bank of China
+    organization: People's Bank of China
+    country_or_region: China
+    role_dates:
+      start: "2023-07-25"
+      end: null
+      evidence_url: http://www.pbc.gov.cn/english/130715/130839/index.html
+    official_sources:
+      - type: official_profile
+        url: http://www.pbc.gov.cn/english/130715/130839/index.html
+        original_content: true
+        parser_candidate: html
+      - type: official_news
+        url: http://www.pbc.gov.cn/en/3688110/3688172/index.html
+        original_content: true
+        parser_candidate: html
+    related_assets_or_sectors:
+      - CNY
+      - Chinese banks
+      - Chinese equities
+      - offshore yuan
+    market_relevance_evidence: PBOC leadership statements can move FX, China equities, banks, commodities and global risk sentiment.
+    source_priority: high
+    identity_confidence: 0.95
+    source_confidence: 0.90
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: publication_url_or_timestamp
+      initialized: false
+
+  - id: ursula_von_der_leyen
+    status: Candidate
+    machine_reason: Do not activate until European Commission source filtering distinguishes original statements from reposted press-corner material.
+    canonical_name: Ursula von der Leyen
+    aliases:
+      - Ursula von der Leyen
+      - President von der Leyen
+      - von der Leyen
+    current_role: President of the European Commission
+    organization: European Commission
+    country_or_region: European Union
+    role_dates:
+      start: "2019-12-01"
+      end: null
+      evidence_url: https://commission.europa.eu/about/organisation/college-commissioners/ursula-von-der-leyen_en
+    official_sources:
+      - type: official_statements
+        url: https://ec.europa.eu/commission/presscorner/home/en
+        original_content: true
+        parser_candidate: html_search
+      - type: official_audiovisual
+        url: https://audiovisual.ec.europa.eu/en/
+        original_content: true
+        parser_candidate: html_video
+    related_assets_or_sectors:
+      - European equities
+      - semiconductors
+      - autos
+      - energy
+      - defense
+    market_relevance_evidence: EU tariff, energy, semiconductor, antitrust and defense statements can affect liquid sectors and major listed companies.
+    source_priority: medium
+    identity_confidence: 0.98
+    source_confidence: 0.92
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: presscorner_id_or_timestamp
+      initialized: false
+
+  - id: haitham_al_ghais
+    status: Candidate
+    machine_reason: Do not activate until OPEC speeches page pagination, IDs and stale-content handling are validated.
+    canonical_name: Haitham Al Ghais
+    aliases:
+      - Haitham Al Ghais
+      - HE Haitham Al Ghais
+      - OPEC Secretary General
+    current_role: Secretary General of OPEC
+    organization: Organization of the Petroleum Exporting Countries
+    country_or_region: OPEC
+    role_dates:
+      start: "2022-08-01"
+      end: null
+      evidence_url: https://www.opec.org/secretary-general.html
+    official_sources:
+      - type: official_speeches
+        url: https://www.opec.org/speeches.html
+        original_content: true
+        parser_candidate: html
+    related_assets_or_sectors:
+      - crude oil
+      - energy equities
+      - inflation-sensitive assets
+    market_relevance_evidence: OPEC Secretary General speeches are original public oil-market source material.
+    source_priority: high
+    identity_confidence: 0.96
+    source_confidence: 0.95
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: speech_url_or_timestamp
+      initialized: false
+
+  - id: amin_nasser
+    status: Candidate
+    machine_reason: Do not activate until Aramco speech/news page parser compatibility and stable article IDs are validated.
+    canonical_name: Amin H. Nasser
+    aliases:
+      - Amin Nasser
+      - Amin H. Nasser
+      - Aramco CEO
+    current_role: President and CEO of Aramco
+    organization: Aramco
+    country_or_region: Saudi Arabia
+    role_dates:
+      start: "2015-09-01"
+      end: null
+      evidence_url: https://www.aramco.com/en/about-us/our-leadership/amin-h-nasser
+    official_sources:
+      - type: official_speeches
+        url: https://www.aramco.com/en/news-media/speeches
+        original_content: true
+        parser_candidate: html
+      - type: official_profile
+        url: https://www.aramco.com/en/about-us/our-leadership/amin-h-nasser
+        original_content: true
+        parser_candidate: html
+    related_assets_or_sectors:
+      - crude oil
+      - energy equities
+      - petrochemicals
+    market_relevance_evidence: Aramco CEO statements can affect oil supply, demand, investment and energy-sector sentiment.
+    source_priority: medium
+    identity_confidence: 0.98
+    source_confidence: 0.94
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: article_url_or_timestamp
+      initialized: false
+
+  - id: katharine_braddick
+    status: Candidate
+    machine_reason: Do not activate until Prudential Regulation Authority and Bank of England source ownership and item IDs are validated.
+    canonical_name: Katharine Braddick
+    aliases:
+      - Katharine Braddick
+      - PRA CEO Braddick
+      - Deputy Governor Braddick
+    current_role: Deputy Governor for Prudential Regulation and Chief Executive Officer of the Prudential Regulation Authority
+    organization: Bank of England
+    country_or_region: United Kingdom
+    role_dates:
+      start: "2026-07-01"
+      end: null
+      evidence_url: https://www.bankofengland.co.uk/about/people/katharine-braddick/biography
+    official_sources:
+      - type: official_speeches
+        url: https://www.bankofengland.co.uk/news/speeches
+        original_content: true
+        parser_candidate: rss_or_html
+    related_assets_or_sectors:
+      - UK banks
+      - European banks
+      - insurance
+    market_relevance_evidence: PRA capital and regulation statements can affect listed banks and insurers.
+    source_priority: medium
+    identity_confidence: 0.96
+    source_confidence: 0.94
+    last_verification_utc: "2026-07-23T00:05:00Z"
+    collection_cursor:
+      type: publication_url_or_timestamp
+      initialized: false
+
+rejected_or_unavailable:
+  - id: fan_accounts_and_unverified_repost_accounts
+    status: Rejected
+    machine_reason: Not official or original; fails source ownership and quote-context requirements.
+  - id: anonymous_market_rumor_accounts
+    status: Rejected
+    machine_reason: Anonymous claims and rumors cannot satisfy source, quote or speaker verification.
+  - id: paywalled_transcripts_without_public_quote_context
+    status: Unavailable
+    machine_reason: Paywall bypassing is disallowed; direct public source or reputable accessible quotation is required.
+  - id: sam_woods
+    status: Stale
+    machine_reason: Bank of England official material identifies Sam Woods as former Deputy Governor for Prudential Regulation and PRA CEO from 2016 to 2026; do not activate as a current-role source.
