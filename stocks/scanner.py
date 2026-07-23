@@ -23,9 +23,9 @@ CONFIDENCE_RANK = {"None": 0, "Low": 1, "Medium": 2, "High": 3}
 class StockSetup:
     ticker: str
     name: str
-    signal: str  # Good, Bad, Neutral
+    signal: str  # Good, Bad, No Signal
     setup_type: str  # Entry, Exit/Risk, None
-    model_view: str  # Buy, Sell, Short, Hold. Research label only, not advice.
+    model_view: str  # Buy, Sell, No Signal. Research label only, not advice.
     confidence: str  # High, Medium, Low, None
     timeframe: str
     last_price: float
@@ -223,9 +223,9 @@ def _neutral(
     return StockSetup(
         ticker=ticker,
         name=name,
-        signal="Neutral",
+        signal="No Signal",
         setup_type="None",
-        model_view="Hold",
+        model_view="No Signal",
         confidence="None",
         timeframe=timeframe,
         last_price=last,
@@ -415,7 +415,7 @@ def analyze_bars(
         confidence = "High" if exit_score >= 7 and confirmed_breakdown and rsi14 <= exit_rsi_high_max and (volume_high or daily_risk_ok) else "Medium"
         if rr_calc < min_rr or risk_pct >= max_risk_pct:
             confidence = "Low"
-        model_view = "Short" if confirmed_breakdown and bool(settings.get("allow_short_model_view", True)) else "Sell"
+        model_view = "Sell"
         reason = (
             f"Research-only {model_view} setup passed {exit_score}/8 technical checks: {exit_summary}. "
             f"Risk is capped below {max_risk_pct:.2f}% by config; risk/reward is {_ratio(rr_calc)}x."
@@ -593,7 +593,7 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
         db.store_alert(setup.ticker, setup.signal, setup.setup_key, payload)
         if setup.setup_type == "Entry" and setup.model_view == "Buy":
             db.open_entry_setup(setup.ticker, setup.setup_key, payload)
-        elif setup.setup_type == "Exit/Risk" and setup.model_view in {"Sell", "Short"}:
+        elif setup.setup_type == "Exit/Risk" and setup.model_view == "Sell":
             db.close_entry_setup(setup.ticker, payload)
         sent += 1
         if sent >= max_alerts:
