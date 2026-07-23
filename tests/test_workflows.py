@@ -28,6 +28,13 @@ def test_production_workflow_schedules_are_enabled():
     assert _crons("stock-candidate-refresh.yml") == ["31 6 */3 * *"]
 
 
+def test_public_workflow_keeps_live_provisional_guarded_for_high_impact_people():
+    text = (ROOT / ".github" / "workflows" / "stable-monitor.yml").read_text(encoding="utf-8")
+    assert "ENABLE_LIVE_AUDIO: ${{ vars.ENABLE_LIVE_AUDIO || 'false' }}" in text
+    assert "ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'true' }}" in text
+    assert "LIVE_MIN_MARKET_IMPACT_SCORE: ${{ vars.LIVE_MIN_MARKET_IMPACT_SCORE || '9' }}" in text
+
+
 def test_daily_system_health_workflow_sends_telegram_heartbeat():
     on = _workflow("system-health.yml")["on"]
     assert "workflow_dispatch" in on

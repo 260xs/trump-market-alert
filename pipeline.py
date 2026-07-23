@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from alerts.discord import DiscordClient
 from alerts.telegram import TelegramClient, build_market_alert_text
-from config import Settings, load_asset_map
+from config import Settings, load_asset_map, load_watchlist
 from database.db import Database
 from database.models import Statement, AlertDecision
 from dedupe import normalize_quote, quote_hash, normalized_quote_hash, alert_duplicate_key
@@ -24,6 +24,26 @@ class AlertPipeline:
         self.extractor = EntityExtractor(mapper)
         self.telegram = TelegramClient(settings.telegram_bot_token, settings.telegram_chat_id)
         self.discord = DiscordClient(settings.discord_webhook_url)
+        self.market_impact_scores = self._load_market_impact_scores()
+
+    def _load_market_impact_scores(self) -> dict[str, int]:
+        try:
+            people = load_watchlist().get("people", []) or []
+        except Exception:
+            log.exception("Could not load watchlist for live impact gating")
+            return {}
+        scores: dict[str, int] = {}
+        for person in people:
+            if not isinstance(person, dict):
+                continue
+            person_id = str(person.get("id") or "")
+            if not person_id or not bool(person.get("enabled", True)):
+                continue
+            try:
+                scores[person_id] = int(person.get("market_impact_score", 0) or 0)
+            except (TypeError, ValueError):
+                scores[person_id] = 0
+        return scores
 
     def process_statement(self, stmt: Statement) -> int:
         if self._statement_too_old(stmt):
@@ -102,6 +122,16 @@ class AlertPipeline:
         if stmt.is_live:
             if not self.settings.enable_provisional_live_alerts:
                 return AlertDecision(False, "none", "Live provisional alerts are disabled.", duplicate_key, entity, signal)
+            impact_score = self.market_impact_scores.get(stmt.person_id, 0)
+            if impact_score < self.settings.live_min_market_impact_score:
+                return AlertDecision(
+                    False,
+                    "none",
+                    f"Live market impact score {impact_score} is below {self.settings.live_min_market_impact_score}.",
+                    duplicate_key,
+                    entity,
+                    signal,
+                )
             if stmt.source_confidence < self.settings.live_min_source_confidence:
                 return AlertDecision(False, "none", "Live source confidence below threshold.", duplicate_key, entity, signal)
             if stmt.speaker_confidence < self.settings.live_min_speaker_confidence:

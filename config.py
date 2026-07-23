@@ -54,6 +54,7 @@ class Settings:
     live_min_source_confidence: float
     live_min_speaker_confidence: float
     live_min_quote_confidence: float
+    live_min_market_impact_score: int
     run_once: bool
     log_level: str
 
@@ -76,6 +77,7 @@ def load_settings() -> Settings:
         live_min_source_confidence=_env_float("LIVE_MIN_SOURCE_CONFIDENCE", 0.75),
         live_min_speaker_confidence=_env_float("LIVE_MIN_SPEAKER_CONFIDENCE", 0.70),
         live_min_quote_confidence=_env_float("LIVE_MIN_QUOTE_CONFIDENCE", 0.60),
+        live_min_market_impact_score=_env_int("LIVE_MIN_MARKET_IMPACT_SCORE", 9),
         run_once=_env_bool("RUN_ONCE", False),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
     )

@@ -94,11 +94,14 @@ def test_automatic_health_and_watchdog_are_enabled() -> None:
 
 def test_candidate_refresh_is_silent_by_default() -> None:
     stocks_cfg = load_yaml("config/stocks.yaml")
-    assert stocks_cfg["settings"]["send_candidate_refresh_telegram"] is False
-    assert stocks_cfg["settings"]["send_hourly_summary"] is False
-    assert stocks_cfg["settings"]["send_only_when_actionable"] is True
-    assert stocks_cfg["settings"]["max_alerts_per_run"] <= 5
-    assert stocks_cfg["settings"]["duplicate_silence_hours"] >= 24
+    settings = stocks_cfg["settings"]
+    assert settings["send_candidate_refresh_telegram"] is False
+    assert settings["send_hourly_summary"] is False
+    assert settings["send_only_when_actionable"] is True
+    assert settings["min_setup_confidence"] == "High"
+    assert settings["allow_short_model_view"] is False
+    assert settings["max_alerts_per_run"] <= 5
+    assert settings["duplicate_silence_hours"] >= 24
 
     workflow_text = (ROOT / ".github/workflows/stock-candidate-refresh.yml").read_text(encoding="utf-8")
     assert "Validate Telegram secrets" not in workflow_text

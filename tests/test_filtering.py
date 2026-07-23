@@ -43,15 +43,16 @@ def settings(tmp_path: Path) -> Settings:
         live_min_source_confidence=0.75,
         live_min_speaker_confidence=0.70,
         live_min_quote_confidence=0.60,
+        live_min_market_impact_score=9,
         run_once=True,
         log_level="INFO",
     )
 
 
-def stmt(text: str, *, live: bool = False, quote_conf: float = 0.98) -> Statement:
+def stmt(text: str, *, live: bool = False, quote_conf: float = 0.98, person_id: str = "donald_trump") -> Statement:
     now = datetime.now(timezone.utc)
     return Statement(
-        person_id="donald_trump",
+        person_id=person_id,
         source_id="test",
         speaker_name="Donald J. Trump",
         statement_text=text,
@@ -125,12 +126,18 @@ def test_low_confidence_normal_ignored(tmp_path):
     assert p.process_statement(stmt("Nvidia is amazing.", quote_conf=0.60)) == 0
 
 
-def test_live_provisional_sends_with_timestamp(tmp_path):
+def test_live_provisional_sends_with_timestamp_for_high_impact_person(tmp_path):
     p = pipeline(tmp_path)
     assert p.process_statement(stmt("Bitcoin is amazing.", live=True, quote_conf=0.68)) == 1
     assert "LIVE PROVISIONAL" in p.telegram.messages[0]
     assert "Approx live minute" in p.telegram.messages[0]
     assert "12:34" in p.telegram.messages[0]
+
+
+def test_live_provisional_ignored_for_lower_impact_person(tmp_path):
+    p = pipeline(tmp_path)
+    assert p.process_statement(stmt("Bitcoin is amazing.", live=True, quote_conf=0.68, person_id="cathie_wood")) == 0
+    assert not p.telegram.messages
 
 class FlakyTelegram:
     enabled = True

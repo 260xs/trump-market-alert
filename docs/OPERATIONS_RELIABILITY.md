@@ -13,6 +13,8 @@ Updated: 2026-07-23
 - The GitHub Actions watchdog runs at `25 13 * * *` and sends one grouped Telegram alert only if watched workflows failed recently.
 - `.github/workflows/telegram-test.yml` remains manual-only and sends exactly `✅ Telegram test successful` when intentionally run.
 - The public scanner, hourly stock scanner, and candidate refresh remain strict and quiet unless a real alert gate passes.
+- Stock Telegram alerts are High-confidence Buy/Sell only. `Short` is disabled and Medium-confidence stock setups are stored silently.
+- Live provisional public-figure alerts are allowed only when live mode is enabled and the watched person has a high market-impact score.
 
 ## Research findings
 
@@ -51,7 +53,8 @@ Optional repository variables:
 
 - `ENABLE_WORKFLOW_FAILURE_TELEGRAM=true` can still enable immediate per-workflow failure alerts, but the watchdog now provides automatic daily grouped failure reporting without requiring that variable.
 - `ENABLE_LIVE_AUDIO=false` unless intentionally testing the heavier live audio path.
-- `ENABLE_PROVISIONAL_LIVE_ALERTS=false` unless live audio is intentionally enabled and tested.
+- `ENABLE_PROVISIONAL_LIVE_ALERTS=true` keeps provisional live alerts available when live audio is enabled.
+- `LIVE_MIN_MARKET_IMPACT_SCORE=9` limits live provisional alerts to heavily market-moving watched people.
 
 ## Recommended next upgrades
 

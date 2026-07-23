@@ -3,7 +3,7 @@
 This project has two independent scanners that send Telegram only when strict alert rules pass.
 
 1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets.
-2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean Medium/High confidence entry, exit/risk, or short setup.
+2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean High-confidence Buy entry or Sell exit/risk setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, connect to a broker, or place trades. Alerts are research signals only and use legal public information.
 
@@ -15,15 +15,7 @@ The enabled watchlist lives in:
 watchlist.yaml
 ```
 
-Current enabled market movers:
-
-```text
-Donald J. Trump
-Kevin Warsh
-Scott Bessent
-Elon Musk
-Jensen Huang
-```
+Current enabled market movers include Donald J. Trump, Kevin Warsh, Scott Bessent, Elon Musk, Jensen Huang, Jerome Powell, major central bankers, selected mega-cap CEOs, and market-moving investors. Live provisional alerts are limited to enabled people with a high `market_impact_score`.
 
 Public-figure Telegram wording:
 
@@ -56,8 +48,8 @@ The stock scanner is strict. Telegram is silent unless all of these are true:
 ```text
 Setup type is Entry or Exit/Risk
 Signal is Good or Bad
-Model view is Buy, Sell, or Short
-Confidence is High or Medium
+Model view is Buy or Sell
+Confidence is High
 Trigger level exists
 Exit/invalidation level exists
 Risk/reward exists
@@ -70,7 +62,9 @@ The stock scanner does **not** send:
 ```text
 Neutral summaries
 Weak setups
+Medium-confidence setups
 Low-confidence setups
+Short views
 Hold views
 Repeated duplicate setups
 Candidate refresh lists by default
@@ -97,6 +91,12 @@ Scheduled workflows:
 
 .github/workflows/stock-candidate-refresh.yml
   Stock candidate refresh: 31 6 */3 * *
+
+.github/workflows/system-health.yml
+  Daily health check and Telegram heartbeat: 5 13 * * *
+
+.github/workflows/workflow-watchdog.yml
+  Recent workflow failure watchdog: 25 13 * * *
 ```
 
 Manual workflow:
@@ -111,11 +111,19 @@ The Telegram test workflow sends exactly:
 ✅ Telegram test successful
 ```
 
-Workflow failure Telegram alerts are off by default. To intentionally enable them, set repository variable:
+The daily system health workflow sends exactly one heartbeat after tests pass:
+
+```text
+✅ Daily system health check passed
+```
+
+Workflow failure Telegram alerts are off by default. To intentionally enable immediate per-workflow failure alerts, set repository variable:
 
 ```text
 ENABLE_WORKFLOW_FAILURE_TELEGRAM=true
 ```
+
+The scheduled watchdog can still send one grouped Telegram alert if watched workflows failed recently.
 
 ## GitHub Secrets / Environment Values
 
@@ -185,21 +193,14 @@ Meaning: Rule-based short-term risk or exit setup.
 Includes: exit/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
 ```
 
-Short setup:
-
-```text
-Signal: Bad
-Model view: Short
-Meaning: Rule-based confirmed breakdown setup.
-Includes: short/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
-```
-
 Hold:
 
 ```text
 Model view: Hold
 Meaning: No clear setup. Telegram stays silent.
 ```
+
+`Short` is intentionally disabled. Bearish actionable stock alerts use `Sell` only.
 
 These are mechanical technical research labels, not personal investment advice or instructions to trade.
 
@@ -241,7 +242,8 @@ RUNNER_PUBLIC_INTERVAL_SECONDS=300
 RUNNER_STOCK_MARKET_HOURS_ONLY=true
 RUNNER_CANDIDATE_INTERVAL_SECONDS=604800
 ENABLE_LIVE_AUDIO=false
-ENABLE_PROVISIONAL_LIVE_ALERTS=false
+ENABLE_PROVISIONAL_LIVE_ALERTS=true
+LIVE_MIN_MARKET_IMPACT_SCORE=9
 ```
 
 The systemd service also sets CPU and memory ceilings so the process stays small on free-tier hosts.
@@ -264,10 +266,11 @@ CANDIDATE_HEALTHCHECKS_URL
 ```text
 ENABLE_LIVE_AUDIO=true
 ENABLE_PROVISIONAL_LIVE_ALERTS=true
+LIVE_MIN_MARKET_IMPACT_SCORE=9
 LIVE_SAMPLE_SECONDS=90
 ```
 
-Live audio uses `yt-dlp`, `ffmpeg`, and `faster-whisper`. Keep it disabled on the smallest free VM unless you intentionally install and test the heavier stack. Live alerts are marked as provisional and include the approximate live minute.
+Live audio uses `yt-dlp`, `ffmpeg`, and `faster-whisper`. Keep live audio disabled on the smallest free VM unless you intentionally install and test the heavier stack. When enabled, live provisional alerts are still limited to high-impact watched people and are marked as provisional with the approximate live minute.
 
 ## Local Run
 

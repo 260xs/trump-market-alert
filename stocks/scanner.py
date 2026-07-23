@@ -25,7 +25,7 @@ class StockSetup:
     name: str
     signal: str  # Good, Bad, Neutral
     setup_type: str  # Entry, Exit/Risk, None
-    model_view: str  # Buy, Sell, Short, Hold. Research label only, not advice.
+    model_view: str  # Buy, Sell, Hold. Research label only, not advice.
     confidence: str  # High, Medium, Low, None
     timeframe: str
     last_price: float
@@ -53,6 +53,7 @@ class StockSetup:
         return (
             self.signal in {"Good", "Bad"}
             and self.setup_type in {"Entry", "Exit/Risk"}
+            and self.model_view in {"Buy", "Sell"}
             and self.confidence in {"High", "Medium"}
             and self.trigger_level is not None
             and self.exit_level is not None
@@ -415,9 +416,9 @@ def analyze_bars(
         confidence = "High" if exit_score >= 7 and confirmed_breakdown and rsi14 <= exit_rsi_high_max and (volume_high or daily_risk_ok) else "Medium"
         if rr_calc < min_rr or risk_pct >= max_risk_pct:
             confidence = "Low"
-        model_view = "Short" if confirmed_breakdown and bool(settings.get("allow_short_model_view", True)) else "Sell"
+        model_view = "Sell"
         reason = (
-            f"Research-only {model_view} setup passed {exit_score}/8 technical checks: {exit_summary}. "
+            f"Research-only Sell setup passed {exit_score}/8 technical checks: {exit_summary}. "
             f"Risk is capped below {max_risk_pct:.2f}% by config; risk/reward is {_ratio(rr_calc)}x."
         )
         key = f"{ticker}:exit:{model_view}:{confidence}:{round(exit_trigger, 2)}:{round(risk_invalid, 2)}"
@@ -529,7 +530,7 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
     if not tickers:
         tickers = priority
 
-    min_conf = str(settings.get("min_setup_confidence", "Medium"))
+    min_conf = str(settings.get("min_setup_confidence", "High"))
     max_alerts = int(settings.get("max_alerts_per_run", 5))
     silence_hours = int(settings.get("duplicate_silence_hours", 24))
     min_successful_scans = int(settings.get("min_successful_scans", 1))
@@ -593,7 +594,7 @@ def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClie
         db.store_alert(setup.ticker, setup.signal, setup.setup_key, payload)
         if setup.setup_type == "Entry" and setup.model_view == "Buy":
             db.open_entry_setup(setup.ticker, setup.setup_key, payload)
-        elif setup.setup_type == "Exit/Risk" and setup.model_view in {"Sell", "Short"}:
+        elif setup.setup_type == "Exit/Risk" and setup.model_view == "Sell":
             db.close_entry_setup(setup.ticker, payload)
         sent += 1
         if sent >= max_alerts:
@@ -618,77 +619,71 @@ def _discovery_score(ticker: str, bars: list[dict[str, Any]]) -> dict[str, Any] 
     vols = [float(b.get("volume", 0)) for b in bars]
     last = closes[-1]
     ret20 = (closes[-1] / closes[-21] - 1) if len(closes) > 21 and closes[-21] else 0.0
-    ret60 = (closes[-1] / closes[-61] - 1) if len(closes) > 61 and closes[-61] else 0.0
-    s50 = sma(closes, 50) or last
-    s200 = sma(closes, 200)
-    macd_line, macd_signal, macd_hist = macd(closes)
-    avg_vol20 = sum(vols[-20:]) / max(len(vols[-20:]), 1)
-    trend_bonus = 1.0 if last > s50 else -0.5
-    long_trend_bonus = 0.75 if s200 is not None and last > s200 else 0.0
-    macd_bonus = 0.75 if macd_hist is not None and macd_line is not None and macd_signal is not None and macd_line > macd_signal else 0.0
-    liquidity_score = min(avg_vol20 / 2_000_000, 3.0)
-    momentum_score = (ret20 * 100) + (ret60 * 40)
-    score = momentum_score + liquidity_score + trend_bonus + long_trend_bonus + macd_bonus
+    ret60 = (closes[-1] / closes[-61] - 1) if len(closes) > 61 and closes[-61] else ret20
+    volatility = atr([float(b["high"]) for b in bars], [float(b["low"]) for b in bars], closes, 14) or 0.0
+    vol_ratio = _volume_ratio(bars, 20) or 0.0
+    avg_volume = _avg(vols[-20:]) or 0.0
+    dollar_volume = avg_volume * last
+    e20 = ema(closes, 20)
+    e50 = ema(closes, 50)
+    trend_bonus = 0.0
+    if e20 and e50 and last > e20 > e50:
+        trend_bonus = 0.25
+    elif e20 and e50 and last < e20 < e50:
+        trend_bonus = 0.20
+    liquidity_score = min(dollar_volume / 25_000_000, 2.0)
+    motion_score = min(abs(ret20) * 8 + abs(ret60) * 3 + (volatility / max(last, 0.01)) * 20, 3.0)
+    volume_score = min(vol_ratio, 2.0)
+    score = liquidity_score + motion_score + volume_score + trend_bonus
     return {
         "ticker": ticker,
-        "score": round(score, 3),
-        "last_price": round(last, 2),
-        "return_20d_pct": round(ret20 * 100, 2),
-        "return_60d_pct": round(ret60 * 100, 2),
-        "above_sma50": last > s50,
-        "above_sma200": bool(s200 is not None and last > s200),
-        "macd_bullish": bool(macd_bonus),
-        "avg_volume_20d": int(avg_vol20),
+        "score": score,
+        "last_price": last,
+        "ret20": ret20,
+        "ret60": ret60,
+        "volume_ratio": vol_ratio,
+        "avg_dollar_volume": dollar_volume,
     }
 
 
 def discover_candidates(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClient) -> int:
     settings = cfg.get("settings", {})
-    universe = [str(t).upper() for t in cfg.get("universe", [])]
-    max_symbols = int(settings.get("max_scan_symbols_per_run", 35))
-    top_n = int(settings.get("top_candidate_count", 5))
-    priority = {str(x["ticker"]).upper() for x in cfg.get("priority_stocks", [])}
-    scores: list[dict[str, Any]] = []
-    for ticker in universe[:max_symbols]:
+    universe = [str(x).upper() for x in cfg.get("universe", [])]
+    limit = int(settings.get("max_scan_symbols_per_run", 40))
+    top_n = int(settings.get("top_candidate_count", 10))
+    scored: list[dict[str, Any]] = []
+    failures = 0
+    for ticker in universe[:limit]:
         try:
             bars = fetch_bars(ticker, settings.get("discovery_period", "6mo"), settings.get("discovery_interval", "1d"))
-            scored = _discovery_score(ticker, bars)
-            if scored:
-                if ticker in priority:
-                    scored["score"] += 2.0
-                    scored["priority_boost"] = True
-                scores.append(scored)
+            item = _discovery_score(ticker, bars)
+            if item:
+                scored.append(item)
         except Exception as exc:
-            log.warning("Discovery failed for %s: %s", ticker, exc)
-    scores.sort(key=lambda x: x["score"], reverse=True)
-    top = scores[:top_n]
-    db.save_candidates(top)
-    log.info("Saved %s top research candidates: %s", len(top), [x["ticker"] for x in top])
-
-    # Candidate refresh is silent by default. Telegram is reserved for actionable
-    # High/Medium confidence entry or exit/risk setups from the hourly scanner.
-    if telegram.enabled and top and bool(settings.get("send_candidate_refresh_telegram", False)):
-        lines = [f"{i}. {x['ticker']} - score {x['score']}, 20d {x['return_20d_pct']}%, 60d {x['return_60d_pct']}%" for i, x in enumerate(top, 1)]
-        telegram.send_text(
-            "🔎 3-Day Stock Candidate Refresh\n\n"
-            + "\n".join(lines)
-            + "\n\nThese are research candidates only. Hourly Telegram alerts are still sent only for High/Medium confidence entry or exit/risk setups."
-        )
-    return 0
+            failures += 1
+            log.warning("Discovery scan failed for %s: %s", ticker, exc)
+            continue
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    top = scored[:top_n]
+    db.replace_candidates(top)
+    log.info("Candidate refresh complete. scanned=%s scored=%s failures=%s top=%s", min(limit, len(universe)), len(scored), failures, [x["ticker"] for x in top])
+    if settings.get("send_candidate_refresh_telegram", False) and telegram.enabled:
+        lines = ["Stock candidate refresh", "", "Top candidates:"]
+        lines.extend(f"{i+1}. {x['ticker']} score={x['score']:.2f}" for i, x in enumerate(top))
+        telegram.send_text("\n".join(lines))
+    return 0 if scored else 1
 
 
-def main() -> int:
-    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)sZ %(levelname)s %(name)s: %(message)s")
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["hourly", "discover"], default="hourly")
     parser.add_argument("--config", default="config/stocks.yaml")
-    args = parser.parse_args()
-
+    args = parser.parse_args(argv)
+    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
     cfg = load_stock_config(args.config)
     db = StockResearchDB(os.getenv("STOCK_SQLITE_PATH", "data/stocks.sqlite3"))
     db.init()
     telegram = TelegramClient(os.getenv("TELEGRAM_BOT_TOKEN", ""), os.getenv("TELEGRAM_CHAT_ID", ""))
-
     if args.mode == "discover":
         return discover_candidates(cfg, db, telegram)
     return hourly_scan(cfg, db, telegram)

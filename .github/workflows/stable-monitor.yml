@@ -41,7 +41,8 @@ env:
   HEALTHCHECKS_URL: ${{ secrets.HEALTHCHECKS_URL }}
 
   ENABLE_LIVE_AUDIO: ${{ vars.ENABLE_LIVE_AUDIO || 'false' }}
-  ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'false' }}
+  ENABLE_PROVISIONAL_LIVE_ALERTS: ${{ vars.ENABLE_PROVISIONAL_LIVE_ALERTS || 'true' }}
+  LIVE_MIN_MARKET_IMPACT_SCORE: ${{ vars.LIVE_MIN_MARKET_IMPACT_SCORE || '9' }}
   LIVE_SAMPLE_SECONDS: ${{ vars.LIVE_SAMPLE_SECONDS || '90' }}
 
 jobs:
@@ -59,6 +60,8 @@ jobs:
           echo "Branch: ${GITHUB_REF_NAME}"
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
           echo "Live audio enabled: ${ENABLE_LIVE_AUDIO}"
+          echo "Live provisional alerts enabled: ${ENABLE_PROVISIONAL_LIVE_ALERTS}"
+          echo "Live provisional minimum market impact score: ${LIVE_MIN_MARKET_IMPACT_SCORE}"
           echo "Live sample seconds: ${LIVE_SAMPLE_SECONDS}"
           echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 

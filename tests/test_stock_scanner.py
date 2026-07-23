@@ -47,7 +47,7 @@ def test_entry_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert "1 week to 3 months" in setup.timeframe
 
 
-def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
+def test_exit_risk_setup_uses_sell_not_short():
     base = [150 - i * 0.30 for i in range(79)]
     recent_low = min(x - 1 for x in base[-21:-1])
     closes = base + [recent_low - 2.0]
@@ -57,7 +57,7 @@ def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
 
     assert setup.signal == "Bad"
     assert setup.setup_type == "Exit/Risk"
-    assert setup.model_view in {"Sell", "Short"}
+    assert setup.model_view == "Sell"
     assert setup.confidence in {"High", "Medium"}
     assert setup.trigger_level is not None
     assert setup.exit_level is not None
@@ -67,6 +67,24 @@ def test_exit_risk_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert setup.technical_score >= 6
     assert setup.max_technical_score == 8
     assert "1 week to 3 months" in setup.timeframe
+
+
+def test_short_model_view_config_is_ignored_for_safety():
+    base = [150 - i * 0.30 for i in range(79)]
+    recent_low = min(x - 1 for x in base[-21:-1])
+    closes = base + [recent_low - 2.0]
+    daily = [160 - i * 0.45 for i in range(80)]
+
+    setup = analyze_bars(
+        "NOK",
+        "Nokia",
+        make_bars(closes, volume=2_000_000),
+        {"allow_short_model_view": True},
+        make_bars(daily, volume=2_000_000),
+    )
+
+    assert setup.model_view == "Sell"
+    assert setup.actionable
 
 
 def test_neutral_setup_is_not_actionable():
@@ -90,7 +108,7 @@ def test_hourly_scan_does_not_send_for_neutral(monkeypatch, tmp_path: Path):
     db.init()
     telegram = FakeTelegram()
     cfg = {
-        "settings": {"min_setup_confidence": "Medium", "duplicate_silence_hours": 24},
+        "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24},
         "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
@@ -99,7 +117,7 @@ def test_hourly_scan_does_not_send_for_neutral(monkeypatch, tmp_path: Path):
     assert telegram.messages == []
 
 
-def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
+def test_hourly_scan_sends_only_high_confidence_entry(monkeypatch, tmp_path: Path):
     import stocks.scanner as scanner
 
     base = [100 + i * 0.05 + math.sin(i / 2) * 2 for i in range(79)]
@@ -115,7 +133,7 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     db.init()
     telegram = FakeTelegram()
     cfg = {
-        "settings": {"min_setup_confidence": "Medium", "duplicate_silence_hours": 24, "max_alerts_per_run": 5},
+        "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24, "max_alerts_per_run": 5},
         "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
@@ -125,6 +143,7 @@ def test_hourly_scan_sends_only_actionable_entry(monkeypatch, tmp_path: Path):
     assert "Short-Term Stock Entry Setup" in telegram.messages[0]
     assert "Model view:" in telegram.messages[0]
     assert "Buy" in telegram.messages[0]
+    assert "Confidence:\nHigh" in telegram.messages[0]
     assert "Entry trigger" in telegram.messages[0]
     assert "Exit / invalidation level" in telegram.messages[0]
     assert "Risk:" in telegram.messages[0]
@@ -165,7 +184,7 @@ def test_prior_buy_followup_sends_exit_risk_when_invalidation_breaks(monkeypatch
     )
     telegram = FakeTelegram()
     cfg = {
-        "settings": {"min_setup_confidence": "Medium", "duplicate_silence_hours": 24, "max_alerts_per_run": 5, "min_risk_reward": 1.8, "max_risk_pct": 9.0},
+        "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24, "max_alerts_per_run": 5, "min_risk_reward": 1.8, "max_risk_pct": 9.0},
         "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
