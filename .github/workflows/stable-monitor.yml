@@ -3,12 +3,10 @@ name: Market-Moving Public Figure Alert
 run-name: "Public figure scan - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "7,27,47 * * * *"
   workflow_dispatch:
     inputs:
       trigger_source:
-        description: "manual, schedule, external runner, or test"
+        description: "manual, external runner, or test"
         required: false
         default: "manual"
 
@@ -30,7 +28,6 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_INPUT: "1"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
 
   SQLITE_PATH: data/market_alerts.sqlite3
 
@@ -60,7 +57,6 @@ jobs:
           echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
           echo "Live audio enabled: ${ENABLE_LIVE_AUDIO}"
           echo "Live sample seconds: ${LIVE_SAMPLE_SECONDS}"
-          echo "Workflow failure Telegram enabled: ${ENABLE_WORKFLOW_FAILURE_TELEGRAM}"
 
       - name: Ping Healthchecks start
         if: env.HEALTHCHECKS_URL != ''
@@ -168,32 +164,3 @@ jobs:
             -X POST \
             --data-binary "GitHub Actions run failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
             "${HEALTHCHECKS_URL%/}/fail" || true
-
-      - name: Send Telegram failure alert
-        if: failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
-        run: |
-          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
-            echo "Telegram secrets missing; cannot send failure alert."
-            exit 0
-          fi
-
-          MSG="$(printf '%s\n' \
-            "🚨 Public-figure alert workflow failed" \
-            "" \
-            "Workflow: ${GITHUB_WORKFLOW}" \
-            "Trigger: ${GITHUB_EVENT_NAME}" \
-            "Run: #${GITHUB_RUN_NUMBER}" \
-            "Branch: ${GITHUB_REF_NAME}" \
-            "Time UTC: $(date -u '+%Y-%m-%d %H:%M:%S')" \
-            "" \
-            "Logs:" \
-            "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}")"
-
-          curl --fail --silent --show-error \
-            --max-time 20 \
-            --retry 2 \
-            --retry-delay 5 \
-            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${MSG}" \
-            --data-urlencode "disable_web_page_preview=true" \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" || true

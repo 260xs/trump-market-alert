@@ -3,8 +3,6 @@ name: GitHub Actions Watchdog
 run-name: "Actions watchdog - ${{ github.event_name }} - run #${{ github.run_number }}"
 
 on:
-  schedule:
-    - cron: "25 13 * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,7 +19,7 @@ concurrency:
 
 jobs:
   watchdog:
-    name: Report recent workflow failures to Telegram
+    name: Audit recent workflow failures without Telegram
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -29,8 +27,6 @@ jobs:
       - name: Check recent workflow runs
         env:
           GH_TOKEN: ${{ github.token }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SERVER_URL: ${{ github.server_url }}
           WATCHDOG_LOOKBACK_HOURS: "24"
@@ -43,11 +39,10 @@ jobs:
           import json
           import os
           from datetime import datetime, timedelta, timezone
-          from urllib import parse, request
+          from urllib import request
 
           repo = os.environ["GITHUB_REPOSITORY"]
           token = os.environ["GH_TOKEN"]
-          server_url = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
           lookback_hours = float(os.environ.get("WATCHDOG_LOOKBACK_HOURS", "24"))
           cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
           watched_workflows = {
@@ -89,59 +84,16 @@ jobs:
                       "name": name,
                       "conclusion": conclusion,
                       "created_at": created_at.strftime("%Y-%m-%d %H:%M UTC"),
-                      "url": run.get("html_url") or f"{server_url}/{repo}/actions",
+                      "url": run.get("html_url") or f"https://github.com/{repo}/actions",
                   }
               )
 
           if not failures:
               print(f"No watched workflow failures in the last {lookback_hours:g} hours.")
-              return_code = 0
-          else:
-              lines = [
-                  "🚨 GitHub Actions watchdog alert",
-                  "",
-                  f"Repository: {repo}",
-                  f"Lookback: last {lookback_hours:g} hours",
-                  "",
-                  "Failed workflows:",
-              ]
-              for item in failures[:8]:
-                  lines.extend(
-                      [
-                          f"- {item['name']} ({item['conclusion']})",
-                          f"  Started: {item['created_at']}",
-                          f"  Logs: {item['url']}",
-                      ]
-                  )
-              if len(failures) > 8:
-                  lines.append(f"- Plus {len(failures) - 8} more recent failures.")
-              message = "\n".join(lines)
+              raise SystemExit(0)
 
-              bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-              chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-              if not bot_token or not chat_id:
-                  print("Recent workflow failures found, but Telegram secrets are missing.")
-                  print(message)
-                  return_code = 1
-              else:
-                  data = parse.urlencode(
-                      {
-                          "chat_id": chat_id,
-                          "text": message[:3900],
-                          "disable_web_page_preview": "true",
-                      }
-                  ).encode("utf-8")
-                  telegram_request = request.Request(
-                      f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                      data=data,
-                      method="POST",
-                  )
-                  with request.urlopen(telegram_request, timeout=20) as response:
-                      response_payload = json.loads(response.read().decode("utf-8"))
-                  if not response_payload.get("ok"):
-                      raise RuntimeError(f"Telegram API rejected watchdog alert: {response_payload}")
-                  print(f"Sent watchdog alert for {len(failures)} recent workflow failure(s).")
-                  return_code = 0
-
-          raise SystemExit(return_code)
+          print(f"Found {len(failures)} watched workflow failure(s) in the last {lookback_hours:g} hours.")
+          for item in failures[:20]:
+              print(f"- {item['name']} ({item['conclusion']}) started {item['created_at']}: {item['url']}")
+          raise SystemExit(1)
           PY
