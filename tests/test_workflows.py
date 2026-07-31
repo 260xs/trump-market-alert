@@ -68,10 +68,18 @@ def test_failure_telegram_alerts_are_opt_in():
         "stock-candidate-refresh.yml",
         "system-health.yml",
         "manual-run-all.yml",
+        "workflow-watchdog.yml",
     ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
         assert "failure() && env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text
+
+
+def test_workflow_watchdog_is_opt_in_before_it_can_access_telegram_secrets():
+    text = (ROOT / ".github" / "workflows" / "workflow-watchdog.yml").read_text(encoding="utf-8")
+    assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
+    assert "if: env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in text
+    assert "TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}" in text
 
 
 def test_candidate_refresh_does_not_require_or_use_telegram_secrets_for_scan():

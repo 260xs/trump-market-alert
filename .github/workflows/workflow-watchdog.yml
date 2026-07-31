@@ -19,6 +19,9 @@ concurrency:
   group: github-actions-watchdog
   cancel-in-progress: false
 
+env:
+  ENABLE_WORKFLOW_FAILURE_TELEGRAM: ${{ vars.ENABLE_WORKFLOW_FAILURE_TELEGRAM || 'false' }}
+
 jobs:
   watchdog:
     name: Report recent workflow failures to Telegram
@@ -27,6 +30,7 @@ jobs:
 
     steps:
       - name: Check recent workflow runs
+        if: env.ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
