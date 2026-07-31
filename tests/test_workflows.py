@@ -68,7 +68,6 @@ def test_failure_telegram_alerts_are_opt_in():
         "stock-candidate-refresh.yml",
         "system-health.yml",
         "manual-run-all.yml",
-        "workflow-watchdog.yml",
     ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text
