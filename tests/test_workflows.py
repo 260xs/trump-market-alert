@@ -35,19 +35,16 @@ def test_public_workflow_keeps_live_provisional_guarded_for_high_impact_people()
     assert "LIVE_MIN_MARKET_IMPACT_SCORE: ${{ vars.LIVE_MIN_MARKET_IMPACT_SCORE || '9' }}" in text
 
 
-def test_daily_system_health_workflow_sends_telegram_heartbeat():
+def test_daily_system_health_workflow_is_scheduled_but_quiet():
     on = _workflow("system-health.yml")["on"]
     assert "workflow_dispatch" in on
     assert on.get("schedule") == [{"cron": "5 13 * * *"}]
 
     workflow_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
-    assert "daily Telegram health check at 13:05 UTC" in workflow_text
-    assert "Validate Telegram secrets for scheduled health check" in workflow_text
-    assert "success() && github.event_name == 'schedule'" in workflow_text
-    assert 'TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}' in workflow_text
-    assert 'TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}' in workflow_text
-    assert "✅ Daily system health check passed" in workflow_text
-    assert workflow_text.count("✅ Daily system health check passed") == 1
+    assert "daily system health check at 13:05 UTC" in workflow_text
+    assert "Validate Telegram secrets for scheduled health check" not in workflow_text
+    assert "Send Telegram daily health check" not in workflow_text
+    assert "✅ Daily system health check passed" not in workflow_text
 
 
 def test_telegram_test_workflow_is_manual_only_exact_message():
@@ -70,6 +67,7 @@ def test_failure_telegram_alerts_are_opt_in():
         "hourly-stock-scan.yml",
         "stock-candidate-refresh.yml",
         "system-health.yml",
+        "manual-run-all.yml",
     ]:
         text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
         assert "ENABLE_WORKFLOW_FAILURE_TELEGRAM" in text

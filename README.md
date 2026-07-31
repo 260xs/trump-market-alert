@@ -111,12 +111,6 @@ The Telegram test workflow sends exactly:
 ✅ Telegram test successful
 ```
 
-The daily system health workflow sends exactly one heartbeat after tests pass:
-
-```text
-✅ Daily system health check passed
-```
-
 Workflow failure Telegram alerts are off by default. To intentionally enable immediate per-workflow failure alerts, set repository variable:
 
 ```text
