@@ -38,17 +38,18 @@ def test_telegram_test_workflow_is_manual_only_exact_message() -> None:
     assert workflow_text.count('text=✅ Telegram test successful') == 1
 
 
-def test_daily_health_workflow_sends_scheduled_heartbeat() -> None:
+def test_daily_health_workflow_is_scheduled_and_quiet() -> None:
     workflow = load_yaml(".github/workflows/system-health.yml")
     assert workflow["on"]["schedule"] == [{"cron": "5 13 * * *"}]
     assert "workflow_dispatch" in workflow["on"]
 
-    workflow_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
-    assert "daily Telegram health check at 13:05 UTC" in workflow_text
-    assert "Validate Telegram secrets for scheduled health check" in workflow_text
-    assert "success() && github.event_name == 'schedule'" in workflow_text
-    assert "✅ Daily system health check passed" in workflow_text
-    assert workflow_text.count("✅ Daily system health check passed") == 1
+    workflow_text = (ROOT / ".github/workflows/system-health.yml").read_text(encoding="utf-8")
+    assert "daily system health check at 13:05 UTC" in workflow_text
+    assert "python -m pytest -q" in workflow_text
+    assert "Validate Telegram secrets for scheduled health check" not in workflow_text
+    assert "success() && github.event_name == 'schedule'" not in workflow_text
+    assert "✅ Daily system health check passed" not in workflow_text
+
 
 
 def test_core_workflow_failure_alerts_are_guarded() -> None:
