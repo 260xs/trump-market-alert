@@ -71,10 +71,11 @@ def test_core_workflow_failure_alerts_are_guarded() -> None:
         assert all("ENABLE_WORKFLOW_FAILURE_TELEGRAM == 'true'" in step["if"] for step in failure_steps)
 
 
-def test_automatic_health_and_watchdog_are_enabled() -> None:
+def test_automatic_health_and_watchdog_are_enabled_without_routine_success_messages() -> None:
     health_text = (ROOT / ".github/workflows/system-health.yml").read_text(encoding="utf-8")
     assert "python -m pytest -q" in health_text
-    assert "Daily system health check passed" in health_text
+    assert "Daily system health check passed" not in health_text
+    assert "success() && github.event_name == 'schedule'" not in health_text
     assert "System health check failed" in health_text
     assert "TELEGRAM_BOT_TOKEN" in health_text
     assert "TELEGRAM_CHAT_ID" in health_text
