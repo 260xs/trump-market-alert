@@ -117,7 +117,7 @@ Workflow failure Telegram alerts are off by default. To intentionally enable imm
 ENABLE_WORKFLOW_FAILURE_TELEGRAM=true
 ```
 
-The scheduled watchdog can still send one grouped Telegram alert if watched workflows failed recently.
+The scheduled watchdog sends one grouped failure alert only when `ENABLE_WORKFLOW_FAILURE_TELEGRAM=true` is explicitly enabled.
 
 ## GitHub Secrets / Environment Values
 
