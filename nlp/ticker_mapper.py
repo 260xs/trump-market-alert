@@ -48,13 +48,11 @@ class TickerMapper:
         matches: list[EntityMatch] = []
         low = text.lower()
 
-        blocked_reason = self._blocked_ambiguous(text)
-        if blocked_reason:
-            # Do not return anything. Ambiguous entities are stored as ignored by the pipeline.
-            return []
-
         for rule in self.rules:
-            if any(ctx in low for ctx in rule.avoid_contexts):
+            if any(
+                re.search(rf"\b{re.escape(ctx)}\b", text, re.IGNORECASE)
+                for ctx in rule.avoid_contexts
+            ):
                 continue
             if rule.required_context_any and not any(ctx in low for ctx in rule.required_context_any):
                 continue
@@ -75,7 +73,13 @@ class TickerMapper:
                         )
                     )
                     break
-        return self._dedupe(matches)
+
+        # Explicit valid matches take precedence over standalone ambiguous terms.
+        if matches:
+            return self._dedupe(matches)
+        if self._blocked_ambiguous(text):
+            return []
+        return []
 
     @staticmethod
     def _matched_alias(text: str, aliases: list[str]) -> str | None:
