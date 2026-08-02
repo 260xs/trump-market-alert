@@ -1,0 +1,159 @@
+report_id: public_figure_coverage_2026_07_21
+verified_at_utc: "2026-07-21T00:16:00Z"
+scope:
+  automation_goal: "Expand, verify, and repair worldwide public-figure/source coverage only."
+  telegram_disabled: true
+  stock_scans_run: false
+  public_scanner_workflow_dispatched: false
+  stock_scanner_workflow_dispatched: false
+  telegram_test_sent: false
+  strategy_rules_changed: false
+  profitability_evaluated: false
+  cron_added: false
+  reason_no_dispatch: "Actions run-list/dispatch/log access was unavailable in this environment; scanner workflows can send Telegram alerts and no safe Telegram-disabled discovery-only workflow exists on main."
+repository_snapshot:
+  repository: 260xs/trump-market-alert
+  inspected_main_commit: 291e135b8912ff4423f8f7bfd0392d631ac0c5df
+  branch: coverage/fix-ambiguous-mapper-20260721
+  pull_request: 22
+  runtime_watchlist_file: watchlist.yaml
+  runtime_people_reviewed: 22
+  runtime_active_regions_seen: [United States, Taiwan]
+  runtime_source_types_seen: [rss, youtube_rss, x_api, truthsocial, live_audio]
+current_registry_findings:
+  active_entries_reviewed: 22
+  candidates_added_to_runtime: 0
+  active_entries_added_to_runtime: 0
+  entries_disabled_or_rejected_in_runtime: 0
+  registry_status_gap: "Runtime watchlist still uses enabled/allow_telegram_alerts booleans and does not yet store the requested Active/Candidate/Unavailable/Stale/Disabled/Rejected status fields, reason codes, role dates, last verification time, or per-source cursor metadata."
+workflow_review:
+  workflows_confirmed_on_main:
+    - {path: .github/workflows/stable-monitor.yml, dispatch: true, sends_telegram_when_strict_alert_passes: true, cron_present: false, note: "No cron added in this run."}
+    - {path: .github/workflows/telegram-test.yml, dispatch: true, sends_exact_test_message: "✅ Telegram test successful"}
+  workflow_actions_state: "Could not verify queued/running/completed workflow state because the exposed connector has no Actions run-list/dispatch/log tools and direct GitHub API/clone access from the container returned HTTP 403."
+source_adapters_reviewed:
+  supported_runtime_source_types: [rss, youtube_rss, x_api, truthsocial, live_audio]
+  source_state_storage: "SQLite source_state records last_checked_at, last_success_at, last_error_at, last_error, run_count and failure_count."
+  unavailable_runtime_health: "SQLite cache/artifacts and live source failure rows were not accessible from this environment."
+official_sources_verified_today:
+  - id: christine_lagarde
+    status: Candidate
+    country_or_region: Euro area
+    category: central_bank
+    canonical_name: Christine Lagarde
+    current_role_verified: "President of the European Central Bank"
+    official_sources:
+      - https://www.ecb.europa.eu/ecb/decisions/html/cvlagarde.en.html
+      - https://www.ecb.europa.eu/press/key/date/2026/html/ecb.sp260629~cb5a2e2168.en.html
+      - https://www.ecb.europa.eu/press/press_conference/html/index.en.html
+    market_relevance: "ECB monetary-policy communications can move EUR rates, European equities, banks and sovereign bonds."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: andrew_bailey
+    status: Candidate
+    country_or_region: United Kingdom
+    category: central_bank
+    canonical_name: Andrew Bailey
+    current_role_verified: "Governor, Bank of England"
+    official_sources: [https://www.bankofengland.co.uk/about/people/andrew-bailey/biography, https://www.bankofengland.co.uk/news/speeches]
+    market_relevance: "Bank of England policy speeches and testimony can move GBP rates, UK equities, banks and gilts."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: kazuo_ueda
+    status: Candidate
+    country_or_region: Japan
+    category: central_bank
+    canonical_name: UEDA Kazuo
+    current_role_verified: "Governor, Bank of Japan"
+    official_sources: [https://www.boj.or.jp/en/about/outline/history/pre_gov/index.htm, https://www.boj.or.jp/en/about/press/index.htm]
+    market_relevance: "BOJ communications can move JPY, Japanese equities, banks and global rates."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: tiff_macklem
+    status: Candidate
+    country_or_region: Canada
+    category: central_bank
+    canonical_name: Tiff Macklem
+    current_role_verified: "Governor, Bank of Canada"
+    official_sources: [https://www.bankofcanada.ca/profile/tiff-macklem/, https://www.bankofcanada.ca/press/speeches/]
+    market_relevance: "Bank of Canada communications can move CAD, Canadian banks, commodities and rates."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: michele_bullock
+    status: Candidate
+    country_or_region: Australia
+    category: central_bank
+    canonical_name: Michele Bullock
+    current_role_verified: "Governor, Reserve Bank of Australia"
+    official_sources: [https://www.rba.gov.au/speeches/, https://www.rba.gov.au/speeches/2026/mc-gov-2026-05-05.html]
+    market_relevance: "RBA communications can move AUD, Australian banks, miners and rates."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: martin_schlegel
+    status: Candidate
+    country_or_region: Switzerland
+    category: central_bank
+    canonical_name: Martin Schlegel
+    current_role_verified: "Chairman of the Governing Board, Swiss National Bank"
+    official_sources: [https://www.snb.ch/en/the-snb/organisation/supervisory-management-boards, https://www.snb.ch/en/news-publications/speeches]
+    market_relevance: "SNB communications can move CHF, Swiss equities, banks and European rates."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: paul_atkins
+    status: Candidate
+    country_or_region: United States
+    category: regulator
+    canonical_name: Paul S. Atkins
+    current_role_verified: "Chairman, U.S. Securities and Exchange Commission"
+    official_sources: [https://www.sec.gov/newsroom/speeches-statements, https://www.sec.gov/newsroom/speeches-statements/atkins-keynote-remarks-economic-club-washington-042126]
+    market_relevance: "SEC rulemaking and enforcement communications can move crypto, brokers, exchanges, asset managers and market-structure exposed equities."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+  - id: michael_selig
+    status: Candidate
+    country_or_region: United States
+    category: regulator
+    canonical_name: Michael S. Selig
+    current_role_verified: "Chairman, Commodity Futures Trading Commission"
+    official_sources: [https://www.cftc.gov/PressRoom/SpeechesTestimony/index.htm, https://www.cftc.gov/PressRoom/SpeechesTestimony/opaselig1]
+    market_relevance: "CFTC communications can move crypto, commodities, futures venues and derivatives-exposed sectors."
+    source_priority: high
+    identity_source_confidence: 0.98
+    activation_blocker: "Not added to runtime because registry schema lacks requested candidate/status metadata and no Telegram-disabled discovery workflow exists on main."
+non_active_entries:
+  stale_or_rejected_reviewed:
+    - {id: caroline_pham_cftc_acting_chair, status: Stale, reason_code: role_changed_current_cftc_chairman_verified_as_michael_selig_on_official_cftc_pages}
+coverage_summary:
+  countries_or_regions_represented_in_today_verification: [Euro area, United Kingdom, Japan, Canada, Australia, Switzerland, United States]
+  categories_represented_in_today_verification: [central_bank, regulator]
+  missing_regions_not_claimed_complete: [China, India, Brazil, Mexico, South Korea, Singapore, Saudi Arabia, UAE, South Africa, Turkey]
+  unsupported_or_unavailable_platforms:
+    - "Authenticated X API coverage depends on X_BEARER_TOKEN."
+    - "Official video/livestream transcript extraction is not available as a Telegram-disabled discovery-only workflow on main."
+    - "Actions logs/artifacts/cache/source cursors were unavailable in this environment."
+mapping_review:
+  mappings_added_or_changed: []
+  mappings_corrected_by_code:
+    - "Explicit Meta Platforms/Facebook/META mentions are no longer suppressed solely by the generic Meta ambiguity blocker."
+    - "Marvell Technology/MRVL mentions are no longer suppressed by the Marvel entertainment avoid-context substring."
+  ambiguity_preserved:
+    - Apple fruit remains blocked from AAPL.
+    - Amazon rainforest remains blocked from AMZN.
+    - Marvel entertainment context remains blocked from MRVL.
+    - Ordinary meta language remains blocked from META.
+validation:
+  targeted_mapper_ambiguity_check: "passed_8_cases_in_local_scratch_harness"
+  full_pytest: "not_run_direct_clone_blocked_and_no_full_checkout_available"
+  tests_added: [tests/test_ticker_mapper_ambiguity.py]
+  yaml_config_validation: "Static YAML report fetched back from PR branch after creation. Normal PR checks required before merge."
+  secrets_scan: "No secret values added; only public URLs and metadata were committed."
+rollback:
+  code: "Revert mapper commits on PR 22."
+  report: "Remove docs/public_figure_coverage_report_2026-07-21.yaml from the PR branch."

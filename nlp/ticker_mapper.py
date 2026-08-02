@@ -44,19 +44,19 @@ class TickerMapper:
                     return blocked.get("reason", "Ambiguous entity")
         return None
 
+    @staticmethod
+    def _context_matches(text_lower: str, context: str) -> bool:
+        escaped = re.escape(context.lower())
+        return bool(re.search(rf"(?<!\w){escaped}(?!\w)", text_lower))
+
     def map_direct_entities(self, text: str) -> list[EntityMatch]:
         matches: list[EntityMatch] = []
         low = text.lower()
 
-        blocked_reason = self._blocked_ambiguous(text)
-        if blocked_reason:
-            # Do not return anything. Ambiguous entities are stored as ignored by the pipeline.
-            return []
-
         for rule in self.rules:
-            if any(ctx in low for ctx in rule.avoid_contexts):
+            if any(self._context_matches(low, ctx) for ctx in rule.avoid_contexts):
                 continue
-            if rule.required_context_any and not any(ctx in low for ctx in rule.required_context_any):
+            if rule.required_context_any and not any(self._context_matches(low, ctx) for ctx in rule.required_context_any):
                 continue
 
             for pattern in rule.direct_patterns:
@@ -75,7 +75,15 @@ class TickerMapper:
                         )
                     )
                     break
-        return self._dedupe(matches)
+
+        if matches:
+            return self._dedupe(matches)
+
+        blocked_reason = self._blocked_ambiguous(text)
+        if blocked_reason:
+            # Do not return anything. Ambiguous entities are stored as ignored by the pipeline.
+            return []
+        return []
 
     @staticmethod
     def _matched_alias(text: str, aliases: list[str]) -> str | None:
