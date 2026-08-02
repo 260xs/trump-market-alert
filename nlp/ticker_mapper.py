@@ -47,8 +47,15 @@ class TickerMapper:
     def map_direct_entities(self, text: str) -> list[EntityMatch]:
         matches: list[EntityMatch] = []
         low = text.lower()
+        blocked_reason = self._blocked_ambiguous(text)
 
         for rule in self.rules:
+            # Ambiguous blockers stay authoritative unless an exact-case company
+            # name or ticker pattern is present.
+            if blocked_reason and not any(
+                re.search(pattern, text) for pattern in rule.direct_patterns
+            ):
+                continue
             if any(
                 re.search(rf"\b{re.escape(ctx)}\b", text, re.IGNORECASE)
                 for ctx in rule.avoid_contexts
@@ -77,7 +84,7 @@ class TickerMapper:
         # Explicit valid matches take precedence over standalone ambiguous terms.
         if matches:
             return self._dedupe(matches)
-        if self._blocked_ambiguous(text):
+        if blocked_reason:
             return []
         return []
 
