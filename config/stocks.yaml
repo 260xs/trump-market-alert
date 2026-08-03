@@ -11,17 +11,17 @@ settings:
   max_alerts_per_run: 3
   min_successful_scans: 1
 
-  # Short-term focus: 1 week to 3 months.
-  timeframe_label: "Short-term swing focus: 1 week to 3 months"
+  # Multi-horizon focus: short-term and medium-term research from 1 week to 1 year.
+  timeframe_label: "Multi-horizon swing and position focus: 1 week to 1 year"
 
   # Hourly timing chart + daily context chart.
   hourly_period: 30d
   hourly_interval: 1h
-  daily_period: 6mo
+  daily_period: 2y
   daily_interval: 1d
 
   # 3-day discovery job.
-  discovery_period: 6mo
+  discovery_period: 2y
   discovery_interval: 1d
   # Wider scan for a bigger research circle while keeping Telegram capped and deduped.
   max_scan_symbols_per_run: 90

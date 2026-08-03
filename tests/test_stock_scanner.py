@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from stocks.scanner import analyze_bars, discover_candidates, hourly_scan
+from stocks.scanner import analyze_bars, discover_candidates, hourly_scan, load_stock_config
 from stocks.research_db import StockResearchDB
 
 
@@ -25,6 +25,14 @@ class FakeTelegram:
         return "1"
 
 
+def test_repo_config_enables_multi_horizon_daily_context():
+    cfg = load_stock_config()
+    settings = cfg["settings"]
+    assert settings["timeframe_label"] == "Multi-horizon swing and position focus: 1 week to 1 year"
+    assert settings["daily_period"] == "2y"
+    assert settings["discovery_period"] == "2y"
+
+
 def test_entry_setup_has_trigger_exit_and_medium_or_high_confidence():
     base = [100 + i * 0.05 + math.sin(i / 2) * 2 for i in range(79)]
     recent_high = max(x + 1 for x in base[-21:-1])
@@ -44,7 +52,7 @@ def test_entry_setup_has_trigger_exit_and_medium_or_high_confidence():
     assert setup.risk_pct < 15
     assert setup.technical_score >= 6
     assert setup.max_technical_score == 8
-    assert "1 week to 3 months" in setup.timeframe
+    assert "1 week to 1 year" in setup.timeframe
 
 
 def test_exit_risk_setup_uses_sell_not_short():
@@ -66,7 +74,7 @@ def test_exit_risk_setup_uses_sell_not_short():
     assert setup.risk_pct < 15
     assert setup.technical_score >= 6
     assert setup.max_technical_score == 8
-    assert "1 week to 3 months" in setup.timeframe
+    assert "1 week to 1 year" in setup.timeframe
 
 
 def test_short_model_view_config_is_ignored_for_safety():
@@ -140,7 +148,7 @@ def test_hourly_scan_sends_only_high_confidence_entry(monkeypatch, tmp_path: Pat
 
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
-    assert "Short-Term Stock Entry Setup" in telegram.messages[0]
+    assert "Multi-Horizon Stock Entry Setup" in telegram.messages[0]
     assert "Model view:" in telegram.messages[0]
     assert "Buy" in telegram.messages[0]
     assert "Confidence:\nHigh" in telegram.messages[0]
@@ -191,7 +199,7 @@ def test_prior_buy_followup_sends_exit_risk_when_invalidation_breaks(monkeypatch
 
     assert hourly_scan(cfg, db, telegram) == 0
     assert len(telegram.messages) == 1
-    assert "Short-Term Stock Exit/Risk Setup" in telegram.messages[0]
+    assert "Multi-Horizon Stock Exit/Risk Setup" in telegram.messages[0]
     assert "Model view:\nSell" in telegram.messages[0]
     assert "Prior Buy research setup follow-up" in telegram.messages[0]
     assert "not an instruction" in telegram.messages[0]
