@@ -20,7 +20,7 @@ defaults:
     shell: bash
 
 concurrency:
-  group: hourly-stock-research-scanner
+  group: stock-research-database
   cancel-in-progress: false
 
 env:
@@ -117,7 +117,7 @@ jobs:
           timeout --foreground 900s python -m stocks.scanner --mode hourly
 
       - name: Save stock database cache
-        if: always()
+        if: success()
         uses: actions/cache/save@v5
         with:
           path: data

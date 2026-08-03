@@ -148,7 +148,7 @@ jobs:
           timeout --foreground 780s python main.py
 
       - name: Save SQLite database cache
-        if: always()
+        if: success()
         uses: actions/cache/save@v5
         with:
           path: data

@@ -86,3 +86,22 @@ def test_candidate_refresh_does_not_require_or_use_telegram_secrets_for_scan():
     assert "Validate Telegram secrets" not in text
     assert 'TELEGRAM_BOT_TOKEN: ""' in text
     assert 'TELEGRAM_CHAT_ID: ""' in text
+
+
+def test_stock_workflows_serialize_shared_database_and_cache_only_successes():
+    hourly = _workflow("hourly-stock-scan.yml")
+    refresh = _workflow("stock-candidate-refresh.yml")
+    assert hourly["concurrency"]["group"] == "stock-research-database"
+    assert refresh["concurrency"]["group"] == "stock-research-database"
+    assert hourly["concurrency"]["cancel-in-progress"] is False
+    assert refresh["concurrency"]["cancel-in-progress"] is False
+
+    for workflow in [
+        "stable-monitor.yml",
+        "hourly-stock-scan.yml",
+        "stock-candidate-refresh.yml",
+        "manual-run-all.yml",
+    ]:
+        text = (ROOT / ".github" / "workflows" / workflow).read_text(encoding="utf-8")
+        assert "if: success()\n        uses: actions/cache/save@v5" in text
+        assert "if: always()\n        uses: actions/cache/save@v5" not in text
