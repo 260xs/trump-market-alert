@@ -64,6 +64,7 @@ jobs:
           status=${PIPESTATUS[0]}
           set -e
           printf 'public_scanner_exit_code=%s\n' "${status}" | tee -a artifacts/summary.txt
+          echo "PUBLIC_SCANNER_EXIT_CODE=${status}" >> "${GITHUB_ENV}"
           echo "Public scanner completed with exit code ${status}; no Telegram secrets were provided."
 
       - name: Run stock scanners without delivery
@@ -78,7 +79,7 @@ jobs:
           set -e
           printf 'stock_hourly_exit_code=%s\nstock_discover_exit_code=%s\n' "${hourly_status}" "${discover_status}" | tee -a artifacts/summary.txt
           echo "Stock scanners completed; no Telegram secrets were provided."
-          if [[ "${status}" -ne 0 || "${hourly_status}" -ne 0 || "${discover_status}" -ne 0 ]]; then
+          if [[ "${PUBLIC_SCANNER_EXIT_CODE}" -ne 0 || "${hourly_status}" -ne 0 || "${discover_status}" -ne 0 ]]; then
             echo "One or more scanners failed; uploaded logs contain details."
             exit 1
           fi
