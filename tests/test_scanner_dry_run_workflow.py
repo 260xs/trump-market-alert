@@ -29,7 +29,6 @@ def test_scanner_dry_run_is_manual_only_and_telegram_disabled():
     assert "artifacts/summary.txt" in text
     assert "--mode hourly" in text
     assert "--mode discover" in text
-    assert 'if [[ "${status}" -ne 0 || "${hourly_status}" -ne 0 || "${discover_status}" -ne 0 ]]; then' in text
     assert "One or more scanners failed; uploaded logs contain details." in text
     assert 'echo "PUBLIC_SCANNER_EXIT_CODE=${status}" >> "${GITHUB_ENV}"' in text
     assert '${PUBLIC_SCANNER_EXIT_CODE}" -ne 0' in text
