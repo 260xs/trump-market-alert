@@ -78,6 +78,10 @@ jobs:
           set -e
           printf 'stock_hourly_exit_code=%s\nstock_discover_exit_code=%s\n' "${hourly_status}" "${discover_status}" | tee -a artifacts/summary.txt
           echo "Stock scanners completed; no Telegram secrets were provided."
+          if [[ "${status}" -ne 0 || "${hourly_status}" -ne 0 || "${discover_status}" -ne 0 ]]; then
+            echo "One or more scanners failed; uploaded logs contain details."
+            exit 1
+          fi
 
       - name: Upload dry-run logs
         if: always()
