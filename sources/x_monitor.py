@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import timezone
 
 import requests
@@ -7,6 +8,10 @@ from dateutil import parser as date_parser
 
 from database.models import SourceConfig, Statement
 from sources.base import SourceMonitor, utc_now
+
+
+FROM_OPERATOR_RE = re.compile(r"(?<!\S)from:([A-Za-z0-9_]{1,15})(?=\s|$)", re.IGNORECASE)
+RETWEET_EXCLUSION_RE = re.compile(r"(?<!\S)-is:retweet(?=\s|$)", re.IGNORECASE)
 
 
 class XMonitor(SourceMonitor):
@@ -20,15 +25,26 @@ class XMonitor(SourceMonitor):
         super().__init__(source)
         self.bearer_token = bearer_token
 
+    def _validated_query(self) -> str:
+        username = str(self.source.extra.get("username") or "").strip().lstrip("@")
+        if not username:
+            raise ValueError("X source requires a configured username")
+
+        query = str(self.source.extra.get("query") or "").strip()
+        if not query:
+            return f"from:{username} -is:retweet"
+
+        authors = FROM_OPERATOR_RE.findall(query)
+        if len(authors) != 1 or authors[0].casefold() != username.casefold():
+            raise ValueError("X query must contain exactly one from: operator matching the configured username")
+        if not RETWEET_EXCLUSION_RE.search(query):
+            raise ValueError("X query must exclude retweets with -is:retweet")
+        return query
+
     def fetch(self) -> list[Statement]:
         if not self.bearer_token:
             return []
-        query = self.source.extra.get("query")
-        if not query:
-            username = self.source.extra.get("username")
-            if not username:
-                return []
-            query = f"from:{username} -is:retweet"
+        query = self._validated_query()
         url = "https://api.twitter.com/2/tweets/search/recent"
         params = {
             "query": query,
@@ -43,6 +59,9 @@ class XMonitor(SourceMonitor):
         data = resp.json().get("data", [])
         out: list[Statement] = []
         for item in data[:20]:
+            references = item.get("referenced_tweets") or []
+            if any(ref.get("type") == "retweeted" for ref in references if isinstance(ref, dict)):
+                continue
             text = (item.get("text") or "").strip()
             if not text:
                 continue
