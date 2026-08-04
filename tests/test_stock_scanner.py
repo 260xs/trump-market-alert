@@ -122,7 +122,8 @@ def test_hourly_scan_sends_only_high_confidence_entry(monkeypatch, tmp_path: Pat
 
     base = [100 + i * 0.05 + math.sin(i / 2) * 2 for i in range(79)]
     recent_high = max(x + 1 for x in base[-21:-1])
-    hourly = make_bars(base + [recent_high + 0.5], volume=2_000_000)
+    hourly = make_bars(base + [recent_high + 1.0], volume=2_000_000)
+    hourly[-1]["volume"] = 3_000_000
     daily = make_bars([90 + i * 0.45 for i in range(80)], volume=2_000_000)
 
     def fake_fetch(_ticker, _period, interval):

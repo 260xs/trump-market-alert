@@ -665,7 +665,7 @@ def discover_candidates(cfg: dict[str, Any], db: StockResearchDB, telegram: Tele
             continue
     scored.sort(key=lambda x: x["score"], reverse=True)
     top = scored[:top_n]
-    db.replace_candidates(top)
+    db.save_candidates(top)
     log.info("Candidate refresh complete. scanned=%s scored=%s failures=%s top=%s", min(limit, len(universe)), len(scored), failures, [x["ticker"] for x in top])
     if settings.get("send_candidate_refresh_telegram", False) and telegram.enabled:
         lines = ["Stock candidate refresh", "", "Top candidates:"]
