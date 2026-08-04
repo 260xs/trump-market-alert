@@ -71,7 +71,7 @@ def _setup(model_view: str = "Buy") -> StockSetup:
 
 def _cfg():
     return {
-        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "settings": {
             "min_setup_confidence": "Medium",
             "min_risk_reward": 1.8,

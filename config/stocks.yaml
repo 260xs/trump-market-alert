@@ -11,13 +11,14 @@ settings:
   max_alerts_per_run: 3
   min_successful_scans: 1
 
-  # Short-term focus: 1 week to 3 months.
-  timeframe_label: "Short-term swing focus: 1 week to 3 months"
+  # Short-term setups use hourly timing; one year of daily data provides medium-term context.
+  # Short-term: 1 week to 3 months. Medium-term: more than 3 months to 1 year.
+  timeframe_label: "Short-term focus: 1 week to 3 months; medium-term context: more than 3 months to 1 year"
 
   # Hourly timing chart + daily context chart.
   hourly_period: 30d
   hourly_interval: 1h
-  daily_period: 6mo
+  daily_period: 1y
   daily_interval: 1d
 
   # 3-day discovery job.
@@ -49,100 +50,70 @@ settings:
   exit_rsi_max: 44
   exit_rsi_high_max: 38
 
-priority_stocks:
+stocks:
   - ticker: NVDA
     name: NVIDIA
-    priority: 10
   - ticker: NOK
     name: Nokia
-    priority: 10
   - ticker: DELL
     name: Dell Technologies
-    priority: 10
   - ticker: ORCL
     name: Oracle
-    priority: 9
   - ticker: VRT
     name: Vertiv
-    priority: 9
   - ticker: ANET
     name: Arista Networks
-    priority: 9
   - ticker: HPE
     name: Hewlett Packard Enterprise
-    priority: 9
   - ticker: TSLA
     name: Tesla
-    priority: 9
   - ticker: AAPL
     name: Apple
-    priority: 9
   - ticker: MSFT
     name: Microsoft
-    priority: 9
   - ticker: GOOGL
     name: Alphabet
-    priority: 9
   - ticker: AMZN
     name: Amazon
-    priority: 9
   - ticker: META
     name: Meta Platforms
-    priority: 9
   - ticker: AMD
     name: Advanced Micro Devices
-    priority: 9
   - ticker: AVGO
     name: Broadcom
-    priority: 9
   - ticker: MU
     name: Micron Technology
-    priority: 9
   - ticker: QCOM
     name: Qualcomm
-    priority: 9
   - ticker: CRM
     name: Salesforce
-    priority: 8
   - ticker: CRWD
     name: CrowdStrike
-    priority: 8
   - ticker: PANW
     name: Palo Alto Networks
-    priority: 8
   - ticker: TSM
     name: Taiwan Semiconductor
-    priority: 8
   - ticker: ASML
     name: ASML
-    priority: 8
   - ticker: SMCI
     name: Super Micro Computer
-    priority: 8
   - ticker: PLTR
     name: Palantir
-    priority: 8
   - ticker: COIN
     name: Coinbase
-    priority: 8
   - ticker: JPM
     name: JPMorgan Chase
-    priority: 8
   - ticker: XOM
     name: Exxon Mobil
-    priority: 8
   - ticker: LLY
     name: Eli Lilly
-    priority: 8
   - ticker: QQQ
     name: Nasdaq 100 ETF
-    priority: 8
   - ticker: SPY
     name: S&P 500 ETF
-    priority: 8
 
-# Free scanner universe. It is not literally every stock in the world.
-# Add/remove tickers here any time. The 3-day discovery job ranks this universe.
+# Configured scanner universe. Each symbol has equal, very-high scan importance; none is favored.
+# Add or remove symbols here. The candidate refresh is silent and does not affect hourly scan order.
 # The scheduled refresh scans only the first max_scan_symbols_per_run names per run.
 universe:
   - NVDA

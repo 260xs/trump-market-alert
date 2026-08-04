@@ -1,9 +1,9 @@
-# Market-Moving Public Figure + Short-Term Stock Alert System
+# Market-Moving Public Figure + Short- and Medium-Term Stock Alert System
 
 This project has two independent scanners that send Telegram only when strict alert rules pass.
 
 1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets.
-2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean High-confidence Buy entry or Sell exit/risk setup.
+2. **Short- and medium-term stock scanner** - checks every configured stock with equal, very-high scan importance and sends Telegram only when there is a clean High-confidence Buy entry or Sell exit/risk setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, connect to a broker, or place trades. Alerts are research signals only and use legal public information.
 
@@ -34,14 +34,9 @@ Stock config lives in:
 config/stocks.yaml
 ```
 
-Priority stocks:
+All configured stocks are treated equally. No ticker, including NVDA, NOK, or VRT, is prioritized over another.
 
-```text
-NVDA
-NOK
-```
-
-The broader research universe is also listed in `config/stocks.yaml`. The candidate refresh ranks that universe, but it is silent by default and does not send candidate-list Telegram messages.
+The research universe is listed in `config/stocks.yaml`. The hourly scanner checks the full configured universe; the candidate refresh remains silent by default and does not send candidate-list Telegram messages.
 
 The stock scanner is strict. Telegram is silent unless all of these are true:
 
@@ -70,11 +65,14 @@ Repeated duplicate setups
 Candidate refresh lists by default
 ```
 
-Short-term focus:
+Time horizons:
 
 ```text
-1 week to 3 months
+Short-term: 1 week to 3 months
+Medium-term: more than 3 months to 1 year
 ```
+
+Hourly timing data produces the setup, with one year of daily data supplying medium-term trend context.
 
 ## GitHub Actions MVP Deployment
 
@@ -174,7 +172,7 @@ Entry setup:
 ```text
 Signal: Good
 Model view: Buy
-Meaning: Rule-based short-term entry setup.
+Meaning: Rule-based short-term entry setup with medium-term trend context.
 Includes: entry trigger, exit/invalidation level, target, confidence, reason.
 ```
 
@@ -183,7 +181,7 @@ Exit/risk setup:
 ```text
 Signal: Bad
 Model view: Sell
-Meaning: Rule-based short-term risk or exit setup.
+Meaning: Rule-based short-term risk or exit setup with medium-term trend context.
 Includes: exit/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
 ```
 

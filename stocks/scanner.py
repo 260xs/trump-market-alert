@@ -255,7 +255,7 @@ def analyze_bars(
     settings: dict[str, Any],
     daily_bars: list[dict[str, Any]] | None = None,
 ) -> StockSetup:
-    timeframe = str(settings.get("timeframe_label", "Short-term swing focus: 1 week to 3 months"))
+    timeframe = str(settings.get("timeframe_label", "Short-term focus: 1 week to 3 months; medium-term context: more than 3 months to 1 year"))
     if len(bars) < 60:
         last = float(bars[-1]["close"]) if bars else 0.0
         return _neutral(ticker, name, last, "Not enough hourly data for a high-quality setup.", timeframe)
@@ -455,7 +455,7 @@ def analyze_bars(
         ticker,
         name,
         last,
-        "No high-quality short-term entry or exit/risk setup right now, so Telegram stays silent.",
+        "No high-quality short- or medium-term entry or exit/risk setup right now, so Telegram stays silent.",
         timeframe,
         rsi14,
         ema8,
@@ -511,7 +511,7 @@ def _confidence_ok(confidence: str, minimum: str) -> bool:
 
 def _ticker_name_map(cfg: dict[str, Any]) -> dict[str, str]:
     out: dict[str, str] = {}
-    for item in cfg.get("priority_stocks", []):
+    for item in cfg.get("stocks", []):
         out[str(item["ticker"]).upper()] = str(item.get("name", item["ticker"]))
     for t in cfg.get("universe", []):
         out.setdefault(str(t).upper(), str(t).upper())
@@ -521,14 +521,14 @@ def _ticker_name_map(cfg: dict[str, Any]) -> dict[str, str]:
 def hourly_scan(cfg: dict[str, Any], db: StockResearchDB, telegram: TelegramClient) -> int:
     settings = cfg.get("settings", {})
     ticker_names = _ticker_name_map(cfg)
-    priority = [str(x["ticker"]).upper() for x in cfg.get("priority_stocks", [])]
-    candidates = db.load_candidate_tickers()
+    universe = [str(t).upper() for t in cfg.get("universe", [])]
     tickers: list[str] = []
-    for t in priority + candidates:
-        if t and t not in tickers:
-            tickers.append(t)
+    for ticker in universe:
+        if ticker and ticker not in tickers:
+            tickers.append(ticker)
+    # A candidate-only config remains usable, but candidates never outrank configured symbols.
     if not tickers:
-        tickers = priority
+        tickers = [str(t).upper() for t in db.load_candidate_tickers() if t]
 
     min_conf = str(settings.get("min_setup_confidence", "High"))
     max_alerts = int(settings.get("max_alerts_per_run", 5))

@@ -35,7 +35,7 @@ env:
 
 jobs:
   hourly-stock-scan:
-    name: Scan priority stocks hourly
+    name: Scan all configured stocks hourly
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

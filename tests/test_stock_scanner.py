@@ -109,7 +109,7 @@ def test_hourly_scan_does_not_send_for_neutral(monkeypatch, tmp_path: Path):
     telegram = FakeTelegram()
     cfg = {
         "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24},
-        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
 
@@ -135,7 +135,7 @@ def test_hourly_scan_sends_only_high_confidence_entry(monkeypatch, tmp_path: Pat
     telegram = FakeTelegram()
     cfg = {
         "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24, "max_alerts_per_run": 5},
-        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
 
@@ -186,7 +186,7 @@ def test_prior_buy_followup_sends_exit_risk_when_invalidation_breaks(monkeypatch
     telegram = FakeTelegram()
     cfg = {
         "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24, "max_alerts_per_run": 5, "min_risk_reward": 1.8, "max_risk_pct": 9.0},
-        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA"],
     }
 
@@ -213,9 +213,33 @@ def test_candidate_refresh_is_silent_by_default(monkeypatch, tmp_path: Path):
     telegram = FakeTelegram()
     cfg = {
         "settings": {"max_scan_symbols_per_run": 5, "top_candidate_count": 3},
-        "priority_stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
         "universe": ["NVDA", "NOK", "AAPL"],
     }
 
     assert discover_candidates(cfg, db, telegram) == 0
     assert telegram.messages == []
+
+
+def test_hourly_scan_treats_every_configured_symbol_equally(monkeypatch, tmp_path: Path):
+    import stocks.scanner as scanner
+
+    scanned = []
+    bars = make_bars([100 + math.sin(i / 3) for i in range(80)])
+
+    def fake_fetch(ticker, _period, _interval):
+        scanned.append(ticker)
+        return bars
+
+    monkeypatch.setattr(scanner, "fetch_bars", fake_fetch)
+    db = StockResearchDB(tmp_path / "stocks.sqlite3")
+    db.init()
+    telegram = FakeTelegram()
+    cfg = {
+        "settings": {"min_setup_confidence": "High", "duplicate_silence_hours": 24},
+        "stocks": [{"ticker": "NVDA", "name": "NVIDIA"}],
+        "universe": ["NVDA", "NOK", "VRT"],
+    }
+
+    assert hourly_scan(cfg, db, telegram) == 0
+    assert set(scanned) == {"NVDA", "NOK", "VRT"}
