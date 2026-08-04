@@ -255,7 +255,7 @@ def analyze_bars(
     settings: dict[str, Any],
     daily_bars: list[dict[str, Any]] | None = None,
 ) -> StockSetup:
-    timeframe = str(settings.get("timeframe_label", "Multi-horizon swing and position focus: 1 week to 1 year"))
+    timeframe = str(settings.get("timeframe_label", "Short-term swing focus: 1 week to 3 months"))
     if len(bars) < 60:
         last = float(bars[-1]["close"]) if bars else 0.0
         return _neutral(ticker, name, last, "Not enough hourly data for a high-quality setup.", timeframe)
@@ -455,7 +455,7 @@ def analyze_bars(
         ticker,
         name,
         last,
-        "No high-quality multi-horizon entry or exit/risk setup right now, so Telegram stays silent.",
+        "No high-quality short-term entry or exit/risk setup right now, so Telegram stays silent.",
         timeframe,
         rsi14,
         ema8,
@@ -473,7 +473,7 @@ def _action_message(setup: StockSetup) -> str:
     reason = f"Technical checks: {checks}. {setup.reason}"
     if setup.setup_type == "Entry":
         return (
-            "📈 Multi-Horizon Stock Entry Setup\n\n"
+            "📈 Short-Term Stock Entry Setup\n\n"
             f"Ticker:\n{setup.ticker}\n\n"
             "Model view:\nBuy\n\n"
             "Signal:\nGood\n\n"
@@ -489,7 +489,7 @@ def _action_message(setup: StockSetup) -> str:
         )
 
     return (
-        "📉 Multi-Horizon Stock Exit/Risk Setup\n\n"
+        "📉 Short-Term Stock Exit/Risk Setup\n\n"
         f"Ticker:\n{setup.ticker}\n\n"
         f"Model view:\n{setup.model_view}\n\n"
         "Signal:\nBad\n\n"

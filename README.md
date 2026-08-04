@@ -1,9 +1,9 @@
-# Market-Moving Public Figure + Multi-Horizon Stock Alert System
+# Market-Moving Public Figure + Short-Term Stock Alert System
 
 This project has two independent scanners that send Telegram only when strict alert rules pass.
 
 1. **Public-figure alert scanner** - watches configured market-moving public figures and sends Telegram only for direct, high-confidence Good/Bad statements about tradable assets.
-2. **Multi-horizon stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean High-confidence Buy entry or Sell exit/risk setup across research horizons from 1 week to 1 year.
+2. **Short-term stock scanner** - checks priority stocks hourly, especially **NVDA** and **NOK**, and sends Telegram only when there is a clean High-confidence Buy entry or Sell exit/risk setup.
 
 This is **not** a trading bot. It does not buy, sell, short, hold, connect to a broker, or place trades. Alerts are research signals only and use legal public information.
 
@@ -70,10 +70,10 @@ Repeated duplicate setups
 Candidate refresh lists by default
 ```
 
-Multi-horizon focus:
+Short-term focus:
 
 ```text
-1 week to 1 year, covering short-term swing and medium-term position research
+1 week to 3 months
 ```
 
 ## GitHub Actions MVP Deployment
@@ -174,7 +174,7 @@ Entry setup:
 ```text
 Signal: Good
 Model view: Buy
-Meaning: Rule-based multi-horizon entry setup for research periods from 1 week to 1 year.
+Meaning: Rule-based short-term entry setup.
 Includes: entry trigger, exit/invalidation level, target, confidence, reason.
 ```
 
@@ -183,7 +183,7 @@ Exit/risk setup:
 ```text
 Signal: Bad
 Model view: Sell
-Meaning: Rule-based multi-horizon risk or exit setup for research periods from 1 week to 1 year.
+Meaning: Rule-based short-term risk or exit setup.
 Includes: exit/risk trigger, invalidation/recovery level, downside reference, confidence, reason.
 ```
 
