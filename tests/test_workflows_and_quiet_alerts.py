@@ -43,7 +43,7 @@ def test_daily_health_workflow_is_scheduled_and_quiet() -> None:
     assert workflow["on"]["schedule"] == [{"cron": "5 13 * * *"}]
     assert "workflow_dispatch" in workflow["on"]
 
-    workflow_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
+    workflow_text = (ROOT / ".github/workflows/system-health.yml").read_text(encoding="utf-8")
     assert "daily system health check at 13:05 UTC" in workflow_text
     assert "python -m pytest -q" in workflow_text
     assert "Validate Telegram secrets for scheduled health check" not in workflow_text
@@ -71,7 +71,7 @@ def test_core_workflow_failure_alerts_are_guarded() -> None:
 
 
 def test_automatic_health_and_watchdog_are_enabled_without_routine_success_messages() -> None:
-    health_text = (ROOT / ".github" / "workflows" / "system-health.yml").read_text(encoding="utf-8")
+    health_text = (ROOT / ".github/workflows/system-health.yml").read_text(encoding="utf-8")
     assert "python -m pytest -q" in health_text
     assert "Daily system health check passed" not in health_text
     assert "success() && github.event_name == 'schedule'" not in health_text
@@ -83,7 +83,7 @@ def test_automatic_health_and_watchdog_are_enabled_without_routine_success_messa
 
     watchdog = load_yaml(".github/workflows/workflow-watchdog.yml")
     assert watchdog["permissions"]["actions"] == "read"
-    watchdog_text = (ROOT / ".github" / "workflows" / "workflow-watchdog.yml").read_text(encoding="utf-8")
+    watchdog_text = (ROOT / ".github/workflows/workflow-watchdog.yml").read_text(encoding="utf-8")
     assert "WATCHDOG_LOOKBACK_HOURS" in watchdog_text
     assert "GitHub Actions watchdog alert" in watchdog_text
     assert "Market-Moving Public Figure Alert" in watchdog_text
@@ -104,7 +104,7 @@ def test_candidate_refresh_is_silent_by_default() -> None:
     assert settings["max_alerts_per_run"] <= 5
     assert settings["duplicate_silence_hours"] >= 24
 
-    workflow_text = (ROOT / ".github" / "workflows" / "stock-candidate-refresh.yml").read_text(encoding="utf-8")
+    workflow_text = (ROOT / ".github/workflows/stock-candidate-refresh.yml").read_text(encoding="utf-8")
     assert "Validate Telegram secrets" not in workflow_text
     assert 'TELEGRAM_BOT_TOKEN: ""' in workflow_text
     assert 'TELEGRAM_CHAT_ID: ""' in workflow_text
