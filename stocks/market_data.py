@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 from datetime import datetime, timedelta, timezone
@@ -35,13 +36,28 @@ def _col(row: Any, key: str) -> float:
     return float(value)
 
 
-def _normalize_timestamp(ts: Any) -> Any:
-    try:
-        if getattr(ts, "tzinfo", None) is None:
-            return ts.tz_localize(timezone.utc) if hasattr(ts, "tz_localize") else ts.replace(tzinfo=timezone.utc)
-        return ts.tz_convert(timezone.utc) if hasattr(ts, "tz_convert") else ts.astimezone(timezone.utc)
-    except Exception:
-        return ts
+def _normalize_timestamp(ts: Any) -> datetime:
+    if hasattr(ts, "to_pydatetime"):
+        ts = ts.to_pydatetime()
+    if not isinstance(ts, datetime):
+        raise ValueError(f"invalid market-data timestamp: {ts!r}")
+    if ts.tzinfo is None:
+        raise ValueError(f"market-data timestamp must include timezone: {ts!r}")
+    return ts.astimezone(timezone.utc)
+
+
+def _valid_ohlcv(bar: dict[str, Any]) -> bool:
+    open_price = float(bar["open"])
+    high_price = float(bar["high"])
+    low_price = float(bar["low"])
+    close_price = float(bar["close"])
+    volume = float(bar["volume"])
+    prices = [open_price, high_price, low_price, close_price]
+    if any(not math.isfinite(value) or value <= 0 for value in prices):
+        return False
+    if not math.isfinite(volume) or volume < 0:
+        return False
+    return low_price <= open_price <= high_price and low_price <= close_price <= high_price
 
 
 def _rows_from_dataframe(df: Any) -> list[dict[str, Any]]:
@@ -50,18 +66,31 @@ def _rows_from_dataframe(df: Any) -> list[dict[str, Any]]:
 
     df = df.reset_index()
     out: list[dict[str, Any]] = []
+    seen_timestamps: set[datetime] = set()
     for _, row in df.iterrows():
         ts = row.get("Datetime") if "Datetime" in row else row.get("Date")
-        out.append(
-            {
-                "timestamp": _normalize_timestamp(ts),
+        try:
+            timestamp = _normalize_timestamp(ts)
+            bar = {
+                "timestamp": timestamp,
                 "open": _col(row, "Open"),
                 "high": _col(row, "High"),
                 "low": _col(row, "Low"),
                 "close": _col(row, "Close"),
                 "volume": _col(row, "Volume") if "Volume" in row or any(isinstance(k, tuple) and k[0] == "Volume" for k in row.keys()) else 0.0,
             }
-        )
+        except Exception as exc:
+            log.warning("Skipping malformed market-data row: %s", exc)
+            continue
+        if timestamp in seen_timestamps:
+            log.warning("Skipping duplicate market-data timestamp: %s", timestamp.isoformat())
+            continue
+        if not _valid_ohlcv(bar):
+            log.warning("Skipping impossible market-data row at %s", timestamp.isoformat())
+            continue
+        seen_timestamps.add(timestamp)
+        out.append(bar)
+    out.sort(key=lambda bar: bar["timestamp"])
     return out
 
 
