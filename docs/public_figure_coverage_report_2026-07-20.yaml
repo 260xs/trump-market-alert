@@ -1,0 +1,44 @@
+report_id: public_figure_coverage_2026_07_20
+verified_at_utc: "2026-07-20T00:20:00Z"
+scope:
+  telegram_disabled: true
+  stock_scans_run: false
+  strategy_rules_changed: false
+  profitability_evaluated: false
+  cron_added: false
+  workflow_dispatch_started: false
+  reason_no_dispatch: "No safe discovery-only workflow exists; scanner workflows can send Telegram alerts and stock workflows are out of scope."
+repository_snapshot:
+  repository: 260xs/trump-market-alert
+  inspected_head: 294eb417f59df3257b2f2922d739698de2f942ae
+  current_runtime_people_reviewed: 22
+  active_runtime_regions_seen: [United States, Taiwan]
+source_adapters_reviewed:
+  supported_runtime_source_types: [rss, youtube_rss, x_api, truthsocial, live_audio]
+  unavailable_runtime_health: "SQLite source_state/cache/artifacts and direct Actions state were unavailable from this environment."
+official_sources_verified:
+  - {id: christine_lagarde, status: Candidate, country_or_region: Euro area, category: central_bank, sources: ["https://www.ecb.europa.eu/press/tvservices/podcast/html/index.en.html", "https://www.ecb.europa.eu/services/socialmedia/html/index.en.html"]}
+  - {id: andrew_bailey, status: Candidate, country_or_region: United Kingdom, category: central_bank, sources: ["https://www.bankofengland.co.uk/news/speeches", "https://www.bankofengland.co.uk/news"]}
+  - {id: kazuo_ueda, status: Candidate, country_or_region: Japan, category: central_bank, sources: ["https://www.boj.or.jp/en/about/press/index.htm", "https://www.boj.or.jp/en/about/press/koen_speaker/gv_ueda/index.htm"]}
+  - {id: tiff_macklem, status: Candidate, country_or_region: Canada, category: central_bank, sources: ["https://www.bankofcanada.ca/press/speeches/", "https://www.bankofcanada.ca/profile/tiff-macklem/"]}
+  - {id: michele_bullock, status: Candidate, country_or_region: Australia, category: central_bank, sources: ["https://www.rba.gov.au/speeches/", "https://www.rba.gov.au/speeches/2026/"]}
+  - {id: martin_schlegel, status: Candidate, country_or_region: Switzerland, category: central_bank, sources: ["https://www.snb.ch/en/news-publications/speeches", "https://www.snb.ch/en/the-snb/organisation/supervisory-management-boards"]}
+  - {id: michael_selig, status: Candidate, country_or_region: United States, category: regulator, sources: ["https://www.cftc.gov/PressRoom/SpeechesTestimony/index.htm", "https://www.cftc.gov/PressRoom/SpeechesTestimony/opaselig1"]}
+  - {id: paul_atkins, status: Candidate, country_or_region: United States, category: regulator, sources: ["https://www.sec.gov/newsroom/speeches-statements", "https://www.sec.gov/newsroom/speeches-statements/atkins-keynote-remarks-economic-club-washington-042126"]}
+rejected_or_stale_discoveries:
+  - {id: caroline_pham_cftc_acting_chair, status: Stale, non_active_reason_code: role_changed_current_cftc_chairman_is_michael_selig_in_2026_sources_reviewed}
+mapping_review:
+  mappings_added_or_changed: []
+  confirmed_failures_requiring_code_fix:
+    - "Meta Platforms and uppercase META can be suppressed by the global blocked_ambiguous precheck."
+    - "Marvel avoid-context substring matching can suppress Marvell Technology."
+  proposed_fix_validated_locally_but_not_committed: "Connector lacked exposed update_file and tree/create_file attempts returned 502."
+validation:
+  local_yaml_parse: passed
+  local_compileall_for_proposed_mapper_fix: passed
+  direct_regression_checks_for_proposed_mapper_fix: passed
+  secret_pattern_scan: passed
+  pytest: not_run_pytest_not_installed
+  telegram_test_sent: false
+  public_scanner_workflow_ran: false
+  stock_scanner_workflow_ran: false
