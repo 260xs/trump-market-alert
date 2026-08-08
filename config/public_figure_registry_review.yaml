@@ -1,0 +1,303 @@
+review:
+  reviewed_at_utc: "2026-07-17T00:20:00Z"
+  scope: worldwide public-figure and official-source coverage review
+  live_scanner_change: false
+  telegram_disabled: true
+  stock_scans_run: false
+  workflow_dispatch_run: false
+  notes:
+    - Shadow registry only. These entries do not alter watchlist.yaml or config/watchlist_extra.yaml.
+    - Active means identity, current role, official source, and market relevance were verified for coverage planning.
+    - Candidate means plausible market relevance exists but the repo should not enable live collection until parser/source behavior is tested.
+
+coverage_statuses:
+  allowed: [Active, Candidate, Unavailable, Stale, Disabled, Rejected]
+  non_active_reason_required: true
+
+people:
+  - id: christine_lagarde
+    status: Active
+    canonical_name: Christine Lagarde
+    aliases: [Christine Lagarde, Lagarde, ECB President Lagarde]
+    current_role: President of the European Central Bank
+    organization: European Central Bank
+    country_or_region: European Union
+    category: central_bank
+    role_dates: "ECB President since 2019; current official ECB speech pages verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://www.ecb.europa.eu/press/key/date/2026/html/ecb.sp260622~b060a27b78.en.html
+        original_content: true
+        parser_compatibility: html
+        cursor: url_and_date
+    trusted_feeds:
+      - https://www.ecb.europa.eu/press/key/html/index.en.html
+    related_assets: [EUR, European banks, euro-area bonds, FEZ]
+    market_relevance: ECB rate, inflation, banking, and euro-area policy statements can move EUR, rates, banks, and European equity ETFs.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.99
+    asset_relevance_confidence: 0.96
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_speech_date_and_url
+
+  - id: andrew_bailey
+    status: Active
+    canonical_name: Andrew Bailey
+    aliases: [Andrew Bailey, Bailey, Bank of England Governor Bailey]
+    current_role: Governor of the Bank of England
+    organization: Bank of England
+    country_or_region: United Kingdom
+    category: central_bank
+    role_dates: "Current Bank of England speeches page verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://www.bankofengland.co.uk/news/speeches
+        original_content: true
+        parser_compatibility: html
+        cursor: url_and_date
+    trusted_feeds:
+      - https://www.bankofengland.co.uk/news/speeches
+    related_assets: [GBP, UK gilts, UK banks, EWU]
+    market_relevance: Bank of England speeches on rates, inflation, banking regulation, and financial stability can move GBP, gilts, banks, and UK ETFs.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.98
+    asset_relevance_confidence: 0.95
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_speech_date_and_url
+
+  - id: kazuo_ueda
+    status: Active
+    canonical_name: Kazuo Ueda
+    aliases: [Kazuo Ueda, Ueda, BOJ Governor Ueda]
+    current_role: Governor of the Bank of Japan
+    organization: Bank of Japan
+    country_or_region: Japan
+    category: central_bank
+    role_dates: "BOJ Governor term began 2023; BOJ speeches page verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://www.boj.or.jp/en/about/press/index.htm
+        original_content: true
+        parser_compatibility: html
+        cursor: url_and_date
+    trusted_feeds:
+      - https://www.boj.or.jp/en/about/press/index.htm
+    related_assets: [JPY, Japanese government bonds, EWJ, Japanese banks]
+    market_relevance: BOJ policy speeches can move JPY, Japanese rates, financials, exporters, and Japan ETFs.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.98
+    asset_relevance_confidence: 0.96
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_speech_date_and_url
+
+  - id: pan_gongsheng
+    status: Candidate
+    non_active_reason: Official role and market relevance are verified, but primary PBOC/SAFE source structure needs adapter testing before activation.
+    canonical_name: Pan Gongsheng
+    aliases: [Pan Gongsheng, Pan, PBOC Governor Pan]
+    current_role: Governor of the People's Bank of China
+    organization: People's Bank of China
+    country_or_region: China
+    category: central_bank
+    role_dates: "Governor since 2023; official and BIS speech mirrors verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://www.safe.gov.cn/en/2025/0618/2309.html
+        original_content: true
+        parser_compatibility: html
+        cursor: url_and_date
+      - type: official_mirror
+        url: https://www.bis.org/author/pan_gongsheng.htm
+        original_content: false
+        parser_compatibility: html
+        cursor: url_and_date
+    related_assets: [CNY, CNH, FXI, KWEB, Chinese banks]
+    market_relevance: PBOC policy speeches can move renminbi, China ETFs, banks, and global risk sentiment.
+    source_priority: high
+    identity_confidence: 0.98
+    source_confidence: 0.92
+    asset_relevance_confidence: 0.95
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_official_or_bis_speech_url
+
+  - id: ursula_von_der_leyen
+    status: Candidate
+    non_active_reason: Official speech sources are verified, but scanner should first add EU press-corner source tests and direct-asset filtering for trade/energy/defense statements.
+    canonical_name: Ursula von der Leyen
+    aliases: [Ursula von der Leyen, von der Leyen, Commission President von der Leyen]
+    current_role: President of the European Commission
+    organization: European Commission
+    country_or_region: European Union
+    category: government_policy
+    role_dates: "Current Commission President speech pages verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://ec.europa.eu/commission/presscorner/detail/en/speech_25_2053
+        original_content: true
+        parser_compatibility: html
+        cursor: presscorner_id
+    related_assets: [European defense sector, European energy sector, steel, autos, EUR, FEZ]
+    market_relevance: EU trade, tariffs, energy, competition, defense, and industrial-policy statements can affect sectors and European ETFs.
+    source_priority: medium
+    identity_confidence: 0.99
+    source_confidence: 0.97
+    asset_relevance_confidence: 0.91
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: presscorner_id
+
+  - id: haitham_al_ghais
+    status: Active
+    canonical_name: Haitham Al Ghais
+    aliases: [Haitham Al Ghais, OPEC Secretary General, HE Haitham Al Ghais]
+    current_role: Secretary General of OPEC
+    organization: OPEC
+    country_or_region: OPEC
+    category: energy_policy
+    role_dates: "OPEC Secretary General; official OPEC speeches page verified 2026-07-17."
+    official_sources:
+      - type: official_site
+        url: https://www.opec.org/speeches.html
+        original_content: true
+        parser_compatibility: html
+        cursor: speech_detail_url
+    related_assets: [Oil, Brent, WTI, USO, XLE]
+    market_relevance: OPEC supply, demand, and energy-security statements can move crude oil and energy equities.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.98
+    asset_relevance_confidence: 0.97
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_speech_detail_url
+
+  - id: abdulaziz_bin_salman
+    status: Candidate
+    non_active_reason: Role and OPEC member page are verified, but reliable current original speech feed is intermittent; keep shadow-only until source cadence is proven.
+    canonical_name: Abdulaziz bin Salman Al Saud
+    aliases: [Abdulaziz bin Salman, Prince Abdulaziz bin Salman, Saudi Energy Minister]
+    current_role: Minister of Energy, Saudi Arabia
+    organization: Saudi Ministry of Energy
+    country_or_region: Saudi Arabia
+    category: energy_policy
+    role_dates: "Saudi energy minister role verified through OPEC member page 2026-07-17."
+    official_sources:
+      - type: official_profile
+        url: https://www.opec.org/saudi-arabia.html
+        original_content: true
+        parser_compatibility: html
+        cursor: page_snapshot
+    related_assets: [Oil, Brent, WTI, USO, XLE]
+    market_relevance: Saudi oil policy statements can move crude oil, refined products, and energy equities.
+    source_priority: high
+    identity_confidence: 0.98
+    source_confidence: 0.90
+    asset_relevance_confidence: 0.97
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: page_snapshot_plus_opec_speech_search
+
+  - id: amin_nasser
+    status: Active
+    canonical_name: Amin H. Nasser
+    aliases: [Amin Nasser, Amin H. Nasser, Aramco CEO]
+    current_role: President and Chief Executive Officer of Aramco
+    organization: Aramco
+    country_or_region: Saudi Arabia
+    category: energy_ceo
+    role_dates: "Current Aramco leadership profile and speech index verified 2026-07-17."
+    official_sources:
+      - type: official_profile
+        url: https://www.aramco.com/en/about-us/our-leadership/amin-h-nasser
+        original_content: true
+        parser_compatibility: html
+        cursor: latest_speech_url
+      - type: official_speech
+        url: https://www.aramco.com/en/news-media/speeches/2025/remarks-by-amin-h-nasser-at-the-2025-energy-intelligence-forum
+        original_content: true
+        parser_compatibility: html
+        cursor: speech_url
+    related_assets: [Oil, Brent, WTI, XLE, Aramco]
+    market_relevance: Aramco production, demand, investment, and oil-market comments can move energy commodities and equities.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.98
+    asset_relevance_confidence: 0.96
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_speech_url
+
+  - id: christophe_fouquet
+    status: Active
+    canonical_name: Christophe Fouquet
+    aliases: [Christophe Fouquet, ASML CEO, Fouquet]
+    current_role: President and Chief Executive Officer of ASML
+    organization: ASML
+    country_or_region: Netherlands
+    category: semiconductor_ceo
+    role_dates: "ASML board page shows President and CEO; verified 2026-07-17."
+    official_sources:
+      - type: official_profile
+        url: https://www.asml.com/company/governance/board-of-management
+        original_content: true
+        parser_compatibility: html
+        cursor: page_snapshot
+      - type: official_release
+        url: https://www.asml.com/news/press-releases/2026/asml-ceo-christophe-fouquet-co-signed-opinion-piece
+        original_content: true
+        parser_compatibility: html
+        cursor: release_url
+    related_assets: [ASML, Semiconductor Sector, SOXX]
+    market_relevance: ASML comments on lithography demand, export controls, and EUV capacity can move ASML and semiconductor ETFs.
+    source_priority: high
+    identity_confidence: 0.99
+    source_confidence: 0.98
+    asset_relevance_confidence: 0.96
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: latest_release_url
+
+  - id: richard_teng
+    status: Candidate
+    non_active_reason: Role and official Binance content are verified, but Binance sources require source-specific legal/API and stable-ID testing before activation.
+    canonical_name: Richard Teng
+    aliases: [Richard Teng, Binance CEO, Teng]
+    current_role: Chief Executive Officer of Binance
+    organization: Binance
+    country_or_region: Global crypto
+    category: crypto_leader
+    role_dates: "Binance official content identifies Teng as CEO; verified 2026-07-17."
+    official_sources:
+      - type: official_company_post
+        url: https://www.binance.com/en/square/post/17120875124410
+        original_content: true
+        parser_compatibility: html
+        cursor: post_id
+    related_assets: [Bitcoin, Ethereum, crypto sector, Coinbase]
+    market_relevance: Binance leadership statements on regulation, listings, stablecoins, and adoption can affect crypto assets and crypto equities.
+    source_priority: medium
+    identity_confidence: 0.97
+    source_confidence: 0.88
+    asset_relevance_confidence: 0.94
+    last_verified_utc: "2026-07-17T00:20:00Z"
+    collection_cursor: binance_post_id
+
+rejected_or_unavailable:
+  - id: fan_or_repost_accounts
+    status: Rejected
+    non_active_reason: Fan accounts, unattributed screenshots, anonymous reposts, and unverified clips are not legal original sources for urgent alerts.
+  - id: paywalled_direct_quote_only_sources
+    status: Rejected
+    non_active_reason: Paywall bypassing is disallowed; use official originals or legally accessible reputable reporting with verifiable direct source context.
+  - id: broad_country_leader_pages_without_asset_context
+    status: Candidate
+    non_active_reason: Government leaders can be market-moving, but broad political pages need direct-asset filters and official-source tests before activation.
+
+source_platform_gaps:
+  - platform: X official API
+    status: Candidate
+    non_active_reason: Requires X_BEARER_TOKEN and cursor/rate-limit tests. Do not infer ownership from reposts.
+  - platform: YouTube transcripts
+    status: Candidate
+    non_active_reason: Requires stable video/channel ID handling, transcript timestamp validation, and duplicate segment tests.
+  - platform: Government HTML pages
+    status: Candidate
+    non_active_reason: Several official sources are HTML without RSS; adapter tests are needed for selectors, timestamps, redirects, and stale-content behavior.
