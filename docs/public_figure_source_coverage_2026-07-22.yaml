@@ -1,0 +1,312 @@
+run:
+  date_utc: "2026-07-22"
+  scope: "public-figure and source coverage only"
+  changed_alert_rules: false
+  changed_strategy_rules: false
+  changed_cron: false
+  ran_stock_scan: false
+  ran_public_scan: false
+  sent_telegram: false
+  workflow_dispatch_started: false
+  dispatch_blocker: "Available tools did not expose Actions run-list or workflow_dispatch; gh unavailable; direct GitHub clone/API blocked."
+
+repository:
+  full_name: "260xs/trump-market-alert"
+  default_branch: "main"
+  inspected_head_sha: "291e135b8912ff4423f8f7bfd0392d631ac0c5df"
+
+workflow_files_inspected:
+  - path: ".github/workflows/stable-monitor.yml"
+    workflow_dispatch: true
+    schedule_cron_present: false
+    stock_scan: false
+    telegram_market_alert: false
+  - path: ".github/workflows/hourly-stock-scan.yml"
+    workflow_dispatch: true
+    schedule_cron_present: false
+    stock_scan: false
+    telegram_market_alert: false
+    note: "Inspected only; not dispatched or run."
+  - path: ".github/workflows/stock-candidate-refresh.yml"
+    workflow_dispatch: true
+    schedule_cron_present: false
+    stock_scan: false
+    telegram_market_alert: false
+    note: "Inspected only; not dispatched or run."
+  - path: ".github/workflows/telegram-test.yml"
+    workflow_dispatch: true
+    schedule_cron_present: false
+    telegram_test_sent: false
+
+existing_config_review:
+  files:
+    - "watchlist.yaml"
+    - "config/watchlist_extra.yaml"
+  enabled_entries_reviewed: 38
+  active_config_changed: false
+  disabled_entries: []
+  rejected_entries: []
+  stale_entries: []
+  unavailable_entries: []
+  note: "Existing entries are enabled in production configuration, but this run did not re-activate or modify any production entry."
+
+status_definitions:
+  Active: "Enabled in production configuration and allowed by current repo rules."
+  Candidate: "Plausible market-moving identity with public-source evidence, but not activated until official source ownership, parser behavior, cursor handling, and stale handling are verified."
+  Unavailable: "Cannot be collected legally or technically with current adapters."
+  Stale: "Role or source appears outdated and needs re-verification."
+  Disabled: "Known identity/source intentionally not collected."
+  Rejected: "Identity, source ownership, role, or asset relevance failed verification."
+
+candidates:
+  - id: christine_lagarde
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Christine Lagarde"
+    country_or_region: "Euro area"
+    category: "central_bank"
+    current_role: "President of the European Central Bank"
+    organization: "European Central Bank"
+    related_assets_or_sectors: ["EUR rates", "European banks", "European equities", "bond ETFs"]
+    official_sources_to_verify:
+      - "https://www.ecb.europa.eu/press/tvservices/podcast/html/index.en.html"
+      - "https://www.ecb.europa.eu/services/socialmedia/html/index.en.html"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: andrew_bailey
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Andrew Bailey"
+    country_or_region: "United Kingdom"
+    category: "central_bank"
+    current_role: "Governor of the Bank of England"
+    organization: "Bank of England"
+    related_assets_or_sectors: ["GBP rates", "UK banks", "gilts", "UK equity ETFs"]
+    official_sources_to_verify:
+      - "https://www.bankofengland.co.uk/news/speeches"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: kazuo_ueda
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Kazuo Ueda"
+    aliases: ["UEDA Kazuo"]
+    country_or_region: "Japan"
+    category: "central_bank"
+    current_role: "Governor of the Bank of Japan"
+    organization: "Bank of Japan"
+    related_assets_or_sectors: ["JPY", "JGBs", "Japanese banks", "Japan equity ETFs"]
+    official_sources_to_verify:
+      - "https://www.boj.or.jp/en/about/press/index.htm"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: pan_gongsheng
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Pan Gongsheng"
+    country_or_region: "China"
+    category: "central_bank"
+    current_role: "Governor of the People's Bank of China"
+    organization: "People's Bank of China"
+    related_assets_or_sectors: ["China ETFs", "CNH", "commodities", "global risk assets"]
+    official_sources_to_verify:
+      - "https://english.www.gov.cn/news/202606/17/content_WS6a324210c6d00ca5f9a0ba94.html"
+      - "https://www.bis.org/author/pan_gongsheng.htm"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: tiff_macklem
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Tiff Macklem"
+    country_or_region: "Canada"
+    category: "central_bank"
+    current_role: "Governor of the Bank of Canada"
+    organization: "Bank of Canada"
+    related_assets_or_sectors: ["CAD rates", "Canadian banks", "energy-sensitive assets", "Canada ETFs"]
+    official_sources_to_verify:
+      - "https://www.bankofcanada.ca/press/speeches/"
+      - "https://www.bankofcanada.ca/multimedia/press-conference-monetary-policy-report-july-2026/"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: michele_bullock
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Michele Bullock"
+    country_or_region: "Australia"
+    category: "central_bank"
+    current_role: "Governor of the Reserve Bank of Australia"
+    organization: "Reserve Bank of Australia"
+    related_assets_or_sectors: ["AUD rates", "Australian banks", "miners", "Australia ETFs"]
+    official_sources_to_verify:
+      - "https://www.rba.gov.au/speeches/"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: verena_ross
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Verena Ross"
+    country_or_region: "European Union"
+    category: "regulator"
+    current_role: "Chair of ESMA"
+    organization: "European Securities and Markets Authority"
+    related_assets_or_sectors: ["EU market infrastructure", "crypto assets", "financial-sector ETFs", "exchanges"]
+    official_sources_to_verify:
+      - "https://www.esma.europa.eu/esma-conference-2025-shaping-future-eu-capital-markets"
+      - "https://www.esma.europa.eu/databases-library/esma-library"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: michael_selig
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Michael Selig"
+    country_or_region: "United States"
+    category: "regulator"
+    current_role: "Chairman of the CFTC"
+    organization: "Commodity Futures Trading Commission"
+    related_assets_or_sectors: ["commodities", "crypto", "derivatives", "commodity ETFs"]
+    official_sources_to_verify:
+      - "https://www.cftc.gov/"
+      - "https://www.cftc.gov/PressRoom/SpeechesTestimony/opaselig1"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: mary_barra
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Mary Barra"
+    country_or_region: "United States"
+    category: "ceo"
+    current_role: "Chair and CEO of General Motors"
+    organization: "General Motors"
+    related_assets_or_sectors: ["GM", "auto sector", "EV supply chain", "battery materials"]
+    official_sources_to_verify:
+      - "https://investor.gm.com/news-releases/news-release-details/q1-2026-letter-shareholders/"
+      - "https://news.gm.com/home.detail.html/Pages/news/us/en/2025/jun/0611-plants.html"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: darren_woods
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Darren Woods"
+    aliases: ["Darren W. Woods"]
+    country_or_region: "United States"
+    category: "ceo"
+    current_role: "Chairman and CEO of ExxonMobil"
+    organization: "ExxonMobil"
+    related_assets_or_sectors: ["XOM", "oil", "gas", "energy ETFs"]
+    official_sources_to_verify:
+      - "https://corporate.exxonmobil.com/corporate-governance/board-of-directors/darren-woods"
+      - "https://corporate.exxonmobil.com/news/news-releases"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: amin_h_nasser
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Amin H. Nasser"
+    country_or_region: "Saudi Arabia"
+    category: "ceo"
+    current_role: "President and CEO of Aramco"
+    organization: "Aramco"
+    related_assets_or_sectors: ["oil", "energy majors", "energy ETFs", "Saudi equities"]
+    official_sources_to_verify:
+      - "https://www.aramco.com/en/about-us/our-leadership/amin-h-nasser"
+      - "https://www.aramco.com/en/investors"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: lip_bu_tan
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Lip-Bu Tan"
+    country_or_region: "United States"
+    category: "ceo"
+    current_role: "CEO of Intel"
+    organization: "Intel"
+    related_assets_or_sectors: ["INTC", "semiconductor ETFs", "AI chips", "foundry supply chain"]
+    official_sources_to_verify:
+      - "https://newsroom.intel.com/biography/lip-bu-tan"
+      - "https://newsroom.intel.com/corporate/intel-appoints-lip-bu-tan-chief-executive-officer"
+    source_priority: "medium"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+  - id: prince_abdulaziz_bin_salman
+    status: Candidate
+    non_active_reason: "Needs Telegram-disabled official-source validation before activation."
+    canonical_name: "Prince Abdulaziz bin Salman"
+    country_or_region: "Saudi Arabia"
+    category: "energy_policy"
+    current_role: "Saudi Arabia Minister of Energy"
+    organization: "Saudi Ministry of Energy / OPEC events"
+    related_assets_or_sectors: ["oil", "energy ETFs", "energy producers", "commodity ETFs"]
+    official_sources_to_verify:
+      - "https://www.opec.org/speeches-2020.html"
+      - "https://www.opec.org/speech-detail/388-9-july-2025.html"
+    source_priority: "high"
+    identity_confidence: 0.95
+    source_confidence_pending_live_check: true
+
+coverage:
+  configured_active_countries_or_regions:
+    - "United States"
+    - "Global company/market leaders with U.S.-listed primary assets"
+  candidate_countries_or_regions:
+    - "Australia"
+    - "Canada"
+    - "China"
+    - "Euro area"
+    - "European Union"
+    - "Japan"
+    - "Saudi Arabia"
+    - "United Kingdom"
+    - "United States"
+  candidate_categories:
+    - "central_bank"
+    - "regulator"
+    - "ceo"
+    - "energy_policy"
+  missing_regions:
+    - "Latin America"
+    - "Africa"
+    - "India and South Asia"
+    - "Southeast Asia"
+    - "Middle East outside energy policy"
+    - "Non-U.S. defense leadership"
+  unsupported_or_unverified_platforms:
+    - "Authenticated X API behavior without X_BEARER_TOKEN visibility"
+    - "Truth Social structured public feed behavior"
+    - "Official source response status, redirect, rate limit, and cursor behavior from this blocked container"
+    - "GitHub Actions run-list, queue, logs, artifacts, caches, and workflow_dispatch from this blocked environment"
+
+asset_mapping_review:
+  files:
+    - "config/asset_map.yaml"
+    - "config/asset_map_extra.yaml"
+  changed: false
+  ambiguity_guards_observed:
+    - "Apple fruit"
+    - "Amazon rainforest/place"
+    - "ordinary Meta usage"
+    - "Marvel versus Marvell"
+    - "X without company context"
+    - "gold as color/non-market context"
+    - "oil in non-market context"
+
+source_adapter_review:
+  files:
+    - "sources/rss_monitor.py"
+    - "sources/x_monitor.py"
+    - "sources/youtube_monitor.py"
+    - "sources/truthsocial_monitor.py"
+    - "sources/factory.py"
+    - "sources/base.py"
+  repaired: false
+  repair_reason: "No source failure was reproducible through available network/tooling; no verification gates were weakened."
