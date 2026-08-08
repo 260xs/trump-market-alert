@@ -1,0 +1,77 @@
+name: Event Risk Maintenance
+
+run-name: "Event risk maintenance - ${{ github.event_name }} - run #${{ github.run_number }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      trigger_source:
+        description: "manual or external maintenance runner"
+        required: false
+        default: "manual"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: event-risk-maintenance
+  cancel-in-progress: false
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_INPUT: "1"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  TELEGRAM_BOT_TOKEN: ""
+  TELEGRAM_CHAT_ID: ""
+  EVENT_RISK_SQLITE_PATH: data/event_risk.sqlite3
+
+jobs:
+  maintain:
+    name: Refresh event calendar and risk gates without alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Show trigger info
+        run: |
+          echo "Triggered by: ${GITHUB_EVENT_NAME}"
+          echo "Run number: ${GITHUB_RUN_NUMBER}"
+          echo "Repository: ${GITHUB_REPOSITORY}"
+          echo "Branch: ${GITHUB_REF_NAME}"
+          echo "UTC time: $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Telegram disabled for event-risk maintenance."
+
+      - name: Check out project
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Prepare data directory
+        run: mkdir -p data
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Run event-risk maintenance dry run
+        env:
+          TELEGRAM_BOT_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
+        run: |
+          python scripts/maintain_event_risk.py --dry-run
+
+      - name: Upload event-risk artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: event-risk-maintenance-${{ github.run_id }}
+          path: |
+            data/event_risk.sqlite3
+            data/event_risk_report.json
+          if-no-files-found: error
