@@ -91,7 +91,7 @@ Scheduled workflows:
   Stock candidate refresh: 31 6 */3 * *
 
 .github/workflows/system-health.yml
-  Daily health check and Telegram heartbeat: 5 13 * * *
+  Daily health check (quiet; no routine Telegram heartbeat): 5 13 * * *
 
 .github/workflows/workflow-watchdog.yml
   Recent workflow failure watchdog: 25 13 * * *
