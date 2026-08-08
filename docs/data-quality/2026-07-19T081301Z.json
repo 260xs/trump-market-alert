@@ -1,0 +1,35 @@
+{
+  "batch_progress": {
+    "failed": 0,
+    "passed": 0,
+    "processed": 0,
+    "quarantined": 0,
+    "remaining": null
+  },
+  "corporate_actions_detected": [],
+  "coverage_gaps": [
+    "No dedicated symbol-universe implementation existed before this maintenance pass.",
+    "The existing stock candidate refresh reads a static config/stocks.yaml universe instead of legal provider listing files.",
+    "The existing yfinance adapter fetches adjusted OHLCV only; it does not persist independent adjusted and unadjusted price evidence.",
+    "No live provider listing file, exchange cache, or SQLite stock universe database was available in the workspace to validate complete coverage."
+  ],
+  "eligible_symbols": null,
+  "exclusions_by_reason": {},
+  "generated_at": "2026-07-19T08:13:01Z",
+  "known_gaps": [
+    "Recent GitHub Actions run details were visible only through the public Actions HTML page; authenticated run logs were not available through the exposed connector tools.",
+    "No Telegram alert or Telegram test was sent.",
+    "No public-figure scan was started.",
+    "No profitability or Buy/Sell strategy evaluation was performed."
+  ],
+  "provider_status": {
+    "yfinance": {
+      "checked": true,
+      "status": "present_in_code",
+      "version": "requirements-stocks.txt: yfinance>=0.2.61,<0.3"
+    }
+  },
+  "provider_version": "repository-inspection-2026-07-19T08:13:01Z",
+  "stale_or_failed_symbols": [],
+  "unresolved_disagreements": []
+}
